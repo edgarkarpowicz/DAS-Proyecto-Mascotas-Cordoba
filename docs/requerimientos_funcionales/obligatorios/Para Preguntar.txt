@@ -4,3 +4,6 @@ RF11: No puedo consultar el Carnet Sanitario Digital si no tiene tabla...
 
 RF13: Correcto Incluir otro Req Fun en Diagrama cuando se permite registrar una nueva mascota cuando se publica la misma?
 
+RF15: Forma para distinguir permisos de un personal municipal?
+
+RF17: Falta agregar nombre, horarios, y servicios prestados a DER

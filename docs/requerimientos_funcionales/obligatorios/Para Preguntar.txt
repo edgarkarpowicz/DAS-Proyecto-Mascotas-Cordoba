@@ -1,0 +1,6 @@
+RF10: No existe en el DER en ningún lado una forma que permita que solo UN ÚNICO CARNET SANITARIO DIGITAL exista al vez. Tendría que haber una TABLA para esto. 
+
+RF11: No puedo consultar el Carnet Sanitario Digital si no tiene tabla...
+
+RF13: Correcto Incluir otro Req Fun en Diagrama cuando se permite registrar una nueva mascota cuando se publica la misma?
+

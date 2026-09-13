@@ -1,0 +1,15 @@
+[Sistemas de Gestión de Veterinarias] (SOAP/REST)
+                    │
+                    ▼
+       ┌─────────────────────────┐
+       │   PLATAFORMA MASCOTAS   │ <────> [Ciudadano Digital (CiDi)] (Auth)
+       │         CÓRDOBA         │
+       │ (Spring Boot + SQL Svr) │ <────> [Servicio de IA Generativa] (API)
+       └─────────────────────────┘
+                    ▲
+                    │ (HTTPS / Web)
+       [Portal Angular - Frontend]
+         ├── Ciudadanos
+         ├── Operadores de Refugios
+         ├── Veterinarias (carga manual)
+         └── Personal de la Municipalidad

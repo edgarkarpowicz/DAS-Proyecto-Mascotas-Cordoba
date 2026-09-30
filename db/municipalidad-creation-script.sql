@@ -379,4 +379,44 @@ INSERT INTO publicaciones_adopcion (nro_publicacion, nro_reg_municipal, id_refug
 (1, 100004, 1, '2024-03-05', 'Rocco es un perro macho mestizo de 1 año y medio, muy enérgico, cariñoso, castrado y con plan sanitario al día. Se lleva excelente con otros perros y niños.', 'Hogar con patio cerrado, compromiso de seguimiento y paseos diarios. Firma de acta de adopción responsable.', 'https://mascotas.cordoba.gob.ar/uploads/adopciones/rocco_100004.jpg', 'Activa'),
 (2, 100005, 1, '2024-04-01', 'Mía es una gatita de 6 meses, juguetona y muy dulce, desparasitada y con primera dosis de vacunas. Lista para integrarse a una familia.', 'Depto o casa con protecciones en balcones/ventanas. Compromiso de castración al cumplir la edad adecuada.', 'https://mascotas.cordoba.gob.ar/uploads/adopciones/mia_100005.jpg', 'Activa');
 SET IDENTITY_INSERT publicaciones_adopcion OFF;
+GO
 
+-- =============================================================================
+-- PROCEDIMIENTOS ALMACENADOS (Stored Procedures)
+-- =============================================================================
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: autenticar_usuario_refugio (RF15)
+   Autentica a un usuario por CUIL y clave, validando que sea el responsable
+   de un refugio habilitado en el programa.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.autenticar_usuario_refugio
+(
+    @cuil  VARCHAR(20),
+    @clave VARCHAR(128)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Normalizar CUIL removiendo guiones y espacios si los hubiere
+    DECLARE @cuil_clean VARCHAR(20) = REPLACE(REPLACE(TRIM(@cuil), '-', ''), ' ', '');
+
+    SELECT idCiudadano           = c.id_ciudadano,
+           apellido              = c.apellido,
+           nombre                = c.nombre,
+           cuil                  = c.cuil,
+           correo                = c.correo,
+           perfil                = 'REFUGIO',
+           idRefugio             = r.id_refugio,
+           nombreRefugio         = COALESCE(r.nombre, r.razon_social),
+           razonSocialRefugio    = r.razon_social,
+           habilitacionMunicipal = r.habilitacion_municipal
+      FROM dbo.ciudadanos c (NOLOCK)
+      JOIN dbo.refugios r (NOLOCK)
+        ON r.id_responsable = c.id_ciudadano
+     WHERE (c.cuil = @cuil OR REPLACE(REPLACE(c.cuil, '-', ''), ' ', '') = @cuil_clean)
+       AND c.clave = @clave
+       AND c.habilitado = 1;
+END
+GO

@@ -29,6 +29,7 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <cxf.version>4.2.3</cxf.version>
     </properties>
     <dependencies>
         <!-- Spring MVC & DevTools -->
@@ -58,6 +59,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- AspectJ / AOP for POA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
+        </dependency>
+
         <!-- MS SQL Server & Spring Data JDBC -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -73,6 +80,7 @@
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-spring-boot-starter-jaxws</artifactId>
+            <version>${cxf.version}</version>
         </dependency>
     </dependencies>
 

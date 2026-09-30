@@ -1,10 +1,10 @@
 package ar.edu.ubp.das.mascotas;
 
-import ar.edu.ubp.das.mascotas.BE.LoginRequestBE;
-import ar.edu.ubp.das.mascotas.BE.LoginResponseBE;
-import ar.edu.ubp.das.mascotas.BE.UsuarioRefugioBE;
-import ar.edu.ubp.das.mascotas.repositories.AuthRepository;
-import ar.edu.ubp.das.mascotas.resources.AuthResource;
+import ar.edu.ubp.das.mascotas.BE.auth.LoginRequestBE;
+import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
+import ar.edu.ubp.das.mascotas.resources.auth.AuthResource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

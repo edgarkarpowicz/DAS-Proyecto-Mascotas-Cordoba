@@ -1,4 +1,4 @@
-package ar.edu.ubp.das.mascotas.BE;
+package ar.edu.ubp.das.mascotas.BE.auth;
 
 public class UsuarioRefugioBE {
 

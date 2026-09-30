@@ -1,9 +1,9 @@
-package ar.edu.ubp.das.mascotas.resources;
+package ar.edu.ubp.das.mascotas.resources.auth;
 
-import ar.edu.ubp.das.mascotas.BE.LoginRequestBE;
-import ar.edu.ubp.das.mascotas.BE.LoginResponseBE;
-import ar.edu.ubp.das.mascotas.BE.UsuarioRefugioBE;
-import ar.edu.ubp.das.mascotas.repositories.AuthRepository;
+import ar.edu.ubp.das.mascotas.BE.auth.LoginRequestBE;
+import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

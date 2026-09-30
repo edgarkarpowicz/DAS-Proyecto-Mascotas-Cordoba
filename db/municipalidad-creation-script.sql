@@ -420,3 +420,182 @@ BEGIN
        AND c.habilitado = 1;
 END
 GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_publicaciones_refugio (RF13)
+   Obtiene el listado de publicaciones de adopción administradas por un refugio,
+   incluyendo datos y rasgos principales de cada mascota para la pantalla principal.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_publicaciones_refugio
+(
+    @id_refugio INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT nroPublicacion        = p.nro_publicacion,
+           nroRegMunicipal       = p.nro_reg_municipal,
+           idRefugio             = p.id_refugio,
+           fechaPublicacion      = p.fecha_publicacion,
+           caracteristicasMascota= p.caracteristicas_mascota,
+           condicionAdopcion     = p.condicion_adopcion,
+           foto                  = p.foto,
+           estadoPublicacion     = p.estado_publicacion,
+           nombreMascota         = m.nombre,
+           sexo                  = m.sexo,
+           añoNacimiento         = m.[año_nacimiento],
+           edadAproximada        = (YEAR(GETDATE()) - m.[año_nacimiento]),
+           especie               = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica 
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK) 
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1), 
+               'Perro'
+           ),
+           raza                  = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica 
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK) 
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2), 
+               'Mestizo'
+           )
+      FROM dbo.publicaciones_adopcion p (NOLOCK)
+      JOIN dbo.mascotas m (NOLOCK)
+        ON m.nro_reg_municipal = p.nro_reg_municipal
+     WHERE p.id_refugio = @id_refugio
+     ORDER BY p.nro_publicacion DESC;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: ins_publicacion_adopcion (RF13 / RF06)
+   Registra una nueva publicación de adopción. Si la mascota no está registrada,
+   crea previamente el registro en dbo.mascotas y dbo.caracteristicas_mascotas (RF06).
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.ins_publicacion_adopcion
+(
+    @id_refugio               INT,
+    @nro_reg_municipal        INT = NULL,
+    @nombre_mascota           VARCHAR(64) = NULL,
+    @sexo                     CHAR(1) = 'M',
+    @año_nacimiento           INT = NULL,
+    @especie                  VARCHAR(64) = NULL,
+    @raza                     VARCHAR(64) = NULL,
+    @fecha_publicacion        DATE = NULL,
+    @caracteristicas_mascota  VARCHAR(MAX),
+    @condicion_adopcion       VARCHAR(MAX),
+    @foto                     VARCHAR(255) = NULL,
+    @estado_publicacion       VARCHAR(20) = 'Activa',
+    @nro_publicacion          INT OUTPUT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @nrm INT = @nro_reg_municipal;
+
+    -- Si la mascota no está previamente registrada en el sistema municipal,
+    -- realizamos el alta en el Registro Único asociada al refugio (RF06)
+    IF @nrm IS NULL OR @nrm <= 0
+    BEGIN
+        SELECT @nrm = COALESCE(MAX(nro_reg_municipal), 100000) + 1 FROM dbo.mascotas;
+
+        IF @año_nacimiento IS NULL
+            SET @año_nacimiento = YEAR(GETDATE());
+
+        INSERT INTO dbo.mascotas (nro_reg_municipal, nombre, sexo, [año_nacimiento], microchip, vive, id_responsable, id_refugio)
+        VALUES (@nrm, COALESCE(@nombre_mascota, 'Sin Nombre'), @sexo, @año_nacimiento, NULL, 1, NULL, @id_refugio);
+
+        -- Registrar Especie (cod_rasgo = 1)
+        IF @especie IS NOT NULL AND TRIM(@especie) <> ''
+        BEGIN
+            INSERT INTO dbo.caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracteristica, nro_valor_dominio, valor_caracteristica)
+            VALUES (@nrm, 1, 1, NULL, @especie);
+        END
+
+        -- Registrar Raza (cod_rasgo = 2)
+        IF @raza IS NOT NULL AND TRIM(@raza) <> ''
+        BEGIN
+            INSERT INTO dbo.caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracteristica, nro_valor_dominio, valor_caracteristica)
+            VALUES (@nrm, 2, 1, NULL, @raza);
+        END
+    END
+
+    IF @fecha_publicacion IS NULL
+        SET @fecha_publicacion = CAST(GETDATE() AS DATE);
+
+    INSERT INTO dbo.publicaciones_adopcion 
+        (nro_reg_municipal, id_refugio, fecha_publicacion, caracteristicas_mascota, condicion_adopcion, foto, estado_publicacion)
+    VALUES 
+        (@nrm, @id_refugio, @fecha_publicacion, @caracteristicas_mascota, @condicion_adopcion, @foto, @estado_publicacion);
+
+    SET @nro_publicacion = SCOPE_IDENTITY();
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: upd_estado_publicacion_adopcion (RF13)
+   Actualiza el estado de una publicación ('Activa', 'Pausada', 'Finalizada')
+   validando la pertenencia al refugio responsable.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.upd_estado_publicacion_adopcion
+(
+    @nro_publicacion   INT,
+    @id_refugio        INT,
+    @nuevo_estado      VARCHAR(20),
+    @filas_afectadas   INT OUTPUT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.publicaciones_adopcion
+       SET estado_publicacion = @nuevo_estado
+     WHERE nro_publicacion = @nro_publicacion
+       AND id_refugio = @id_refugio;
+
+    SET @filas_afectadas = @@ROWCOUNT;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_mascotas_disponibles_refugio (RF13)
+   Devuelve las mascotas del refugio que no tienen una publicación Activa.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_mascotas_disponibles_refugio
+(
+    @id_refugio INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT nroRegMunicipal = m.nro_reg_municipal,
+           nombre          = m.nombre,
+           sexo            = m.sexo,
+           añoNacimiento   = m.[año_nacimiento],
+           edadAproximada  = (YEAR(GETDATE()) - m.[año_nacimiento]),
+           especie         = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica 
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK) 
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1), 
+               'Perro'
+           ),
+           raza            = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica 
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK) 
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2), 
+               'Mestizo'
+           )
+      FROM dbo.mascotas m (NOLOCK)
+     WHERE m.id_refugio = @id_refugio
+       AND m.vive = 1
+       AND NOT EXISTS (
+           SELECT 1 
+             FROM dbo.publicaciones_adopcion p (NOLOCK)
+            WHERE p.nro_reg_municipal = m.nro_reg_municipal
+              AND p.estado_publicacion = 'Activa'
+       )
+     ORDER BY m.nombre;
+END
+GO
+

@@ -1,6 +1,6 @@
-package ar.edu.ubp.das.mascotas.repositories;
+package ar.edu.ubp.das.mascotas.repositories.auth;
 
-import ar.edu.ubp.das.mascotas.BE.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;

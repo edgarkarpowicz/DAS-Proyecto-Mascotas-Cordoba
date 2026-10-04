@@ -4,9 +4,14 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
@@ -15,6 +20,10 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 
     @Value("${security.rest.api-key:${security.api-key:}}")
     private String configuredApiKey;
+
+    @Autowired
+    @Qualifier("handlerExceptionResolver")
+    private HandlerExceptionResolver resolver;
 
     @Override
     protected void doFilterInternal(
@@ -29,25 +38,33 @@ public class ApiKeyFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Si la clave no está configurada, permitir el paso (desarrollo flexible)
-        if (configuredApiKey == null || configuredApiKey.trim().isEmpty()) {
+        try {
+            validarApiKey(request);
             filterChain.doFilter(request, response);
+        } catch (Exception ex) {
+            // Delega la excepción al GlobalExceptionHandler (@RestControllerAdvice)
+            resolver.resolveException(request, response, null, ex);
+        }
+    }
+
+    /**
+     * Valida la presencia y exactitud de la API Key requerida.
+     * Lanza ResponseStatusException (UNAUTHORIZED) si la clave no coincide o no está provista.
+     */
+    private void validarApiKey(HttpServletRequest request) {
+        // Si no está configurada la clave en el servidor, se permite el paso (modo desarrollo)
+        if (configuredApiKey == null || configuredApiKey.trim().isEmpty()) {
             return;
         }
 
         String apiKey = request.getHeader("X-API-Key");
-        if (apiKey == null) {
+        if (apiKey == null || apiKey.trim().isEmpty()) {
             apiKey = request.getHeader("API-Key");
         }
 
-        if (!configuredApiKey.equals(apiKey)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"codigoRespuesta\": -1, \"mensajeRespuesta\": \"API Key inválida o no provista\"}");
-            return;
+        if (apiKey == null || apiKey.trim().isEmpty() || !configuredApiKey.equals(apiKey.trim())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "API Key inválida o no provista");
         }
-
-        filterChain.doFilter(request, response);
     }
 
 }

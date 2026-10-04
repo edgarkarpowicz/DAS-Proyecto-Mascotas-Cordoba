@@ -2,9 +2,12 @@ package ar.edu.ubp.das.mascotas.repositories.auth;
 
 import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,17 +23,25 @@ public class AuthRepository {
      * a un refugio habilitado en el programa mediante el procedimiento almacenado.
      */
     public Optional<UsuarioRefugioBE> autenticarRefugio(String cuil, String clave) {
-        List<UsuarioRefugioBE> resultados = jdbcTemplate.query(
-                "exec dbo.autenticar_usuario_refugio ?, ?",
-                new BeanPropertyRowMapper<>(UsuarioRefugioBE.class),
-                cuil,
-                clave
-        );
+        try {
+            List<UsuarioRefugioBE> resultados = jdbcTemplate.query(
+                    "exec dbo.autenticar_usuario_refugio ?, ?",
+                    new BeanPropertyRowMapper<>(UsuarioRefugioBE.class),
+                    cuil,
+                    clave
+            );
 
-        if (resultados.isEmpty()) {
-            return Optional.empty();
+            if (resultados.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(resultados.get(0));
+        } catch (DataAccessException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error de base de datos al autenticar usuario: " + ex.getMessage(),
+                    ex
+            );
         }
-        return Optional.of(resultados.get(0));
     }
 
 }

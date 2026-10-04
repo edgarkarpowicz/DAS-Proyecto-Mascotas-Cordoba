@@ -10,7 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -52,24 +54,24 @@ class AuthResourceTests {
     }
 
     @Test
-    void testLoginInvalido() {
+    void testLoginInvalidoLanzaException() {
         when(authRepository.autenticarRefugio("20259990005", "wrongpass"))
                 .thenReturn(Optional.empty());
 
         LoginRequestBE req = new LoginRequestBE("API_KEY", "20259990005", "wrongpass");
-        ResponseEntity<LoginResponseBE> response = authResource.login(null, req);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authResource.login(null, req));
 
-        assertNotNull(response.getBody());
-        assertEquals(-1, response.getBody().getCodigoRespuesta());
-        assertNull(response.getBody().getToken());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("Credenciales inválidas"));
     }
 
     @Test
-    void testLoginParametrosVacios() {
+    void testLoginParametrosVaciosLanzaException() {
         LoginRequestBE req = new LoginRequestBE("API_KEY", "", "");
-        ResponseEntity<LoginResponseBE> response = authResource.login(null, req);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authResource.login(null, req));
 
-        assertNotNull(response.getBody());
-        assertEquals(-1, response.getBody().getCodigoRespuesta());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("obligatorios"));
     }
+
 }

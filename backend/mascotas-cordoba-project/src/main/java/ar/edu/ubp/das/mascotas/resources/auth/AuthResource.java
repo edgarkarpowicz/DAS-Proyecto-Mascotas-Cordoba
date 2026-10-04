@@ -5,10 +5,11 @@ import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
 import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -28,25 +29,15 @@ public class AuthResource {
             @RequestHeader(value = "X-API-Key", required = false) String apiKeyHeader,
             @RequestBody LoginRequestBE request) {
 
-        if (request == null || request.getCuil() == null || request.getClave() == null ||
-                request.getCuil().trim().isEmpty() || request.getClave().trim().isEmpty()) {
-            return ResponseEntity.ok(
-                    LoginResponseBE.error("El CUIL y la clave son obligatorios para iniciar sesión")
-            );
-        }
+        validarLoginRequest(request);
 
-        Optional<UsuarioRefugioBE> usuarioOpt = authRepository.autenticarRefugio(
+        UsuarioRefugioBE usuario = authRepository.autenticarRefugio(
                 request.getCuil().trim(),
                 request.getClave().trim()
-        );
-
-        if (usuarioOpt.isEmpty()) {
-            return ResponseEntity.ok(
-                    LoginResponseBE.error("Credenciales inválidas o el usuario no pertenece a un refugio habilitado")
-            );
-        }
-
-        UsuarioRefugioBE usuario = usuarioOpt.get();
+        ).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Credenciales inválidas o el usuario no pertenece a un refugio habilitado"
+        ));
 
         // Generar token único de sesión (32 caracteres hexadecimales)
         String token = UUID.randomUUID().toString().replace("-", "");
@@ -54,6 +45,14 @@ public class AuthResource {
         return ResponseEntity.ok(
                 LoginResponseBE.exitoso(token, usuario)
         );
+    }
+
+    private void validarLoginRequest(LoginRequestBE request) {
+        if (request == null ||
+                request.getCuil() == null || request.getCuil().trim().isEmpty() ||
+                request.getClave() == null || request.getClave().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El CUIL y la clave son obligatorios para iniciar sesión");
+        }
     }
 
 }

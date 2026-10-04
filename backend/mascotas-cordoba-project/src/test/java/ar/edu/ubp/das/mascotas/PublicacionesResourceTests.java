@@ -11,7 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -71,6 +73,18 @@ class PublicacionesResourceTests {
     }
 
     @Test
+    void testCrearPublicacionInvalidaLanzaException() {
+        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
+        req.setIdRefugio(null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesResource.crearPublicacion(null, req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("obligatorio"));
+    }
+
+    @Test
     void testActualizarEstadoExitoso() {
         CambioEstadoRequestBE req = new CambioEstadoRequestBE(1, "Pausada");
 
@@ -86,13 +100,14 @@ class PublicacionesResourceTests {
     }
 
     @Test
-    void testActualizarEstadoInvalido() {
+    void testActualizarEstadoInvalidoLanzaException() {
         CambioEstadoRequestBE req = new CambioEstadoRequestBE(1, "Inexistente");
 
-        ResponseEntity<AdministrarPublicacionResponseBE> response = publicacionesResource.actualizarEstado(1, req);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesResource.actualizarEstado(1, req));
 
-        assertNotNull(response.getBody());
-        assertEquals(-1, response.getBody().getCodigoRespuesta());
-        assertTrue(response.getBody().getMensajeRespuesta().contains("Estado no válido"));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("Estado no válido"));
     }
+
 }

@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -19,7 +18,16 @@ public class PublicacionesResource {
     @Autowired
     private PublicacionesRepository publicacionesRepository;
 
-    private static final List<String> ESTADOS_VALIDOS = Arrays.asList("Activa", "Pausada", "Finalizada");
+    /**
+     * RF13 - Catálogo de estados válidos para publicaciones de adopción.
+     * Retorna la lista dinámica de estados configurados en la base de datos.
+     */
+    @GetMapping("/publicaciones/estados")
+    public ResponseEntity<List<EstadoPublicacionBE>> getEstadosPublicacion() {
+        return ResponseEntity.ok(
+                publicacionesRepository.getEstadosPublicacion()
+        );
+    }
 
     /**
      * RF13 - Obtiene todas las publicaciones de adopción administradas por el refugio.
@@ -53,7 +61,7 @@ public class PublicacionesResource {
 
     /**
      * RF13 - Operación: AdministrarPublicacion() [Cambio de estado]
-     * Permite transicionar el estado de una publicación entre: Activa, Pausada y Finalizada.
+     * Permite transicionar el estado de una publicación según los estados válidos registrados en la base de datos.
      */
     @PutMapping("/publicaciones/{nroPublicacion}/estado")
     public ResponseEntity<AdministrarPublicacionResponseBE> actualizarEstado(
@@ -111,6 +119,16 @@ public class PublicacionesResource {
         if (!tieneMascotaRegistrada && !tieneNombreMascota) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe especificar una mascota existente o ingresar los datos de una nueva mascota");
         }
+
+        if (request.getEstadoPublicacion() != null && !request.getEstadoPublicacion().trim().isEmpty()) {
+            String estado = request.getEstadoPublicacion().trim();
+            if (!publicacionesRepository.esEstadoValido(estado)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Estado no válido para la nueva publicación: " + estado
+                );
+            }
+        }
     }
 
     private void validarActualizarEstado(int nroPublicacion, CambioEstadoRequestBE request) {
@@ -124,8 +142,11 @@ public class PublicacionesResource {
         }
 
         String nuevoEstado = request.getNuevoEstado().trim();
-        if (!ESTADOS_VALIDOS.contains(nuevoEstado)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado no válido. Los estados permitidos son: Activa, Pausada, Finalizada");
+        if (!publicacionesRepository.esEstadoValido(nuevoEstado)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Estado no válido para la publicación: " + nuevoEstado
+            );
         }
     }
 

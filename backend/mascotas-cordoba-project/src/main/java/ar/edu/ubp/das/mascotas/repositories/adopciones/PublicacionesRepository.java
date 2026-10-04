@@ -1,5 +1,6 @@
 package ar.edu.ubp.das.mascotas.repositories.adopciones;
 
+import ar.edu.ubp.das.mascotas.BE.adopciones.EstadoPublicacionBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.MascotaDisponibleBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.NuevaPublicacionRequestBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.PublicacionAdopcionBE;
@@ -152,6 +153,48 @@ public class PublicacionesRepository {
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Error al consultar mascotas disponibles en la base de datos: " + ex.getMessage(),
+                    ex
+            );
+        }
+    }
+
+    /**
+     * Retorna todos los estados válidos configurados en la base de datos para publicaciones de adopción.
+     */
+    public List<EstadoPublicacionBE> getEstadosPublicacion() {
+        try {
+            return jdbcTemplate.query(
+                    "exec dbo.get_estados_publicacion",
+                    new BeanPropertyRowMapper<>(EstadoPublicacionBE.class)
+            );
+        } catch (DataAccessException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error de base de datos al obtener los estados de publicación: " + ex.getMessage(),
+                    ex
+            );
+        }
+    }
+
+    /**
+     * Verifica dinámicamente contra la base de datos si un código de estado existe y es válido.
+     */
+    public boolean esEstadoValido(String estado) {
+        if (estado == null || estado.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM dbo.estados_publicacion WHERE cod_estado = ?",
+                    Integer.class,
+                    estado.trim()
+            );
+            return count != null && count > 0;
+        } catch (DataAccessException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error de base de datos al validar el estado de la publicación: " + ex.getMessage(),
                     ex
             );
         }

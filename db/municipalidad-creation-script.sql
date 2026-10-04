@@ -193,6 +193,15 @@ CREATE TABLE informacion_sanitaria (
 );
 
 -- =============================================================================
+-- TABLA: estados_publicacion
+-- =============================================================================
+CREATE TABLE estados_publicacion (
+    cod_estado VARCHAR(20) NOT NULL,
+    descripcion VARCHAR(128) NOT NULL,
+    CONSTRAINT pk_estados_publicacion PRIMARY KEY (cod_estado)
+);
+
+-- =============================================================================
 -- TABLA: publicaciones_adopcion
 -- =============================================================================
 CREATE TABLE publicaciones_adopcion (
@@ -205,7 +214,8 @@ CREATE TABLE publicaciones_adopcion (
     foto VARCHAR(255) NULL,
     estado_publicacion VARCHAR(20) NOT NULL,
     CONSTRAINT pk_publicaciones_adopcion PRIMARY KEY (nro_publicacion),
-    CONSTRAINT chk_publicaciones_estado CHECK (estado_publicacion IN ('Activa', 'Pausada', 'Finalizada')),
+    CONSTRAINT fk_pub_adopcion_estados FOREIGN KEY (estado_publicacion)
+        REFERENCES estados_publicacion(cod_estado),
     CONSTRAINT fk_pub_adopcion_mascotas FOREIGN KEY (nro_reg_municipal)
         REFERENCES mascotas(nro_reg_municipal)
         ON DELETE CASCADE,
@@ -373,7 +383,13 @@ INSERT INTO informacion_sanitaria (nro_reg_municipal, nro_registro, fecha_atenci
 (100004, 1, '2024-02-18', 1, 'Vacunación quíntuple canina y antirrábica de ingreso al refugio', '2025-02-18', 2, 3),
 (100004, 2, '2024-03-01', 4, 'Castración quirúrgica previa a habilitación de adopción', NULL, 2, 3);
 
--- 13. Publicaciones de Adopción (Tabla Intermedia: Mascotas <-> Refugios)
+-- 13. Estados de Publicaciones de Adopción
+INSERT INTO estados_publicacion (cod_estado, descripcion) VALUES
+('Activa', 'Publicación visible y disponible para adopción'),
+('Pausada', 'Publicación pausada temporalmente por el refugio'),
+('Finalizada', 'Proceso de adopción concretado exitosamente');
+
+-- 14. Publicaciones de Adopción (Tabla Intermedia: Mascotas <-> Refugios)
 SET IDENTITY_INSERT publicaciones_adopcion ON;
 INSERT INTO publicaciones_adopcion (nro_publicacion, nro_reg_municipal, id_refugio, fecha_publicacion, caracteristicas_mascota, condicion_adopcion, foto, estado_publicacion) VALUES
 (1, 100004, 1, '2024-03-05', 'Rocco es un perro macho mestizo de 1 año y medio, muy enérgico, cariñoso, castrado y con plan sanitario al día. Se lleva excelente con otros perros y niños.', 'Hogar con patio cerrado, compromiso de seguimiento y paseos diarios. Firma de acta de adopción responsable.', 'https://mascotas.cordoba.gob.ar/uploads/adopciones/rocco_100004.jpg', 'Activa'),
@@ -442,6 +458,7 @@ BEGIN
            condicionAdopcion     = p.condicion_adopcion,
            foto                  = p.foto,
            estadoPublicacion     = p.estado_publicacion,
+           descripcionEstado     = ep.descripcion,
            nombreMascota         = m.nombre,
            sexo                  = m.sexo,
            añoNacimiento         = m.[año_nacimiento],
@@ -461,6 +478,8 @@ BEGIN
       FROM dbo.publicaciones_adopcion p (NOLOCK)
       JOIN dbo.mascotas m (NOLOCK)
         ON m.nro_reg_municipal = p.nro_reg_municipal
+      JOIN dbo.estados_publicacion ep (NOLOCK)
+        ON ep.cod_estado = p.estado_publicacion
      WHERE p.id_refugio = @id_refugio
      ORDER BY p.nro_publicacion DESC;
 END
@@ -522,6 +541,17 @@ BEGIN
 
     IF @fecha_publicacion IS NULL
         SET @fecha_publicacion = CAST(GETDATE() AS DATE);
+
+    -- Si se publica en estado 'Activa', verificar que la mascota no tenga ya otra publicación activa
+    IF @estado_publicacion = 'Activa' AND EXISTS (
+        SELECT 1 FROM dbo.publicaciones_adopcion (NOLOCK)
+         WHERE nro_reg_municipal = @nrm 
+           AND estado_publicacion = 'Activa'
+    )
+    BEGIN
+        RAISERROR('La mascota seleccionada ya cuenta con una publicación activa de adopción.', 16, 1);
+        RETURN;
+    END
 
     INSERT INTO dbo.publicaciones_adopcion 
         (nro_reg_municipal, id_refugio, fecha_publicacion, caracteristicas_mascota, condicion_adopcion, foto, estado_publicacion)
@@ -596,6 +626,22 @@ BEGIN
               AND p.estado_publicacion = 'Activa'
        )
      ORDER BY m.nombre;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_estados_publicacion (RF13)
+   Devuelve el catálogo de estados válidos para publicaciones de adopción.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_estados_publicacion
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT codEstado   = cod_estado,
+           descripcion = descripcion
+      FROM dbo.estados_publicacion (NOLOCK)
+     ORDER BY cod_estado;
 END
 GO
 

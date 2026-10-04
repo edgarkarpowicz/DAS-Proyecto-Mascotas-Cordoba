@@ -1,9 +1,6 @@
 package ar.edu.ubp.das.mascotas;
 
-import ar.edu.ubp.das.mascotas.BE.adopciones.AdministrarPublicacionResponseBE;
-import ar.edu.ubp.das.mascotas.BE.adopciones.CambioEstadoRequestBE;
-import ar.edu.ubp.das.mascotas.BE.adopciones.NuevaPublicacionRequestBE;
-import ar.edu.ubp.das.mascotas.BE.adopciones.PublicacionAdopcionBE;
+import ar.edu.ubp.das.mascotas.BE.adopciones.*;
 import ar.edu.ubp.das.mascotas.repositories.adopciones.PublicacionesRepository;
 import ar.edu.ubp.das.mascotas.resources.adopciones.PublicacionesResource;
 import org.junit.jupiter.api.Test;
@@ -30,6 +27,22 @@ class PublicacionesResourceTests {
 
     @InjectMocks
     private PublicacionesResource publicacionesResource;
+
+    @Test
+    void testGetEstadosPublicacion() {
+        EstadoPublicacionBE e1 = new EstadoPublicacionBE("Activa", "Visible");
+        EstadoPublicacionBE e2 = new EstadoPublicacionBE("Pausada", "Suspendida");
+        EstadoPublicacionBE e3 = new EstadoPublicacionBE("Finalizada", "Adoptado");
+
+        when(publicacionesRepository.getEstadosPublicacion())
+                .thenReturn(Arrays.asList(e1, e2, e3));
+
+        ResponseEntity<List<EstadoPublicacionBE>> response = publicacionesResource.getEstadosPublicacion();
+
+        assertNotNull(response.getBody());
+        assertEquals(3, response.getBody().size());
+        assertEquals("Activa", response.getBody().get(0).getCodEstado());
+    }
 
     @Test
     void testListarPublicaciones() {
@@ -61,6 +74,8 @@ class PublicacionesResourceTests {
         req.setCaracteristicasMascota("Cariñoso y amigable");
         req.setCondicionAdopcion("Patio cerrado");
 
+        when(publicacionesRepository.esEstadoValido("Activa"))
+                .thenReturn(true);
         when(publicacionesRepository.crearPublicacion(any(NuevaPublicacionRequestBE.class)))
                 .thenReturn(50);
 
@@ -85,9 +100,28 @@ class PublicacionesResourceTests {
     }
 
     @Test
+    void testCrearPublicacionEstadoInvalidoLanzaException() {
+        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
+        req.setIdRefugio(1);
+        req.setNroRegMunicipal(100004);
+        req.setEstadoPublicacion("EstadoFicticio");
+
+        when(publicacionesRepository.esEstadoValido("EstadoFicticio"))
+                .thenReturn(false);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesResource.crearPublicacion(null, req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("Estado no válido"));
+    }
+
+    @Test
     void testActualizarEstadoExitoso() {
         CambioEstadoRequestBE req = new CambioEstadoRequestBE(1, "Pausada");
 
+        when(publicacionesRepository.esEstadoValido("Pausada"))
+                .thenReturn(true);
         when(publicacionesRepository.actualizarEstado(1, 1, "Pausada"))
                 .thenReturn(true);
 
@@ -102,6 +136,9 @@ class PublicacionesResourceTests {
     @Test
     void testActualizarEstadoInvalidoLanzaException() {
         CambioEstadoRequestBE req = new CambioEstadoRequestBE(1, "Inexistente");
+
+        when(publicacionesRepository.esEstadoValido("Inexistente"))
+                .thenReturn(false);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> publicacionesResource.actualizarEstado(1, req));

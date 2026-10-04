@@ -10,6 +10,7 @@ public class PublicacionAdopcionBE {
     private String condicionAdopcion;
     private String foto;
     private String estadoPublicacion;
+    private String descripcionEstado;
     private String nombreMascota;
     private String sexo;
     private Integer añoNacimiento;
@@ -82,6 +83,14 @@ public class PublicacionAdopcionBE {
 
     public void setEstadoPublicacion(String estadoPublicacion) {
         this.estadoPublicacion = estadoPublicacion;
+    }
+
+    public String getDescripcionEstado() {
+        return descripcionEstado;
+    }
+
+    public void setDescripcionEstado(String descripcionEstado) {
+        this.descripcionEstado = descripcionEstado;
     }
 
     public String getNombreMascota() {

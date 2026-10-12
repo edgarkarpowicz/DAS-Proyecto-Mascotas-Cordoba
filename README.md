@@ -95,6 +95,10 @@ El repositorio cuenta con la especificación de dos modelos lógicos fundamental
 ```text
 DAS-Proyecto-Mascotas-Cordoba/
 │
+├── backend/mascotas-cordoba-project/  # Aplicación Backend Spring Boot (REST + SOAP + AOP)
+│   ├── pom.xml                        # Dependencias (Java 17, Spring Boot, Apache CXF, AspectJ, MSSQL)
+│   └── src/                           # Código fuente (Java, Recursos, Tests)
+├── frontend/                          # Portal Cliente Web (Angular)
 ├── db/                                # Scripts SQL, esquemas DDL y datos de prueba para MS SQL Server
 ├── docs/                              # Documentación del proyecto
 │   ├── proyecto/                      # Documentación oficial de la cátedra
@@ -104,10 +108,6 @@ DAS-Proyecto-Mascotas-Cordoba/
 │   └── requerimientos_funcionales/    # Detalle y análisis por requerimiento funcional
 │       ├── obligatorios/              # RF obligatorios de la primera versión
 │       └── no_obligatorios/           # RF complementarios
-│
-├── mascotas-cordoba-project/          # Aplicación Backend Spring Boot (Maven)
-│   ├── pom.xml                        # Configuración de dependencias (Java 17, Spring Boot, CXF, MSSQL)
-│   └── src/                           # Código fuente (Java, Recursos, Tests)
 │
 ├── .gitignore
 ├── LICENSE
@@ -125,9 +125,9 @@ DAS-Proyecto-Mascotas-Cordoba/
 - **Node.js** (v18+) y **Angular CLI** (para el portal cliente).
 
 ### Ejecución del Backend
-1. Navegar al directorio del proyecto:
+1. Navegar al directorio del backend:
    ```bash
-   cd mascotas-cordoba-project
+   cd backend/mascotas-cordoba-project
    ```
 2. Configurar la conexión a la base de datos en `src/main/resources/application.properties` (o variables de entorno correspondientes).
 3. Compilar y ejecutar la aplicación con Maven:
@@ -138,6 +138,335 @@ DAS-Proyecto-Mascotas-Cordoba/
    ```cmd
    mvnw.cmd spring-boot:run
    ```
+
+---
+
+## 🔌 Ejemplos de Invocación de Servicios (REST y SOAP / XML)
+
+El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **SOAP (XML)** sobre el puerto `8080`.
+
+### 🔐 Seguridad y Autenticación
+* **REST:** Se envía la cabecera HTTP `X-API-Key`.  
+  *Clave por defecto:* `UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+* **SOAP:** Se incluye el elemento `<apiKey>` en la cabecera SOAP (`<soapenv:Header>`).  
+  *Clave por defecto:* `UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT`
+
+---
+
+### 🌐 1. Servicios RESTful (JSON)
+
+#### A. Autenticación de Refugio (RF15)
+* **URL:** `POST http://localhost:8080/auth/login`
+* **Headers:**
+  * `Content-Type: application/json`
+  * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+* **Request Body:**
+  ```json
+  {
+    "cuil": "20-12345678-9",
+    "clave": "secret123"
+  }
+  ```
+* **Response Body (200 OK):**
+  ```json
+  {
+    "codigoRespuesta": 1,
+    "mensajeRespuesta": "Usuario autenticado exitosamente",
+    "token": "4a7b9c2e1f3d4a5b6c7d8e9f0a1b2c3d",
+    "usuario": {
+      "idCiudadano": 5,
+      "apellido": "Pérez",
+      "nombre": "Juan",
+      "cuil": "20-12345678-9",
+      "correo": "juan.perez@refugiohuellitas.org",
+      "perfil": "Refugio",
+      "idRefugio": 1,
+      "nombreRefugio": "Refugio Huellitas Felices",
+      "razonSocialRefugio": "Asociación Civil Huellitas",
+      "habilitacionMunicipal": "HAB-REF-2024-001"
+    }
+  }
+  ```
+
+#### B. Catálogo de Estados de Publicación (RF13)
+* **URL:** `GET http://localhost:8080/refugios/publicaciones/estados`
+* **Headers:**
+  * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+* **Response Body (200 OK):**
+  ```json
+  [
+    { "codEstado": "Activa", "nomEstado": "Publicación activa para adopción" },
+    { "codEstado": "Pausada", "nomEstado": "Publicación temporalmente en pausa" },
+    { "codEstado": "Finalizada", "nomEstado": "Adopción concretada o retirada" }
+  ]
+  ```
+
+#### C. Consultar Publicaciones de un Refugio (RF13)
+* **URL:** `GET http://localhost:8080/refugios/1/publicaciones`
+* **Headers:**
+  * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+* **Response Body (200 OK):**
+  ```json
+  [
+    {
+      "nroPublicacion": 101,
+      "nroRegMunicipal": 5001,
+      "nombreMascota": "Milo",
+      "sexo": "M",
+      "especie": "Canino",
+      "raza": "Mestizo",
+      "estadoPublicacion": "Activa",
+      "fechaPublicacion": "2024-10-01"
+    }
+  ]
+  ```
+
+#### D. Crear Publicación de Adopción (RF13)
+* **URL:** `POST http://localhost:8080/refugios/publicaciones`
+* **Headers:**
+  * `Content-Type: application/json`
+  * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+* **Request Body:**
+  ```json
+  {
+    "idRefugio": 1,
+    "nroRegMunicipal": 5001,
+    "nombreMascota": "Milo",
+    "sexo": "M",
+    "añoNacimiento": 2022,
+    "especie": "Canino",
+    "raza": "Mestizo",
+    "caracteristicasMascota": "Dócil, vacunado y castrado",
+    "condicionAdopcion": "Patio cerrado y compromiso de seguimiento",
+    "foto": "https://mascotascordoba.gob.ar/fotos/milo.jpg",
+    "estadoPublicacion": "Activa"
+  }
+  ```
+* **Response Body (200 OK):**
+  ```json
+  {
+    "codigoRespuesta": 1,
+    "mensajeRespuesta": "Publicación de adopción creada exitosamente",
+    "nroPublicacion": 102
+  }
+  ```
+
+#### E. Actualizar Estado de Publicación (RF13)
+* **URL:** `PUT http://localhost:8080/refugios/publicaciones/102/estado`
+* **Headers:**
+  * `Content-Type: application/json`
+  * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+* **Request Body:**
+  ```json
+  {
+    "idRefugio": 1,
+    "nuevoEstado": "Finalizada"
+  }
+  ```
+* **Response Body (200 OK):**
+  ```json
+  {
+    "codigoRespuesta": 0,
+    "mensajeRespuesta": "Estado de publicación actualizado a Finalizada",
+    "nroPublicacion": 102
+  }
+  ```
+
+---
+
+### 📦 2. Servicios Web SOAP / XML (Apache CXF)
+
+#### Contratos WSDL Disponibles (Inspección en Navegador):
+* **Auth Service WSDL:** `http://localhost:8080/services/auth?wsdl`
+* **Publicaciones Service WSDL:** `http://localhost:8080/services/publicaciones?wsdl`
+
+#### A. Autenticación de Refugio (SOAP)
+* **URL:** `POST http://localhost:8080/services/auth`
+* **Headers:**
+  * `Content-Type: text/xml;charset=UTF-8`
+  * `SOAPAction: ""`
+* **Request Envelope:**
+  ```xml
+  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                    xmlns:auth="http://auth.services.mascotas.das.ubp.edu.ar/">
+     <soapenv:Header>
+        <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+     </soapenv:Header>
+     <soapenv:Body>
+        <auth:login>
+           <request>
+              <cuil>20-12345678-9</cuil>
+              <clave>secret123</clave>
+           </request>
+        </auth:login>
+     </soapenv:Body>
+  </soapenv:Envelope>
+  ```
+* **Response Envelope:**
+  ```xml
+  <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+     <soap:Body>
+        <ns2:loginResponse xmlns:ns2="http://auth.services.mascotas.das.ubp.edu.ar/">
+           <response>
+              <codigoRespuesta>1</codigoRespuesta>
+              <mensajeRespuesta>Usuario autenticado exitosamente</mensajeRespuesta>
+              <token>4a7b9c2e1f3d4a5b6c7d8e9f0a1b2c3d</token>
+              <usuario>
+                 <idCiudadano>5</idCiudadano>
+                 <nombre>Juan</nombre>
+                 <apellido>Pérez</apellido>
+                 <cuil>20-12345678-9</cuil>
+                 <correo>juan.perez@refugiohuellitas.org</correo>
+                 <perfil>Refugio</perfil>
+                 <idRefugio>1</idRefugio>
+                 <nombreRefugio>Refugio Huellitas Felices</nombreRefugio>
+                 <razonSocialRefugio>Asociación Civil Huellitas</razonSocialRefugio>
+                 <habilitacionMunicipal>HAB-REF-2024-001</habilitacionMunicipal>
+              </usuario>
+           </response>
+        </ns2:loginResponse>
+     </soap:Body>
+  </soap:Envelope>
+  ```
+
+#### B. Consultar Estados de Publicación (SOAP)
+* **URL:** `POST http://localhost:8080/services/publicaciones`
+* **Headers:**
+  * `Content-Type: text/xml;charset=UTF-8`
+* **Request Envelope:**
+  ```xml
+  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                    xmlns:adop="http://adopciones.services.mascotas.das.ubp.edu.ar/">
+     <soapenv:Header>
+        <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+     </soapenv:Header>
+     <soapenv:Body>
+        <adop:getEstadosPublicacion/>
+     </soapenv:Body>
+  </soapenv:Envelope>
+  ```
+* **Response Envelope:**
+  ```xml
+  <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+     <soap:Body>
+        <ns2:getEstadosPublicacionResponse xmlns:ns2="http://adopciones.services.mascotas.das.ubp.edu.ar/">
+           <estado>
+              <codEstado>Activa</codEstado>
+              <nomEstado>Publicación activa para adopción</nomEstado>
+           </estado>
+           <estado>
+              <codEstado>Pausada</codEstado>
+              <nomEstado>Publicación temporalmente en pausa</nomEstado>
+           </estado>
+           <estado>
+              <codEstado>Finalizada</codEstado>
+              <nomEstado>Adopción concretada o retirada</nomEstado>
+           </estado>
+        </ns2:getEstadosPublicacionResponse>
+     </soap:Body>
+  </soap:Envelope>
+  ```
+
+#### C. Consultar Publicaciones de un Refugio (SOAP)
+* **URL:** `POST http://localhost:8080/services/publicaciones`
+* **Headers:**
+  * `Content-Type: text/xml;charset=UTF-8`
+* **Request Envelope:**
+  ```xml
+  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                    xmlns:adop="http://adopciones.services.mascotas.das.ubp.edu.ar/">
+     <soapenv:Header>
+        <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+     </soapenv:Header>
+     <soapenv:Body>
+        <adop:getPublicacionesPorRefugio>
+           <idRefugio>1</idRefugio>
+        </adop:getPublicacionesPorRefugio>
+     </soapenv:Body>
+  </soapenv:Envelope>
+  ```
+
+#### D. Crear Publicación de Adopción (SOAP)
+* **URL:** `POST http://localhost:8080/services/publicaciones`
+* **Headers:**
+  * `Content-Type: text/xml;charset=UTF-8`
+* **Request Envelope:**
+  ```xml
+  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                    xmlns:adop="http://adopciones.services.mascotas.das.ubp.edu.ar/">
+     <soapenv:Header>
+        <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+     </soapenv:Header>
+     <soapenv:Body>
+        <adop:crearPublicacion>
+           <request>
+              <idRefugio>1</idRefugio>
+              <nroRegMunicipal>5001</nroRegMunicipal>
+              <nombreMascota>Milo</nombreMascota>
+              <sexo>M</sexo>
+              <añoNacimiento>2022</añoNacimiento>
+              <especie>Canino</especie>
+              <raza>Mestizo</raza>
+              <caracteristicasMascota>Dócil, vacunado y castrado</caracteristicasMascota>
+              <condicionAdopcion>Patio cerrado y compromiso de seguimiento</condicionAdopcion>
+              <foto>https://mascotascordoba.gob.ar/fotos/milo.jpg</foto>
+              <estadoPublicacion>Activa</estadoPublicacion>
+           </request>
+        </adop:crearPublicacion>
+     </soapenv:Body>
+  </soapenv:Envelope>
+  ```
+* **Response Envelope:**
+  ```xml
+  <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+     <soap:Body>
+        <ns2:crearPublicacionResponse xmlns:ns2="http://adopciones.services.mascotas.das.ubp.edu.ar/">
+           <response>
+              <codigoRespuesta>1</codigoRespuesta>
+              <mensajeRespuesta>Publicación de adopción creada exitosamente</mensajeRespuesta>
+              <nroPublicacion>103</nroPublicacion>
+           </response>
+        </ns2:crearPublicacionResponse>
+     </soap:Body>
+  </soap:Envelope>
+  ```
+
+#### E. Actualizar Estado de Publicación (SOAP)
+* **URL:** `POST http://localhost:8080/services/publicaciones`
+* **Headers:**
+  * `Content-Type: text/xml;charset=UTF-8`
+* **Request Envelope:**
+  ```xml
+  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                    xmlns:adop="http://adopciones.services.mascotas.das.ubp.edu.ar/">
+     <soapenv:Header>
+        <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+     </soapenv:Header>
+     <soapenv:Body>
+        <adop:actualizarEstado>
+           <nroPublicacion>103</nroPublicacion>
+           <request>
+              <idRefugio>1</idRefugio>
+              <nuevoEstado>Finalizada</nuevoEstado>
+           </request>
+        </adop:actualizarEstado>
+     </soapenv:Body>
+  </soapenv:Envelope>
+  ```
+* **Response Envelope:**
+  ```xml
+  <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+     <soap:Body>
+        <ns2:actualizarEstadoResponse xmlns:ns2="http://adopciones.services.mascotas.das.ubp.edu.ar/">
+           <response>
+              <codigoRespuesta>0</codigoRespuesta>
+              <mensajeRespuesta>Estado de publicación actualizado a Finalizada</mensajeRespuesta>
+              <nroPublicacion>103</nroPublicacion>
+           </response>
+        </ns2:actualizarEstadoResponse>
+     </soap:Body>
+  </soap:Envelope>
+  ```
 
 ---
 

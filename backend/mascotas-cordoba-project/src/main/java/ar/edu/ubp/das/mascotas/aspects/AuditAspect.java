@@ -15,7 +15,7 @@ public class AuditAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditAspect.class);
 
-    @Pointcut("execution(* ar.edu.ubp.das.mascotas.resources..*(..))")
+    @Pointcut("execution(* ar.edu.ubp.das.mascotas.resources..*(..)) || execution(* ar.edu.ubp.das.mascotas.services..*(..))")
     public void resourceMethods() {
     }
 

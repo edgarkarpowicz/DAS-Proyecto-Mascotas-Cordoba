@@ -38,6 +38,16 @@ public class ApiKeyFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Delegar seguridad de endpoints SOAP (/services/*) a Apache CXF (ApiKeyInterceptor)
+        String requestPath = request.getRequestURI();
+        if (request.getContextPath() != null && !request.getContextPath().isEmpty()) {
+            requestPath = requestPath.substring(request.getContextPath().length());
+        }
+        if (requestPath.startsWith("/services")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             validarApiKey(request);
             filterChain.doFilter(request, response);

@@ -1,0 +1,208 @@
+<app-navbar></app-navbar>
+
+<main class="page-container">
+
+  <!-- Header Card (Gestión de publicaciones) -->
+  <section class="page-header-card">
+    <div class="header-left">
+      <span class="category-badge">Gestión de publicaciones</span>
+      <h1 class="page-title">Mis publicaciones de adopción</h1>
+      <p class="page-subtitle">Administrá las mascotas disponibles para adopción del refugio.</p>
+    </div>
+    <div class="header-right">
+      <button type="button" class="btn-nueva-publicacion" (click)="abrirNuevaModal()">
+        <svg class="plus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Nueva publicación</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Filter Bar Card -->
+  <section class="filter-card">
+    <div class="filter-inputs">
+      
+      <!-- Search Input -->
+      <div class="filter-field search-field">
+        <label for="buscarMascota">Buscar mascota</label>
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            id="buscarMascota"
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="Nombre de la mascota..."
+          />
+        </div>
+      </div>
+
+      <!-- Status Dropdown -->
+      <div class="filter-field status-field">
+        <label for="estadoFiltro">Estado</label>
+        <div class="select-wrapper">
+          <select
+            id="estadoFiltro"
+            [ngModel]="selectedEstado()"
+            (ngModelChange)="onEstadoChange($event)"
+          >
+            <option value="Todos">Todos</option>
+            <option value="Activa">Activa</option>
+            <option value="Pausada">Pausada</option>
+            <option value="Finalizada">Finalizada</option>
+          </select>
+          <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Publications Counter -->
+    <div class="publications-counter">
+      <span>Publicaciones: <strong>{{ filteredPublicaciones().length }}</strong></span>
+    </div>
+  </section>
+
+  <!-- Adoption Cards Grid -->
+  @if (filteredPublicaciones().length > 0) {
+    <section class="cards-grid">
+      @for (pub of filteredPublicaciones(); track pub.nroPublicacion) {
+        <article class="pet-card">
+          
+          <!-- Pet Image & Floating Status Badge -->
+          <div class="card-image-wrapper">
+            <img [src]="pub.foto" [alt]="pub.nombreMascota" class="pet-image" loading="lazy" />
+            
+            <!-- Status Badge -->
+            @if (pub.estadoPublicacion === 'Activa') {
+              <div class="status-badge badge-activa">
+                <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Activa</span>
+              </div>
+            } @else if (pub.estadoPublicacion === 'Pausada') {
+              <div class="status-badge badge-pausada">
+                <svg class="badge-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+                  <rect x="9" y="8" width="2" height="8" rx="1" />
+                  <rect x="13" y="8" width="2" height="8" rx="1" />
+                </svg>
+                <span>Pausada</span>
+              </div>
+            } @else {
+              <div class="status-badge badge-finalizada">
+                <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Finalizada</span>
+              </div>
+            }
+          </div>
+
+          <!-- Card Body -->
+          <div class="card-content">
+            
+            <!-- Header Row: Name & Specie Pill -->
+            <div class="card-header-row">
+              <h2 class="pet-name">{{ pub.nombreMascota }}</h2>
+              <span class="species-pill">{{ pub.especie }}</span>
+            </div>
+
+            <!-- NRM Subtitle -->
+            <p class="nrm-text">NRM: {{ pub.nroRegMunicipal }}</p>
+
+            <!-- Attribute Pills (Sex & Age) -->
+            <div class="attribute-pills">
+              <span class="pill-attr">
+                @if (pub.sexo === 'Hembra') {
+                  <span class="gender-symbol female">♀</span>
+                } @else {
+                  <span class="gender-symbol male">♂</span>
+                }
+                <span>{{ pub.sexo }}</span>
+              </span>
+              <span class="pill-attr">
+                <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>{{ pub.edad }}</span>
+              </span>
+            </div>
+
+            <!-- Description -->
+            <p class="pet-description">{{ pub.descripcion }}</p>
+
+            <!-- Action Buttons Footer -->
+            <div class="card-actions-footer">
+              
+              <!-- Pause / Resume Toggle Button -->
+              @if (pub.estadoPublicacion === 'Activa') {
+                <button
+                  type="button"
+                  class="action-btn btn-pause"
+                  (click)="toggleEstado(pub)"
+                  title="Pausar publicación"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="7" y="5" width="3" height="14" rx="1.5" />
+                    <rect x="14" y="5" width="3" height="14" rx="1.5" />
+                  </svg>
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="action-btn btn-resume"
+                  (click)="toggleEstado(pub)"
+                  title="Reanudar publicación"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </button>
+              }
+
+              <!-- Delete / Finalize Button -->
+              <button
+                type="button"
+                class="action-btn btn-delete"
+                (click)="onEliminar(pub)"
+                title="Finalizar / Eliminar publicación"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+            </div>
+
+          </div>
+
+        </article>
+      }
+    </section>
+  } @else {
+    <!-- Empty State -->
+    <div class="empty-state-card">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 10l4 4m0-4l-4 4" />
+      </svg>
+      <h3>No se encontraron publicaciones</h3>
+      <p>Probá cambiando los filtros o agregá una nueva publicación con el botón superior.</p>
+    </div>
+  }
+
+</main>
+
+<!-- Modal Nueva Publicación -->
+@if (showNuevaModal()) {
+  <app-nueva-publicacion-modal
+    (close)="cerrarNuevaModal()"
+    (save)="guardarNuevaPublicacion($event)"
+  ></app-nueva-publicacion-modal>
+}

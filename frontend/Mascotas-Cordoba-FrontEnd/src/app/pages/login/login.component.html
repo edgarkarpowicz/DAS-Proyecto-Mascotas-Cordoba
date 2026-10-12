@@ -1,0 +1,75 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    
+    <!-- Circular Heart Icon -->
+    <div class="logo-circle">
+      <svg class="heart-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </div>
+
+    <!-- Title & Subtitle -->
+    <h1 class="brand-title">Mascotas Córdoba</h1>
+    <p class="brand-subtitle">Programa Municipal de Bienestar Animal</p>
+
+    <!-- Error message if any -->
+    @if (error) {
+      <div class="error-banner">{{ error }}</div>
+    }
+
+    <!-- Form -->
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      
+      <!-- CUIL Field -->
+      <div class="form-group">
+        <label for="cuil">CUIL</label>
+        <div class="input-container active-focus">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <input
+            id="cuil"
+            type="text"
+            [(ngModel)]="cuil"
+            name="cuil"
+            placeholder="Ingrese su CUIL"
+            required
+            autocomplete="username"
+          />
+        </div>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="clave">Contraseña</label>
+        <div class="input-container">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <input
+            id="clave"
+            type="password"
+            [(ngModel)]="clave"
+            name="clave"
+            placeholder="Ingrese su contraseña"
+            required
+            autocomplete="current-password"
+          />
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="submit-btn">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+        </svg>
+        <span>Iniciar sesión</span>
+      </button>
+
+    </form>
+
+    <!-- Footer Note -->
+    <p class="footer-note">Acceso seguro al Programa Municipal de Bienestar Animal</p>
+
+  </div>
+</div>

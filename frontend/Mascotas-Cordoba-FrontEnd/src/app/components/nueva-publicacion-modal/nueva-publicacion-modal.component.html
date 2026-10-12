@@ -1,0 +1,70 @@
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Nueva Publicación de Adopción</h2>
+        <p class="modal-subtitle">Registrá una mascota del refugio disponible para adopción.</p>
+      </div>
+      <button type="button" class="close-btn" (click)="onClose()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="modal-form">
+      
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Nombre de la Mascota *</label>
+          <input type="text" [(ngModel)]="nombreMascota" name="nombreMascota" placeholder="Ej: Rocky" required />
+        </div>
+        <div class="form-group flex-1">
+          <label>NRM (Registro Municipal)</label>
+          <input type="text" [(ngModel)]="nroRegMunicipal" name="nroRegMunicipal" readonly />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Especie / Tipo</label>
+          <select [(ngModel)]="especie" name="especie">
+            <option value="Perro">Perro</option>
+            <option value="Perra">Perra</option>
+            <option value="Gato">Gato</option>
+            <option value="Gata">Gata</option>
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label>Sexo</label>
+          <select [(ngModel)]="sexo" name="sexo">
+            <option value="Hembra">Hembra</option>
+            <option value="Macho">Macho</option>
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label>Edad estimada</label>
+          <input type="text" [(ngModel)]="edad" name="edad" placeholder="Ej: 3 años" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>URL de la Foto</label>
+        <input type="url" [(ngModel)]="foto" name="foto" placeholder="https://..." />
+      </div>
+
+      <div class="form-group">
+        <label>Descripción y Características *</label>
+        <textarea rows="3" [(ngModel)]="descripcion" name="descripcion" placeholder="Describa la personalidad, hábitos y condiciones de adopción..." required></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="cancel-btn" (click)="onClose()">Cancelar</button>
+        <button type="submit" class="save-btn">Publicar Mascota</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>

@@ -1,0 +1,29 @@
+@if (data(); as dialog) {
+  <div class="modal-backdrop" (click)="cancel()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      
+      <div class="modal-header">
+        <h3 class="modal-title">{{ dialog.title }}</h3>
+        <button type="button" class="close-btn" (click)="cancel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-text">{{ dialog.message }}</p>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="cancel()">
+          {{ dialog.cancelText || 'Cancelar' }}
+        </button>
+        <button type="button" class="btn-confirm" (click)="confirm()">
+          {{ dialog.confirmText || 'Aceptar' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

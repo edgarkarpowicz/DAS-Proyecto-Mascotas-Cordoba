@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/refugios")
-@CrossOrigin(origins = "*")
 public class PublicacionesResource {
 
     @Autowired

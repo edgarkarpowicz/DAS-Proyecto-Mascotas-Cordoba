@@ -40,7 +40,7 @@
         </div>
       </div>
 
-      <!-- Status Dropdown -->
+      <!-- Status Dropdown (Dynamically loaded from database catalog) -->
       <div class="filter-field status-field">
         <label for="estadoFiltro">Estado</label>
         <div class="select-wrapper">
@@ -50,9 +50,9 @@
             (ngModelChange)="onEstadoChange($event)"
           >
             <option value="Todos">Todos</option>
-            <option value="Activa">Activa</option>
-            <option value="Pausada">Pausada</option>
-            <option value="Finalizada">Finalizada</option>
+            @for (est of estadosCatalogo(); track est.codEstado) {
+              <option [value]="est.codEstado">{{ est.codEstado }}</option>
+            }
           </select>
           <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
@@ -76,7 +76,7 @@
           
           <!-- Pet Image & Floating Status Badge -->
           <div class="card-image-wrapper">
-            <img [src]="pub.foto" [alt]="pub.nombreMascota" class="pet-image" loading="lazy" />
+            <img [src]="getFotoMascota(pub)" (error)="onImageError($event, pub)" [alt]="pub.nombreMascota" class="pet-image" loading="lazy" />
             
             <!-- Status Badge -->
             @if (pub.estadoPublicacion === 'Activa') {
@@ -111,11 +111,11 @@
             <!-- Header Row: Name & Specie Pill -->
             <div class="card-header-row">
               <h2 class="pet-name">{{ pub.nombreMascota }}</h2>
-              <span class="species-pill">{{ pub.especie }}</span>
+              <span class="species-pill">{{ pub.especie || 'Mascota' }}</span>
             </div>
 
             <!-- NRM Subtitle -->
-            <p class="nrm-text">NRM: {{ pub.nroRegMunicipal }}</p>
+            <p class="nrm-text">NRM: {{ pub.nroRegMunicipal ? pub.nroRegMunicipal : 'Sin NRM previo' }}</p>
 
             <!-- Attribute Pills (Sex & Age) -->
             <div class="attribute-pills">
@@ -125,18 +125,18 @@
                 } @else {
                   <span class="gender-symbol male">♂</span>
                 }
-                <span>{{ pub.sexo }}</span>
+                <span>{{ pub.sexo || 'Indefinido' }}</span>
               </span>
               <span class="pill-attr">
                 <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span>{{ pub.edad }}</span>
+                <span>{{ getEdadTexto(pub) }}</span>
               </span>
             </div>
 
             <!-- Description -->
-            <p class="pet-description">{{ pub.descripcion }}</p>
+            <p class="pet-description">{{ pub.caracteristicasMascota || pub.condicionAdopcion || 'Sin descripción detallada.' }}</p>
 
             <!-- Action Buttons Footer -->
             <div class="card-actions-footer">
@@ -154,7 +154,17 @@
                     <rect x="14" y="5" width="3" height="14" rx="1.5" />
                   </svg>
                 </button>
-              } @else {
+                <button
+                  type="button"
+                  class="action-btn btn-delete"
+                  (click)="finalizarPublicacion(pub)"
+                  title="Finalizar publicación"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              } @else if (pub.estadoPublicacion === 'Pausada') {
                 <button
                   type="button"
                   class="action-btn btn-resume"
@@ -165,19 +175,28 @@
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </button>
+                <button
+                  type="button"
+                  class="action-btn btn-delete"
+                  (click)="finalizarPublicacion(pub)"
+                  title="Finalizar publicación"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="action-btn btn-resume"
+                  (click)="toggleEstado(pub)"
+                  title="Reactivar publicación"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </button>
               }
-
-              <!-- Delete / Finalize Button -->
-              <button
-                type="button"
-                class="action-btn btn-delete"
-                (click)="onEliminar(pub)"
-                title="Finalizar / Eliminar publicación"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
 
             </div>
 
@@ -206,3 +225,4 @@
     (save)="guardarNuevaPublicacion($event)"
   ></app-nueva-publicacion-modal>
 }
+

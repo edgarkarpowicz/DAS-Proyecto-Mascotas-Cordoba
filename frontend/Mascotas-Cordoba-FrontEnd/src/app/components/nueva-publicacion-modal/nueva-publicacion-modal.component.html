@@ -15,6 +15,21 @@
 
     <form (ngSubmit)="onSubmit()" class="modal-form">
       
+      <!-- Optional: Select from available shelter pets -->
+      @if (mascotasDisponibles().length > 0) {
+        <div class="form-group">
+          <label>Mascota Registrada en el Refugio</label>
+          <select (change)="onMascotaSelect($event)" class="select-mascota">
+            <option value="0">-- Cargar datos de mascota registrada (Opcional) --</option>
+            @for (m of mascotasDisponibles(); track m.nroRegMunicipal) {
+              <option [value]="m.nroRegMunicipal">
+                {{ m.nombre }} (NRM: {{ m.nroRegMunicipal }} - {{ m.especie }} {{ m.raza }})
+              </option>
+            }
+          </select>
+        </div>
+      }
+
       <div class="form-row">
         <div class="form-group flex-1">
           <label>Nombre de la Mascota *</label>
@@ -22,14 +37,14 @@
         </div>
         <div class="form-group flex-1">
           <label>NRM (Registro Municipal)</label>
-          <input type="text" [(ngModel)]="nroRegMunicipal" name="nroRegMunicipal" readonly />
+          <input type="text" [value]="nroRegMunicipal ? ('NRM: ' + nroRegMunicipal) : 'Sin NRM previo'" readonly class="readonly-input" />
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group flex-1">
           <label>Especie / Tipo</label>
-          <select [(ngModel)]="especie" name="especie">
+          <select [(ngModel)]="especie" (change)="onEspecieChange()" name="especie">
             <option value="Perro">Perro</option>
             <option value="Perra">Perra</option>
             <option value="Gato">Gato</option>
@@ -50,13 +65,18 @@
       </div>
 
       <div class="form-group">
+        <label>Condiciones de Adopción</label>
+        <input type="text" [(ngModel)]="condicionAdopcion" name="condicionAdopcion" placeholder="Ej: Hogar responsable, patio cerrado, compromiso de castración" />
+      </div>
+
+      <div class="form-group">
         <label>URL de la Foto</label>
         <input type="url" [(ngModel)]="foto" name="foto" placeholder="https://..." />
       </div>
 
       <div class="form-group">
         <label>Descripción y Características *</label>
-        <textarea rows="3" [(ngModel)]="descripcion" name="descripcion" placeholder="Describa la personalidad, hábitos y condiciones de adopción..." required></textarea>
+        <textarea rows="3" [(ngModel)]="descripcion" name="descripcion" placeholder="Describa la personalidad, hábitos y temperamento..." required></textarea>
       </div>
 
       <div class="modal-footer">

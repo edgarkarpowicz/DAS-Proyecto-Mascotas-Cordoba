@@ -124,20 +124,48 @@ DAS-Proyecto-Mascotas-Cordoba/
 - **Maven 3.8+** (o utilizar el wrapper `./mvnw` incluido).
 - **Node.js** (v18+) y **Angular CLI** (para el portal cliente).
 
-### Ejecución del Backend
+### 1. Base de Datos (Microsoft SQL Server)
+1. Abrir **SQL Server Management Studio (SSMS)** o **Azure Data Studio**.
+2. Abrir y ejecutar el script ubicado en:
+   ```text
+   db/municipalidad-creation-script.sql
+   ```
+   *Crea la base de datos `das-mascotas-cordoba` con todas las tablas relacionales, catálogos, stored procedures y datos semilla.*
+
+### 2. Ejecución del Backend (Spring Boot + CXF SOAP + POA)
 1. Navegar al directorio del backend:
-   ```bash
+   ```powershell
    cd backend/mascotas-cordoba-project
    ```
-2. Configurar la conexión a la base de datos en `src/main/resources/application.properties` (o variables de entorno correspondientes).
-3. Compilar y ejecutar la aplicación con Maven:
-   ```bash
+2. Verificar o ajustar credenciales en `src/main/resources/application.properties` (por defecto usuario `master`, base `das-mascotas-cordoba`, puerto `1433`).
+3. Compilar y ejecutar la aplicación con Maven Wrapper:
+   ```powershell
+   # En Windows PowerShell:
+   .\mvnw.cmd spring-boot:run
+   # o:
    ./mvnw spring-boot:run
    ```
-   En Windows:
-   ```cmd
-   mvnw.cmd spring-boot:run
+   *El backend quedará escuchando en `http://localhost:8080` (REST) y `http://localhost:8080/services` (SOAP).*
+
+### 3. Ejecución del FrontEnd (Angular 17)
+1. Abrir otra terminal y navegar al directorio del frontend:
+   ```powershell
+   cd frontend/Mascotas-Cordoba-FrontEnd
    ```
+2. Instalar dependencias (solo la primera vez):
+   ```powershell
+   npm install
+   ```
+3. Iniciar el servidor de desarrollo:
+   ```powershell
+   npm start
+   ```
+4. Acceder en el navegador a: **`http://localhost:4200/`**
+
+### 4. Credenciales de Prueba para Login
+- **Refugio Principal (Patitas Felices - ID 1):** CUIL: `20-25999000-5` | Clave: `pass123` *(Carga 2 publicaciones activas iniciales)*.
+- **Refugio Secundario (Hogar Animal - ID 2):** CUIL: `27-38123456-9` | Clave: `pass123` *(Sin publicaciones iniciales)*.
+- **Ciudadano sin refugio:** CUIL: `20-28555666-3` | Clave: `pass123` *(Prueba de validación de rol / 401)*.
 
 ---
 

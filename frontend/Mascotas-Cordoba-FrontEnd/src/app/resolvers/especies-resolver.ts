@@ -16,3 +16,4 @@ export const especiesResolver: ResolveFn<IEspecie[]> = (): Observable<IEspecie[]
     ]))
   );
 };
+

@@ -54,6 +54,17 @@ public class PublicacionesResource {
     }
 
     /**
+     * RF13 / RF06 - Catálogo de especies disponibles desde el dominio de rasgos (cod_rasgo = 1).
+     * Retorna la lista dinámica de especies configuradas en la base de datos.
+     */
+    @GetMapping({"/especies", "/publicaciones/especies"})
+    public ResponseEntity<List<EspecieBE>> getEspecies() {
+        return ResponseEntity.ok(
+                publicacionesRepository.getEspecies()
+        );
+    }
+
+    /**
      * RF13 - Obtiene todas las publicaciones de adopción administradas por el refugio.
      */
     @GetMapping("/{idRefugio}/publicaciones")

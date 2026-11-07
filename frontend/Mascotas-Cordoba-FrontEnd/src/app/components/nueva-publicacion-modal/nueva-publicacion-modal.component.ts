@@ -1,10 +1,11 @@
-import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
 import { AuthService } from '../../services/auth.service';
 import { AppMessageService } from '../../services/app-message-service';
 import { IMascotaDisponible } from '../../api/models/i-mascota-disponible';
+import { IEspecie } from '../../api/models/i-especie';
 import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
 
 @Component({
@@ -22,10 +23,12 @@ export class NuevaPublicacionModalComponent implements OnInit {
 
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
+  @Input() especiesInput?: IEspecie[];
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<INuevaPublicacionRequest>();
 
   mascotasDisponibles = signal<IMascotaDisponible[]>([]);
+  especiesDisponibles = signal<IEspecie[]>([]);
   selectedNroReg = signal<number | null>(null);
 
   nombreMascota: string = '';
@@ -58,6 +61,28 @@ export class NuevaPublicacionModalComponent implements OnInit {
         this.mascotasDisponibles.set([]);
       }
     });
+
+    if (this.especiesInput && this.especiesInput.length > 0) {
+      this.especiesDisponibles.set(this.especiesInput);
+      this.especie = this.especiesInput[0].nomEspecie;
+    } else {
+      this._pubResource.getEspecies().subscribe({
+        next: (esp) => {
+          if (esp && esp.length > 0) {
+            this.especiesDisponibles.set(esp);
+            this.especie = esp[0].nomEspecie;
+          }
+        },
+        error: () => {
+          this.especiesDisponibles.set([
+            { nroValorDominio: 1, nomEspecie: 'Perro' },
+            { nroValorDominio: 2, nomEspecie: 'Gato' },
+            { nroValorDominio: 3, nomEspecie: 'Conejo' },
+            { nroValorDominio: 4, nomEspecie: 'Otro' }
+          ]);
+        }
+      });
+    }
   }
 
   onMascotaSelect(event: Event): void {

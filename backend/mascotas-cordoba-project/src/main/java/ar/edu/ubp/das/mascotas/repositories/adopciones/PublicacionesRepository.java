@@ -1,5 +1,6 @@
 package ar.edu.ubp.das.mascotas.repositories.adopciones;
 
+import ar.edu.ubp.das.mascotas.BE.adopciones.EspecieBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.EstadoPublicacionBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.MascotaDisponibleBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.NuevaPublicacionRequestBE;
@@ -73,7 +74,13 @@ public class PublicacionesRepository {
             params.put("id_refugio", req.getIdRefugio());
             params.put("nro_reg_municipal", req.getNroRegMunicipal());
             params.put("nombre_mascota", req.getNombreMascota());
-            params.put("sexo", req.getSexo() != null ? req.getSexo() : "M");
+
+            String sexoNormalizado = "M";
+            if (req.getSexo() != null && !req.getSexo().trim().isEmpty()) {
+                sexoNormalizado = req.getSexo().trim().toUpperCase().startsWith("H") ? "H" : "M";
+            }
+            params.put("sexo", sexoNormalizado);
+
             params.put("año_nacimiento", req.getAñoNacimiento());
             params.put("especie", req.getEspecie());
             params.put("raza", req.getRaza());
@@ -171,6 +178,24 @@ public class PublicacionesRepository {
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Error de base de datos al obtener los estados de publicación: " + ex.getMessage(),
+                    ex
+            );
+        }
+    }
+
+    /**
+     * Retorna el catálogo dinámico de especies configuradas en el dominio de rasgos (cod_rasgo = 1).
+     */
+    public List<EspecieBE> getEspecies() {
+        try {
+            return jdbcTemplate.query(
+                    "exec dbo.get_especies_mascotas",
+                    new BeanPropertyRowMapper<>(EspecieBE.class)
+            );
+        } catch (DataAccessException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error de base de datos al obtener el catálogo de especies: " + ex.getMessage(),
                     ex
             );
         }

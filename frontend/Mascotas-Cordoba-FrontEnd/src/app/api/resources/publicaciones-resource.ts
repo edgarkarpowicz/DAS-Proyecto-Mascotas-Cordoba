@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { IEstadoPublicacion } from '../models/i-estado-publicacion';
+import { IEspecie } from '../models/i-especie';
 import { IPublicacionAdopcion } from '../models/i-publicacion-adopcion';
 import { IMascotaDisponible } from '../models/i-mascota-disponible';
 import { INuevaPublicacionRequest } from '../models/i-nueva-publicacion-request';
@@ -20,6 +21,10 @@ export class PublicacionesResource {
 
   getEstadosPublicacion(): Observable<IEstadoPublicacion[]> {
     return this._http.get<IEstadoPublicacion[]>(`${this._baseUrl}/publicaciones/estados`);
+  }
+
+  getEspecies(): Observable<IEspecie[]> {
+    return this._http.get<IEspecie[]>(`${this._baseUrl}/especies`);
   }
 
   getPublicacionesPorRefugio(idRefugio: number): Observable<IPublicacionAdopcion[]> {

@@ -645,3 +645,20 @@ BEGIN
 END
 GO
 
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_especies_mascotas (RF13 / RF06)
+   Devuelve el catálogo dinámico de especies disponibles desde el dominio de rasgos (cod_rasgo = 1).
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_especies_mascotas
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT nroValorDominio = drm.nro_valor_dominio,
+           nomEspecie      = drm.nom_valor_dominio
+      FROM dbo.dominio_rasgos_mascotas drm (NOLOCK)
+     WHERE drm.cod_rasgo = 1
+     ORDER BY drm.nro_valor_dominio;
+END
+GO
+

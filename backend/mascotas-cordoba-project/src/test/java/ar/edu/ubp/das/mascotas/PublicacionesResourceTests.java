@@ -51,6 +51,23 @@ class PublicacionesResourceTests {
     }
 
     @Test
+    void testGetEspecies() {
+        EspecieBE esp1 = new EspecieBE(1, "Perro");
+        EspecieBE esp2 = new EspecieBE(2, "Gato");
+        EspecieBE esp3 = new EspecieBE(3, "Conejo");
+
+        when(publicacionesRepository.getEspecies())
+                .thenReturn(Arrays.asList(esp1, esp2, esp3));
+
+        ResponseEntity<List<EspecieBE>> response = publicacionesResource.getEspecies();
+
+        assertNotNull(response.getBody());
+        assertEquals(3, response.getBody().size());
+        assertEquals("Perro", response.getBody().get(0).getNomEspecie());
+        assertEquals(1, response.getBody().get(0).getNroValorDominio());
+    }
+
+    @Test
     void testListarPublicaciones() {
         PublicacionAdopcionBE pub1 = new PublicacionAdopcionBE();
         pub1.setNroPublicacion(1);

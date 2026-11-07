@@ -43,17 +43,16 @@
 
       <div class="form-row">
         <div class="form-group flex-1">
-          <label>Especie / Tipo</label>
-          <select [(ngModel)]="especie" (change)="onEspecieChange()" name="especie">
-            <option value="Perro">Perro</option>
-            <option value="Perra">Perra</option>
-            <option value="Gato">Gato</option>
-            <option value="Gata">Gata</option>
+          <label>Especie / Tipo *</label>
+          <select [(ngModel)]="especie" (change)="onEspecieChange()" name="especie" required>
+            @for (esp of especiesDisponibles(); track esp.nroValorDominio) {
+              <option [value]="esp.nomEspecie">{{ esp.nomEspecie }}</option>
+            }
           </select>
         </div>
         <div class="form-group flex-1">
-          <label>Sexo</label>
-          <select [(ngModel)]="sexo" name="sexo">
+          <label>Sexo *</label>
+          <select [(ngModel)]="sexo" name="sexo" required>
             <option value="Hembra">Hembra</option>
             <option value="Macho">Macho</option>
           </select>

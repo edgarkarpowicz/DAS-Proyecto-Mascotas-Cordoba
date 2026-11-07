@@ -2,6 +2,7 @@ package ar.edu.ubp.das.mascotas.services.adopciones;
 
 import ar.edu.ubp.das.mascotas.BE.adopciones.AdministrarPublicacionResponseBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.CambioEstadoRequestBE;
+import ar.edu.ubp.das.mascotas.BE.adopciones.EspecieBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.EstadoPublicacionBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.MascotaDisponibleBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.NuevaPublicacionRequestBE;
@@ -27,6 +28,11 @@ public class PublicacionesService implements IPublicacionesService {
     @Override
     public List<EstadoPublicacionBE> getEstadosPublicacion() {
         return publicacionesRepository.getEstadosPublicacion();
+    }
+
+    @Override
+    public List<EspecieBE> getEspecies() {
+        return publicacionesRepository.getEspecies();
     }
 
     @Override

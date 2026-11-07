@@ -9,6 +9,7 @@ import { AppMessageService } from '../../services/app-message-service';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { IEstadoPublicacion } from '../../api/models/i-estado-publicacion';
+import { IEspecie } from '../../api/models/i-especie';
 import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
 import { HasChangesComponent } from '../../guards/controlar-cambios-guard';
 import { environment } from '../../../environments/environment';
@@ -32,6 +33,7 @@ export class PublicacionesComponent implements OnInit, HasChangesComponent {
   // Resolved inputs from router (withComponentInputBinding)
   publicaciones = input<IPublicacionAdopcion[]>([]);
   estados = input<IEstadoPublicacion[]>([]);
+  especies = input<IEspecie[]>([]);
 
   // Local state signals
   listaPublicaciones = signal<IPublicacionAdopcion[]>([]);

@@ -5,6 +5,7 @@ import { authGuard } from './guards/auth-guard';
 import { controlarCambiosGuard } from './guards/controlar-cambios-guard';
 import { publicacionesResolver } from './resolvers/publicaciones-resolver';
 import { estadosResolver } from './resolvers/estados-resolver';
+import { especiesResolver } from './resolvers/especies-resolver';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -15,7 +16,8 @@ export const routes: Routes = [
     canDeactivate: [controlarCambiosGuard],
     resolve: {
       publicaciones: publicacionesResolver,
-      estados: estadosResolver
+      estados: estadosResolver,
+      especies: especiesResolver
     }
   },
   { path: '', redirectTo: 'publicaciones', pathMatch: 'full' },

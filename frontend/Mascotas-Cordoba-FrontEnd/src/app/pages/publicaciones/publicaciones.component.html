@@ -120,12 +120,13 @@
             <!-- Attribute Pills (Sex & Age) -->
             <div class="attribute-pills">
               <span class="pill-attr">
-                @if (pub.sexo === 'Hembra') {
+                @if (pub.sexo === 'Hembra' || pub.sexo === 'H') {
                   <span class="gender-symbol female">♀</span>
+                  <span>Hembra</span>
                 } @else {
                   <span class="gender-symbol male">♂</span>
+                  <span>Macho</span>
                 }
-                <span>{{ pub.sexo || 'Indefinido' }}</span>
               </span>
               <span class="pill-attr">
                 <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -221,6 +222,7 @@
 <!-- Modal Nueva Publicación -->
 @if (showNuevaModal()) {
   <app-nueva-publicacion-modal
+    [especiesInput]="especies()"
     (close)="cerrarNuevaModal()"
     (save)="guardarNuevaPublicacion($event)"
   ></app-nueva-publicacion-modal>

@@ -36,6 +36,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
   sexo: string = 'Hembra';
   edad: string = '2 años';
   edadAproximada: number = 2;
+  anoNacimiento: number = new Date().getFullYear() - 2;
   nroRegMunicipal: string = '';
   condicionAdopcion: string = 'Hogar responsable y seguimiento veterinario';
   descripcion: string = '';
@@ -96,9 +97,14 @@ export class NuevaPublicacionModalComponent implements OnInit {
         this.nroRegMunicipal = String(encontrada.nroRegMunicipal);
         this.nombreMascota = encontrada.nombre || '';
         this.especie = encontrada.especie || 'Perro';
-        this.sexo = encontrada.sexo || 'Hembra';
-        this.edadAproximada = encontrada.edadAproximada || 2;
-        this.edad = `${this.edadAproximada} años`;
+        this.sexo = (encontrada.sexo === 'M' || encontrada.sexo === 'm' || encontrada.sexo === 'Macho') ? 'Macho' : 'Hembra';
+        if (encontrada.añoNacimiento) {
+          this.anoNacimiento = encontrada.añoNacimiento;
+        } else if (encontrada.edadAproximada) {
+          this.anoNacimiento = new Date().getFullYear() - encontrada.edadAproximada;
+        }
+        this.edadAproximada = encontrada.edadAproximada || (new Date().getFullYear() - this.anoNacimiento);
+        this.edad = `${this.edadAproximada} años (nac. ${this.anoNacimiento})`;
         return;
       }
     }
@@ -106,6 +112,12 @@ export class NuevaPublicacionModalComponent implements OnInit {
     // Sin mascota previa seleccionada
     this.selectedNroReg.set(null);
     this.nroRegMunicipal = '';
+    this.nombreMascota = '';
+    this.especie = this.especiesDisponibles()[0]?.nomEspecie || 'Perro';
+    this.sexo = 'Hembra';
+    this.anoNacimiento = new Date().getFullYear() - 2;
+    this.edadAproximada = 2;
+    this.edad = '2 años';
   }
 
   onEspecieChange(): void {
@@ -243,7 +255,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
       nombreMascota: this.nombreMascota.trim(),
       especie: this.especie,
       sexo: this.sexo,
-      añoNacimiento: new Date().getFullYear() - (this.edadAproximada || 2),
+      añoNacimiento: this.anoNacimiento || (new Date().getFullYear() - (this.edadAproximada || 2)),
       caracteristicasMascota: this.descripcion.trim(),
       condicionAdopcion: this.condicionAdopcion.trim(),
       foto: this.foto.trim() || undefined,

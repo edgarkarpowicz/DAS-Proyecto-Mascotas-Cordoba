@@ -221,7 +221,7 @@ DB_PASSWORD=123
 
 ### 4. Credenciales de Prueba para Login
 - **Refugio Principal (Patitas Felices - ID 1):** CUIL: `20-25999000-5` | Clave: `pass123` *(Carga 2 publicaciones activas iniciales)*.
-- **Refugio Secundario (Hogar Animal - ID 2):** CUIL: `27-38123456-9` | Clave: `pass123` *(Sin publicaciones iniciales)*.
+- **Refugio Secundario (Hogar Animal - ID 2):** CUIL: `27-38123456-9` | Clave: `pass123` *(Sin publicaciones iniciales; cuenta con mascota precargada en el refugio "Thor" - NRM 100006 para probar la publicación de un animal ya registrado)*.
 - **Ciudadano sin refugio:** CUIL: `20-28555666-3` | Clave: `pass123` *(Prueba de validación de rol / 401)*.
 
 ---

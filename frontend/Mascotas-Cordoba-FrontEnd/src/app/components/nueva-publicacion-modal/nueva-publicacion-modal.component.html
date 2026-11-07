@@ -20,31 +20,59 @@
         <div class="form-group">
           <label>Mascota Registrada en el Refugio</label>
           <select (change)="onMascotaSelect($event)" class="select-mascota">
-            <option value="0">-- Cargar datos de mascota registrada (Opcional) --</option>
+            <option value="0">-- Registrar nueva mascota en el refugio --</option>
             @for (m of mascotasDisponibles(); track m.nroRegMunicipal) {
               <option [value]="m.nroRegMunicipal">
                 {{ m.nombre }} (NRM: {{ m.nroRegMunicipal }} - {{ m.especie }} {{ m.raza }})
               </option>
             }
           </select>
+          @if (selectedNroReg() !== null) {
+            <p class="nrm-hint">
+              <svg viewBox="0 0 20 20" fill="currentColor" class="hint-icon">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+              Mascota registrada en el Registro Único Municipal. Sus datos de identidad no pueden ser modificados.
+            </p>
+          }
         </div>
       }
 
       <div class="form-row">
         <div class="form-group flex-1">
           <label>Nombre de la Mascota *</label>
-          <input type="text" [(ngModel)]="nombreMascota" name="nombreMascota" placeholder="Ej: Rocky" required />
+          <input 
+            type="text" 
+            [(ngModel)]="nombreMascota" 
+            name="nombreMascota" 
+            placeholder="Ej: Rocky" 
+            required 
+            [readonly]="selectedNroReg() !== null"
+            [class.input-locked]="selectedNroReg() !== null"
+          />
         </div>
         <div class="form-group flex-1">
           <label>NRM (Registro Municipal)</label>
-          <input type="text" [value]="nroRegMunicipal ? ('NRM: ' + nroRegMunicipal) : 'Sin NRM previo'" readonly class="readonly-input" />
+          <input 
+            type="text" 
+            [value]="nroRegMunicipal ? ('NRM: ' + nroRegMunicipal) : 'Sin NRM previo (nuevo registro)'" 
+            readonly 
+            class="readonly-input input-locked" 
+          />
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group flex-1">
           <label>Especie / Tipo *</label>
-          <select [(ngModel)]="especie" (change)="onEspecieChange()" name="especie" required>
+          <select 
+            [(ngModel)]="especie" 
+            (change)="onEspecieChange()" 
+            name="especie" 
+            required 
+            [disabled]="selectedNroReg() !== null"
+            [class.input-locked]="selectedNroReg() !== null"
+          >
             @for (esp of especiesDisponibles(); track esp.nroValorDominio) {
               <option [value]="esp.nomEspecie">{{ esp.nomEspecie }}</option>
             }
@@ -52,14 +80,27 @@
         </div>
         <div class="form-group flex-1">
           <label>Sexo *</label>
-          <select [(ngModel)]="sexo" name="sexo" required>
+          <select 
+            [(ngModel)]="sexo" 
+            name="sexo" 
+            required 
+            [disabled]="selectedNroReg() !== null"
+            [class.input-locked]="selectedNroReg() !== null"
+          >
             <option value="Hembra">Hembra</option>
             <option value="Macho">Macho</option>
           </select>
         </div>
         <div class="form-group flex-1">
-          <label>Edad estimada</label>
-          <input type="text" [(ngModel)]="edad" name="edad" placeholder="Ej: 3 años" />
+          <label>Edad / Año de Nacimiento</label>
+          <input 
+            type="text" 
+            [(ngModel)]="edad" 
+            name="edad" 
+            placeholder="Ej: 3 años" 
+            [readonly]="selectedNroReg() !== null"
+            [class.input-locked]="selectedNroReg() !== null"
+          />
         </div>
       </div>
 

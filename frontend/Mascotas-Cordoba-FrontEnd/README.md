@@ -70,7 +70,7 @@ Utiliza los usuarios precargados en la base de datos municipal:
 | Usuario | CUIL | Contraseña | Refugio Asociado |
 | :--- | :--- | :--- | :--- |
 | **Roberto Sánchez** | `20-25999000-5` | `pass123` | **Refugio Patitas Felices** (Carga 2 publicaciones iniciales) |
-| **Ana Carolina Morales** | `27-38123456-9` | `pass123` | **Hogar Animal Córdoba** (Sin publicaciones iniciales) |
+| **Ana Carolina Morales** | `27-38123456-9` | `pass123` | **Hogar Animal Córdoba** (Sin publicaciones iniciales; incluye mascota precargada NRM 100006 "Thor") |
 | **Juan Carlos Pérez** | `20-28555666-3` | `pass123` | *Sin refugio* (Prueba de acceso denegado - 401) |
 
 ---

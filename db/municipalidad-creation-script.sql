@@ -331,7 +331,8 @@ INSERT INTO mascotas (nro_reg_municipal, nombre, sexo, [año_nacimiento], microc
 (100002, 'Milo', 'M', 2022, '981098107845612', 1, 2, NULL),
 (100003, 'Luna', 'H', 2023, '981098109923841', 1, 1, NULL),
 (100004, 'Rocco', 'M', 2023, '981098101112233', 1, NULL, 1),
-(100005, 'Mía', 'H', 2024, NULL, 1, NULL, 1);
+(100005, 'Mía', 'H', 2024, NULL, 1, NULL, 1),
+(100006, 'Thor', 'M', 2022, '981098104455667', 1, NULL, 2);
 
 -- 10. Características de Mascotas (Tabla Intermedia: Mascotas <-> Rasgos <-> Dominio)
 INSERT INTO caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracteristica, nro_valor_dominio, valor_caracteristica) VALUES
@@ -364,7 +365,13 @@ INSERT INTO caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracter
 (100005, 2, 1, 5, 'Mestizo Felino'),
 (100005, 3, 1, 2, 'Medio'),
 (100005, 4, 1, 5, 'Tricolor / Manchada'),
-(100005, 5, 1, 1, 'Pequeño');
+(100005, 5, 1, 1, 'Pequeño'),
+-- Thor (100006 - En Hogar Animal)
+(100006, 1, 1, 1, 'Perro'),
+(100006, 2, 1, 3, 'Mestizo Canino'),
+(100006, 3, 1, 1, 'Corto'),
+(100006, 4, 1, 3, 'Dorado'),
+(100006, 5, 1, 2, 'Mediano');
 
 -- 11. Tipos de Prácticas Sanitarias
 INSERT INTO tipos_atencion_sanitaria (cod_tipo_atencion, desc_tipo_atencion) VALUES
@@ -381,7 +388,9 @@ INSERT INTO informacion_sanitaria (nro_reg_municipal, nro_registro, fecha_atenci
 (100002, 1, '2024-05-20', 4, 'Castración electiva bajo Programa Municipal de Esterilización', NULL, 1, 1),
 (100003, 1, '2024-04-12', 1, 'Vacunación Triple Felina Preventiva - Lote FEL-3312', '2025-04-12', 1, 2),
 (100004, 1, '2024-02-18', 1, 'Vacunación quíntuple canina y antirrábica de ingreso al refugio', '2025-02-18', 2, 3),
-(100004, 2, '2024-03-01', 4, 'Castración quirúrgica previa a habilitación de adopción', NULL, 2, 3);
+(100004, 2, '2024-03-01', 4, 'Castración quirúrgica previa a habilitación de adopción', NULL, 2, 3),
+(100006, 1, '2024-04-10', 1, 'Vacunación quíntuple canina anual de ingreso a Hogar Animal', '2025-04-10', 2, 3),
+(100006, 2, '2024-05-02', 2, 'Desparasitación interna preventiva', '2024-11-02', 2, 3);
 
 -- 13. Estados de Publicaciones de Adopción
 INSERT INTO estados_publicacion (cod_estado, descripcion) VALUES

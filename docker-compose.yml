@@ -4,8 +4,6 @@
 # conectándose al SQL Server de la máquina anfitriona vía host.docker.internal.
 # ==============================================================================
 
-version: '3.8'
-
 services:
   # ----------------------------------------------------------------------------
   # Servicio 1: Backend Spring Boot (REST + SOAP CXF) sobre Apache Tomcat 10.1

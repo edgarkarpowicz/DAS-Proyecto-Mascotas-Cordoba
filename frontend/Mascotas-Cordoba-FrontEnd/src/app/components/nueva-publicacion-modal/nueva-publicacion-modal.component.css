@@ -8,6 +8,8 @@
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -16,9 +18,14 @@
   border-radius: var(--radius-lg);
   max-width: 600px;
   width: 100%;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   overflow: hidden;
   animation: slideUp 0.25s ease-out;
+  margin: auto;
 }
 
 @keyframes fadeIn {
@@ -35,8 +42,9 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 1.5rem 1.75rem 1.25rem;
+  padding: 1.25rem 1.75rem 1rem;
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .modal-title {
@@ -74,7 +82,28 @@
 }
 
 .modal-form {
-  padding: 1.5rem 1.75rem;
+  padding: 1.25rem 1.75rem;
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-form::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.modal-form::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.modal-form::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .form-row {
@@ -319,4 +348,62 @@
 .btn-remove-photo:hover {
   background-color: #fee2e2;
   color: #991b1b;
+}
+
+/* ==========================================================================
+   Responsive: Mobile / Phone Styles
+   ========================================================================== */
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .modal-card {
+    max-height: calc(100dvh - 1rem);
+    border-radius: var(--radius-md);
+    margin: 0.5rem auto;
+  }
+
+  .modal-header {
+    padding: 1rem 1.25rem 0.75rem;
+  }
+
+  .modal-title {
+    font-size: 1.125rem;
+  }
+
+  .modal-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .modal-form {
+    padding: 1rem 1.25rem 1.25rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    text-align: center;
+  }
+
+  .preview-container {
+    flex-wrap: wrap;
+  }
+
+  .preview-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }

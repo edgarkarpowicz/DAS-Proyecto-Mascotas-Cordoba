@@ -116,7 +116,64 @@ DAS-Proyecto-Mascotas-Cordoba/
 
 ---
 
-## 🚀 Puesta en Marcha (Entorno de Desarrollo)
+## 🐳 Ejecución con Docker (Recomendada / Contenedores)
+
+El proyecto cuenta con configuración integral de **Docker** y **Docker Compose** siguiendo las pautas de la cátedra DAS (`Resueltos-Profesora/Spring-Boot/03-docker`). Esta modalidad permite levantar el **Backend Spring Boot** (sobre Apache Tomcat 10.1) y el **Frontend Angular** (sobre Nginx) de forma automatizada con un solo comando, conectándose al SQL Server local de la máquina anfitriona.
+
+### Prerrequisitos
+1. **Docker Desktop** instalado y en ejecución en el sistema.
+2. **Microsoft SQL Server** en ejecución en la máquina host con el script de base de datos ya inicializado (`db/municipalidad-creation-script.sql`).
+   > Asegurarse de que el protocolo **TCP/IP** esté habilitado en el *SQL Server Configuration Manager* sobre el puerto estándar `1433`.
+
+### Estructura de Servicios Docker
+* **`backend` (Puerto 8080):** Contenedor multi-stage basado en `maven:3.9-eclipse-temurin-17` y runtime en `tomcat:10.1-jdk17-temurin`.
+  * Se conecta a la base de datos host mediante `host.docker.internal:1433`.
+  * Monta un volumen persistente `./uploads:/usr/local/tomcat/uploads` para que las fotos subidas no se pierdan.
+* **`frontend` (Puerto 4200):** Contenedor multi-stage basado en `node:20-alpine` y servidor `nginx:alpine`.
+  * Configurado con soporte para rutas HTML5 SPA (redirección a `index.html`).
+
+### Comandos de Ejecución
+
+1. **Compilar y levantar todos los contenedores en segundo plano:**
+   ```powershell
+   docker compose up --build -d
+   ```
+
+2. **Verificar el estado y los logs de los contenedores:**
+   ```powershell
+   # Ver estado de los servicios:
+   docker compose ps
+
+   # Ver logs en vivo del backend:
+   docker compose logs -f backend
+
+   # Ver logs en vivo del frontend:
+   docker compose logs -f frontend
+   ```
+
+3. **Acceder a las aplicaciones:**
+   * **Portal Web (Frontend Angular):** [http://localhost:4200/](http://localhost:4200/)
+   * **API REST (Backend):** [http://localhost:8080/refugios/publicaciones/estados](http://localhost:8080/refugios/publicaciones/estados)
+   * **Servicios SOAP (CXF WSDL):** [http://localhost:8080/services/publicaciones?wsdl](http://localhost:8080/services/publicaciones?wsdl)
+
+4. **Detener los contenedores:**
+   ```powershell
+   docker compose down
+   ```
+
+### Variables de Entorno Configurables (Opcional)
+En `docker-compose.yml`, los siguientes parámetros pueden personalizarse o definirse en un archivo `.env` en la raíz si tus credenciales locales de SQL Server difieren de los valores por defecto:
+```env
+DB_HOST=host.docker.internal
+DB_PORT=1433
+DB_NAME=das-mascotas-cordoba
+DB_USER=master
+DB_PASSWORD=123
+```
+
+---
+
+## 🚀 Puesta en Marcha Manual (Entorno de Desarrollo Tradicional)
 
 ### Prerrequisitos
 - **Java JDK 17** o superior instalado y configurado en el `PATH`.

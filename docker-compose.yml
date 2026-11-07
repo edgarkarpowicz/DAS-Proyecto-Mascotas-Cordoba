@@ -1,0 +1,53 @@
+# ==============================================================================
+# Docker Compose - Plataforma Mascotas Córdoba (DAS - UBP)
+# Opción A: Contenedores para Frontend (Angular) y Backend (Spring Boot),
+# conectándose al SQL Server de la máquina anfitriona vía host.docker.internal.
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # Servicio 1: Backend Spring Boot (REST + SOAP CXF) sobre Apache Tomcat 10.1
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend/mascotas-cordoba-project
+      dockerfile: Dockerfile
+    image: mascotas-cordoba-backend:latest
+    container_name: mascotas-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Conexión a la base de datos SQL Server local del anfitrión
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - DB_PORT=${DB_PORT:-1433}
+      - DB_NAME=${DB_NAME:-das-mascotas-cordoba}
+      - DB_USER=${DB_USER:-master}
+      - DB_PASSWORD=${DB_PASSWORD:-123}
+      # API Keys configuradas para seguridad REST y SOAP
+      - REST_API_KEY=UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6
+      - SOAP_API_KEY=UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT
+      # Directorio de fotos dentro del contenedor Tomcat
+      - FILE_UPLOAD_DIR=/usr/local/tomcat/uploads/publicaciones
+    volumes:
+      # Persistencia de fotos de mascotas entre reinicios
+      - ./uploads:/usr/local/tomcat/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ----------------------------------------------------------------------------
+  # Servicio 2: Frontend Angular 17 sobre Servidor Web Nginx
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend/Mascotas-Cordoba-FrontEnd
+      dockerfile: Dockerfile
+    image: mascotas-cordoba-frontend:latest
+    container_name: mascotas-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend

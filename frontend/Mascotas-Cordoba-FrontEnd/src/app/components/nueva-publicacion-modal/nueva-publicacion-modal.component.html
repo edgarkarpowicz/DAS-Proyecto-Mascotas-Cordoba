@@ -69,9 +69,50 @@
         <input type="text" [(ngModel)]="condicionAdopcion" name="condicionAdopcion" placeholder="Ej: Hogar responsable, patio cerrado, compromiso de castración" />
       </div>
 
+      <!-- File upload area for pet picture -->
       <div class="form-group">
-        <label>URL de la Foto</label>
-        <input type="url" [(ngModel)]="foto" name="foto" placeholder="https://..." />
+        <label>Foto de la Mascota</label>
+        
+        <input 
+          #fileInput 
+          type="file" 
+          accept="image/png, image/jpeg, image/webp, image/gif" 
+          (change)="onFileSelected($event)" 
+          style="display: none;" 
+        />
+
+        @if (!previewUrl) {
+          <div 
+            class="dropzone" 
+            [class.dragging]="isDragging"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            (click)="fileInput.click()"
+          >
+            <div class="dropzone-content">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+              </svg>
+              <div class="dropzone-text">
+                <span class="highlight">Hacé clic para seleccionar</span> o arrastrá una imagen aquí
+              </div>
+              <p class="dropzone-hint">PNG, JPG, WEBP o GIF (máximo 5 MB)</p>
+            </div>
+          </div>
+        } @else {
+          <div class="preview-container">
+            <img [src]="previewUrl" alt="Vista previa de la mascota" class="preview-image" />
+            <div class="preview-info">
+              <span class="file-name">{{ selectedFile?.name }}</span>
+              <span class="file-size">{{ formatFileSize(selectedFile?.size || 0) }}</span>
+            </div>
+            <div class="preview-actions">
+              <button type="button" class="btn-change-photo" (click)="fileInput.click()">Cambiar</button>
+              <button type="button" class="btn-remove-photo" (click)="removeFile()">Eliminar</button>
+            </div>
+          </div>
+        }
       </div>
 
       <div class="form-group">
@@ -81,7 +122,13 @@
 
       <div class="modal-footer">
         <button type="button" class="cancel-btn" (click)="onClose()">Cancelar</button>
-        <button type="submit" class="save-btn">Publicar Mascota</button>
+        <button type="submit" class="save-btn" [disabled]="isUploading">
+          @if (isUploading) {
+            <span>Subiendo foto...</span>
+          } @else {
+            <span>Publicar Mascota</span>
+          }
+        </button>
       </div>
 
     </form>

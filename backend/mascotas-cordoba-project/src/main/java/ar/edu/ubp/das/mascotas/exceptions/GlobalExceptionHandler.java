@@ -9,6 +9,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
@@ -52,6 +53,15 @@ public class GlobalExceptionHandler {
         Map<String, Object> error = new HashMap<>();
         error.put("codigoRespuesta", -1);
         error.put("mensajeRespuesta", String.format("El parámetro '%s' debe ser de tipo numérico válido", ex.getName()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex) {
+        logger.warn("Pipeline - Tamaño de archivo excedido: {}", ex.getMessage());
+        Map<String, Object> error = new HashMap<>();
+        error.put("codigoRespuesta", -1);
+        error.put("mensajeRespuesta", "El archivo seleccionado supera el límite máximo permitido por el servidor");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 

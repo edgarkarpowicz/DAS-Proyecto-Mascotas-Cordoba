@@ -1,8 +1,9 @@
-import { Component, EventEmitter, OnInit, Output, inject, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
 import { AuthService } from '../../services/auth.service';
+import { AppMessageService } from '../../services/app-message-service';
 import { IMascotaDisponible } from '../../api/models/i-mascota-disponible';
 import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
 
@@ -17,6 +18,9 @@ export class NuevaPublicacionModalComponent implements OnInit {
 
   private readonly _pubResource = inject(PublicacionesResource);
   private readonly _authService = inject(AuthService);
+  private readonly _messageService = inject(AppMessageService);
+
+  @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<INuevaPublicacionRequest>();
@@ -32,8 +36,17 @@ export class NuevaPublicacionModalComponent implements OnInit {
   nroRegMunicipal: string = '';
   condicionAdopcion: string = 'Hogar responsable y seguimiento veterinario';
   descripcion: string = '';
-  foto: string = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80';
+  foto: string = '';
   estadoPublicacion: string = 'Activa';
+
+  // File upload state
+  selectedFile: File | null = null;
+  previewUrl: string | null = null;
+  isDragging: boolean = false;
+  isUploading: boolean = false;
+
+  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
   ngOnInit(): void {
     const idRefugio = this._authService.idRefugio();
@@ -61,7 +74,6 @@ export class NuevaPublicacionModalComponent implements OnInit {
         this.sexo = encontrada.sexo || 'Hembra';
         this.edadAproximada = encontrada.edadAproximada || 2;
         this.edad = `${this.edadAproximada} años`;
-        this.onEspecieChange();
         return;
       }
     }
@@ -72,16 +84,90 @@ export class NuevaPublicacionModalComponent implements OnInit {
   }
 
   onEspecieChange(): void {
-    if (this.foto.includes('photo-1543466835') || this.foto.includes('photo-1514888286')) {
-      const isCat = this.especie.toLowerCase().includes('gato') || this.especie.toLowerCase().includes('gata');
-      this.foto = isCat
-        ? 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80'
-        : 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80';
+    // No-op mantenido para extensibilidad
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.handleFile(input.files[0]);
     }
   }
 
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+      this.handleFile(event.dataTransfer.files[0]);
+    }
+  }
+
+  private handleFile(file: File): void {
+    if (!this.ALLOWED_TYPES.includes(file.type)) {
+      this._messageService.showMessage({
+        title: 'Formato no permitido',
+        text: 'Solo se admiten imágenes en formato JPG, PNG, WEBP o GIF.',
+        type: 'warning'
+      });
+      return;
+    }
+
+    if (file.size > this.MAX_FILE_SIZE) {
+      this._messageService.showMessage({
+        title: 'Archivo demasiado grande',
+        text: 'La imagen seleccionada no puede superar los 5 MB.',
+        type: 'warning'
+      });
+      return;
+    }
+
+    this.selectedFile = file;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.previewUrl = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeFile(): void {
+    this.selectedFile = null;
+    this.previewUrl = null;
+    this.foto = '';
+    if (this.fileInput?.nativeElement) {
+      this.fileInput.nativeElement.value = '';
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
   hasChanges(): boolean {
-    return Boolean(this.nombreMascota.trim() || this.descripcion.trim() || this.selectedNroReg());
+    return Boolean(
+      this.nombreMascota.trim() ||
+      this.descripcion.trim() ||
+      this.selectedNroReg() ||
+      this.selectedFile
+    );
   }
 
   onClose(): void {
@@ -90,10 +176,41 @@ export class NuevaPublicacionModalComponent implements OnInit {
 
   onSubmit(): void {
     if (!this.nombreMascota.trim() || !this.descripcion.trim()) {
-      alert('Por favor complete el nombre de la mascota y las características');
+      this._messageService.showMessage({
+        title: 'Campos requeridos',
+        text: 'Por favor complete el nombre de la mascota y las características.',
+        type: 'warning'
+      });
       return;
     }
 
+    if (this.isUploading) {
+      return;
+    }
+
+    if (this.selectedFile) {
+      this.isUploading = true;
+      this._pubResource.subirFoto(this.selectedFile).subscribe({
+        next: (res) => {
+          this.isUploading = false;
+          this.foto = res.urlFoto || '';
+          this.emitirGuardar();
+        },
+        error: (err) => {
+          this.isUploading = false;
+          this._messageService.showMessage({
+            title: 'Error al subir foto',
+            text: err?.error?.mensaje || 'No se pudo subir la foto de la mascota. Intente nuevamente.',
+            type: 'error'
+          });
+        }
+      });
+    } else {
+      this.emitirGuardar();
+    }
+  }
+
+  private emitirGuardar(): void {
     const idRefugio = this._authService.idRefugio();
     const req: INuevaPublicacionRequest = {
       idRefugio: idRefugio,
@@ -112,4 +229,3 @@ export class NuevaPublicacionModalComponent implements OnInit {
   }
 
 }
-

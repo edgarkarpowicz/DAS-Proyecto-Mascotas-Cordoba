@@ -116,4 +116,16 @@ class ApiKeyFilterTests {
         assertEquals(HttpServletResponse.SC_OK, response.getStatus());
     }
 
+    @Test
+    void testUploadsPublicosPermitidoSinApiKey() throws ServletException, IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/uploads/publicaciones/foto.jpg");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        apiKeyFilter.doFilter(request, response, filterChain);
+
+        verify(filterChain, times(1)).doFilter(request, response);
+        verify(resolver, never()).resolveException(any(), any(), any(), any());
+        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+    }
+
 }

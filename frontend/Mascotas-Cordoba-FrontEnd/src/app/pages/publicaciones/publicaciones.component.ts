@@ -11,6 +11,7 @@ import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { IEstadoPublicacion } from '../../api/models/i-estado-publicacion';
 import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
 import { HasChangesComponent } from '../../guards/controlar-cambios-guard';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-publicaciones',
@@ -99,6 +100,10 @@ export class PublicacionesComponent implements OnInit, HasChangesComponent {
     if (!foto || foto.includes('mascotas.cordoba.gob.ar')) {
       return this.getDefaultFoto(pub);
     }
+    // Si es una ruta relativa servida localmente por el backend
+    if (foto.startsWith('/uploads/')) {
+      return `${environment.apiUrl}${foto}`;
+    }
     return foto;
   }
 
@@ -135,6 +140,13 @@ export class PublicacionesComponent implements OnInit, HasChangesComponent {
           text: `La publicación de "${pub.nombreMascota}" cambió su estado a "${targetEstado}".`,
           type: 'success'
         });
+      },
+      error: (err) => {
+        this._messageService.showMessage({
+          title: 'Error al cambiar estado',
+          text: err?.error?.mensajeRespuesta || err?.error?.mensaje || 'No se pudo cambiar el estado de la publicación.',
+          type: 'error'
+        });
       }
     });
   }
@@ -159,6 +171,13 @@ export class PublicacionesComponent implements OnInit, HasChangesComponent {
             title: 'Publicación Finalizada',
             text: `La publicación de "${pub.nombreMascota}" ha sido finalizada correctamente.`,
             type: 'info'
+          });
+        },
+        error: (err) => {
+          this._messageService.showMessage({
+            title: 'Error al finalizar',
+            text: err?.error?.mensajeRespuesta || err?.error?.mensaje || 'No se pudo marcar como finalizada la publicación.',
+            type: 'error'
           });
         }
       });
@@ -187,6 +206,13 @@ export class PublicacionesComponent implements OnInit, HasChangesComponent {
         const idRefugio = this._authService.idRefugio();
         this._pubResource.getPublicacionesPorRefugio(idRefugio).subscribe({
           next: (actualizadas) => this.listaPublicaciones.set(actualizadas)
+        });
+      },
+      error: (err) => {
+        this._messageService.showMessage({
+          title: 'Error al registrar publicación',
+          text: err?.error?.mensajeRespuesta || err?.error?.mensaje || 'Ocurrió un error al intentar crear la publicación. Verifique los datos.',
+          type: 'error'
         });
       }
     });

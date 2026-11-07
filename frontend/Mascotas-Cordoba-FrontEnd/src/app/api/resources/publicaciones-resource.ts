@@ -8,6 +8,7 @@ import { IMascotaDisponible } from '../models/i-mascota-disponible';
 import { INuevaPublicacionRequest } from '../models/i-nueva-publicacion-request';
 import { ICambioEstadoRequest } from '../models/i-cambio-estado-request';
 import { IAdministrarPublicacionResponse } from '../models/i-administrar-publicacion-response';
+import { ISubirFotoResponse } from '../models/i-subir-foto-response';
 
 @Injectable({
   providedIn: 'root'
@@ -37,6 +38,15 @@ export class PublicacionesResource {
     return this._http.put<IAdministrarPublicacionResponse>(
       `${this._baseUrl}/publicaciones/${nroPublicacion}/estado`,
       request
+    );
+  }
+
+  subirFoto(archivo: File): Observable<ISubirFotoResponse> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this._http.post<ISubirFotoResponse>(
+      `${this._baseUrl}/publicaciones/fotos`,
+      formData
     );
   }
 

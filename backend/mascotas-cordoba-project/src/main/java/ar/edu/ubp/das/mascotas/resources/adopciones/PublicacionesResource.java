@@ -2,13 +2,17 @@ package ar.edu.ubp.das.mascotas.resources.adopciones;
 
 import ar.edu.ubp.das.mascotas.BE.adopciones.*;
 import ar.edu.ubp.das.mascotas.repositories.adopciones.PublicacionesRepository;
+import ar.edu.ubp.das.mascotas.services.adopciones.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/refugios")
@@ -16,6 +20,27 @@ public class PublicacionesResource {
 
     @Autowired
     private PublicacionesRepository publicacionesRepository;
+
+    @Autowired
+    private StorageService storageService;
+
+    /**
+     * RF13 - Carga y almacenamiento local de fotos de mascotas para adopción.
+     * Recibe un archivo de imagen (MultipartFile), valida y guarda en el disco del servidor.
+     * Retorna la ruta relativa web del archivo (/uploads/publicaciones/...).
+     */
+    @PostMapping("/publicaciones/fotos")
+    public ResponseEntity<Map<String, Object>> subirFoto(
+            @RequestParam("archivo") MultipartFile archivo) {
+        String urlFoto = storageService.almacenarFoto(archivo);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("codigoRespuesta", 1);
+        response.put("mensajeRespuesta", "Foto subida y almacenada exitosamente");
+        response.put("urlFoto", urlFoto);
+
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * RF13 - Catálogo de estados válidos para publicaciones de adopción.

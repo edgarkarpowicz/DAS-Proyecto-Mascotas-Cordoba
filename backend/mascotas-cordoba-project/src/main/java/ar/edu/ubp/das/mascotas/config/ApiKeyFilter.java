@@ -48,6 +48,12 @@ public class ApiKeyFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Permitir acceso directo a recursos estáticos subidos (/uploads/*) para etiquetas <img>
+        if (requestPath.startsWith("/uploads")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             validarApiKey(request);
             filterChain.doFilter(request, response);

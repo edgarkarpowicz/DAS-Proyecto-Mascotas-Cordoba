@@ -3,6 +3,7 @@ package ar.edu.ubp.das.mascotas;
 import ar.edu.ubp.das.mascotas.BE.adopciones.*;
 import ar.edu.ubp.das.mascotas.repositories.adopciones.PublicacionesRepository;
 import ar.edu.ubp.das.mascotas.resources.adopciones.PublicacionesResource;
+import ar.edu.ubp.das.mascotas.services.adopciones.StorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,10 +11,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +27,9 @@ class PublicacionesResourceTests {
 
     @Mock
     private PublicacionesRepository publicacionesRepository;
+
+    @Mock
+    private StorageService storageService;
 
     @InjectMocks
     private PublicacionesResource publicacionesResource;
@@ -64,6 +70,25 @@ class PublicacionesResourceTests {
         assertNotNull(response.getBody());
         assertEquals(2, response.getBody().size());
         assertEquals("Rocco", response.getBody().get(0).getNombreMascota());
+    }
+
+    @Test
+    void testSubirFotoExitosa() {
+        MockMultipartFile file = new MockMultipartFile(
+                "archivo",
+                "perro.jpg",
+                "image/jpeg",
+                "contenido-de-prueba".getBytes()
+        );
+
+        when(storageService.almacenarFoto(file))
+                .thenReturn("/uploads/publicaciones/uuid_perro.jpg");
+
+        ResponseEntity<Map<String, Object>> response = publicacionesResource.subirFoto(file);
+
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().get("codigoRespuesta"));
+        assertEquals("/uploads/publicaciones/uuid_perro.jpg", response.getBody().get("urlFoto"));
     }
 
     @Test

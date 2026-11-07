@@ -392,8 +392,8 @@ INSERT INTO estados_publicacion (cod_estado, descripcion) VALUES
 -- 14. Publicaciones de Adopción (Tabla Intermedia: Mascotas <-> Refugios)
 SET IDENTITY_INSERT publicaciones_adopcion ON;
 INSERT INTO publicaciones_adopcion (nro_publicacion, nro_reg_municipal, id_refugio, fecha_publicacion, caracteristicas_mascota, condicion_adopcion, foto, estado_publicacion) VALUES
-(1, 100004, 1, '2024-03-05', 'Rocco es un perro macho mestizo de 1 año y medio, muy enérgico, cariñoso, castrado y con plan sanitario al día. Se lleva excelente con otros perros y niños.', 'Hogar con patio cerrado, compromiso de seguimiento y paseos diarios. Firma de acta de adopción responsable.', 'https://mascotas.cordoba.gob.ar/uploads/adopciones/rocco_100004.jpg', 'Activa'),
-(2, 100005, 1, '2024-04-01', 'Mía es una gatita de 6 meses, juguetona y muy dulce, desparasitada y con primera dosis de vacunas. Lista para integrarse a una familia.', 'Depto o casa con protecciones en balcones/ventanas. Compromiso de castración al cumplir la edad adecuada.', 'https://mascotas.cordoba.gob.ar/uploads/adopciones/mia_100005.jpg', 'Activa');
+(1, 100004, 1, '2024-03-05', 'Rocco es un perro macho mestizo de 1 año y medio, muy enérgico, cariñoso, castrado y con plan sanitario al día. Se lleva excelente con otros perros y niños.', 'Hogar con patio cerrado, compromiso de seguimiento y paseos diarios. Firma de acta de adopción responsable.', '/uploads/publicaciones/rocco_100004.jpg', 'Activa'),
+(2, 100005, 1, '2024-04-01', 'Mía es una gatita de 6 meses, juguetona y muy dulce, desparasitada y con primera dosis de vacunas. Lista para integrarse a una familia.', 'Depto o casa con protecciones en balcones/ventanas. Compromiso de castración al cumplir la edad adecuada.', '/uploads/publicaciones/mia_100005.jpg', 'Activa');
 SET IDENTITY_INSERT publicaciones_adopcion OFF;
 GO
 

@@ -4,6 +4,7 @@ import ar.edu.ubp.das.mascotas.exceptions.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
@@ -36,6 +37,18 @@ class GlobalExceptionHandlerTests {
         assertNotNull(response.getBody());
         assertEquals(-1, response.getBody().get("codigoRespuesta"));
         assertTrue(response.getBody().get("mensajeRespuesta").toString().contains("Fallo imprevisto"));
+    }
+
+    @Test
+    void testHandleMaxUploadSizeExceeded() {
+        MaxUploadSizeExceededException ex = new MaxUploadSizeExceededException(10 * 1024 * 1024);
+
+        ResponseEntity<Map<String, Object>> response = exceptionHandler.handleMaxUploadSizeExceeded(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(-1, response.getBody().get("codigoRespuesta"));
+        assertEquals("El archivo seleccionado supera el límite máximo permitido por el servidor", response.getBody().get("mensajeRespuesta"));
     }
 
 }

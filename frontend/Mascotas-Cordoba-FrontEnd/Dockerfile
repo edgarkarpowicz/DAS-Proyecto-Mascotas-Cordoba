@@ -32,3 +32,4 @@ COPY --from=builder /app/dist/mascotas-cordoba-front-end/browser /usr/share/ngin
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
+

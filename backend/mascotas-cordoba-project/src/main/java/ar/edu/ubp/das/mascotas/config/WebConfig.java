@@ -6,6 +6,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -27,6 +28,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path configuredPath = Paths.get(storageLocation).toAbsolutePath().normalize();
+        if (!Files.exists(configuredPath) && !storageLocation.startsWith("/") && !storageLocation.contains(":")) {
+            Path rootUploads = Paths.get("../..", storageLocation).toAbsolutePath().normalize();
+            if (Files.exists(rootUploads.getParent())) {
+                configuredPath = rootUploads;
+            }
+        }
         Path configuredUploadsRoot = configuredPath.getParent() != null ? configuredPath.getParent() : configuredPath;
         String configuredLocation = "file:" + configuredUploadsRoot.toString().replace("\\", "/") + "/";
 
@@ -34,7 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations(
                         configuredLocation,
                         "file:uploads/",
-                        "file:backend/mascotas-cordoba-project/uploads/"
+                        "file:../../uploads/"
                 );
     }
 

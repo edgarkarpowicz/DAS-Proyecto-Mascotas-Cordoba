@@ -92,7 +92,7 @@ public class StorageService {
         String uniqueFilename = UUID.randomUUID().toString() + "_" + cleanName + extension;
 
         try {
-            Path targetDir = Paths.get(storageLocation).toAbsolutePath().normalize();
+            Path targetDir = getResolvedStorageDir();
             if (!Files.exists(targetDir)) {
                 Files.createDirectories(targetDir);
             }
@@ -118,6 +118,17 @@ public class StorageService {
                     "No se pudo guardar la imagen en el servidor: " + e.getMessage()
             );
         }
+    }
+
+    private Path getResolvedStorageDir() {
+        Path targetDir = Paths.get(storageLocation).toAbsolutePath().normalize();
+        if (!Files.exists(targetDir) && !storageLocation.startsWith("/") && !storageLocation.contains(":")) {
+            Path rootUploads = Paths.get("../..", storageLocation).toAbsolutePath().normalize();
+            if (Files.exists(rootUploads.getParent())) {
+                targetDir = rootUploads;
+            }
+        }
+        return targetDir;
     }
 
 }

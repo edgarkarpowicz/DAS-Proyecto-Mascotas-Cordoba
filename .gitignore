@@ -18,8 +18,5 @@ buildNumber.properties
 
 # Uploaded user files (keep initial seeds)
 uploads/publicaciones/*-*_*.*
-backend/mascotas-cordoba-project/uploads/publicaciones/*-*_*.*
 !uploads/publicaciones/mia_100005.jpg
 !uploads/publicaciones/rocco_100004.jpg
-!backend/mascotas-cordoba-project/uploads/publicaciones/mia_100005.jpg
-!backend/mascotas-cordoba-project/uploads/publicaciones/rocco_100004.jpg

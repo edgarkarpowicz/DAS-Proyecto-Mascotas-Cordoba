@@ -74,7 +74,6 @@ export class AuthService {
         }
       }
     } catch {
-      // Ignorar en SSR o error de parseo
     }
     return null;
   }
@@ -85,7 +84,6 @@ export class AuthService {
         return sessionStorage.getItem(STORAGE_TOKEN_KEY);
       }
     } catch {
-      // Ignorar en SSR
     }
     return null;
   }

@@ -28,3 +28,4 @@ describe('LoaderService', () => {
     expect(service.loading()).toBeFalse();
   });
 });
+

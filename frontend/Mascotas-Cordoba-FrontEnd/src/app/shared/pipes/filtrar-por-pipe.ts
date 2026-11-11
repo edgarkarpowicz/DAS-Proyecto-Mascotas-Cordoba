@@ -24,3 +24,4 @@ export class FiltrarPorPipe implements PipeTransform {
   }
 
 }
+

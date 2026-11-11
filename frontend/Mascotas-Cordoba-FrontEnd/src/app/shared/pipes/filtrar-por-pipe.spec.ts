@@ -23,3 +23,4 @@ describe('FiltrarPorPipe', () => {
     expect(pipe.transform(sample, 'nombreMascota', '([*')).toEqual([]);
   });
 });
+

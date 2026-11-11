@@ -42,17 +42,7 @@ export class PublicacionesComponent implements OnInit, HasChangesComponent {
   showNuevaModal = signal<boolean>(false);
 
   // Dynamic states catalog from backend resolver
-  estadosCatalogo = computed(() => {
-    const list = this.estados();
-    if (list && list.length > 0) {
-      return list;
-    }
-    return [
-      { codEstado: 'Activa', descripcion: 'Publicación activa' },
-      { codEstado: 'Pausada', descripcion: 'Publicación pausada' },
-      { codEstado: 'Finalizada', descripcion: 'Publicación finalizada' }
-    ];
-  });
+  estadosCatalogo = computed(() => this.estados() || []);
 
   // Filtered publications computed signal
   filteredPublicaciones = computed(() => {

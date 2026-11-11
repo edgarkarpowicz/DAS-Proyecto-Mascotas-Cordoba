@@ -54,33 +54,18 @@ export class NuevaPublicacionModalComponent implements OnInit {
 
   ngOnInit(): void {
     const idRefugio = this._authService.idRefugio();
-    this._pubResource.getMascotasDisponibles(idRefugio).subscribe({
-      next: (pets) => {
-        this.mascotasDisponibles.set(pets || []);
-      },
-      error: () => {
-        this.mascotasDisponibles.set([]);
-      }
+    this._pubResource.getMascotasDisponibles(idRefugio).subscribe((pets) => {
+      this.mascotasDisponibles.set(pets || []);
     });
 
     if (this.especiesInput && this.especiesInput.length > 0) {
       this.especiesDisponibles.set(this.especiesInput);
       this.especie = this.especiesInput[0].nomEspecie;
     } else {
-      this._pubResource.getEspecies().subscribe({
-        next: (esp) => {
-          if (esp && esp.length > 0) {
-            this.especiesDisponibles.set(esp);
-            this.especie = esp[0].nomEspecie;
-          }
-        },
-        error: () => {
-          this.especiesDisponibles.set([
-            { nroValorDominio: 1, nomEspecie: 'Perro' },
-            { nroValorDominio: 2, nomEspecie: 'Gato' },
-            { nroValorDominio: 3, nomEspecie: 'Conejo' },
-            { nroValorDominio: 4, nomEspecie: 'Otro' }
-          ]);
+      this._pubResource.getEspecies().subscribe((esp) => {
+        if (esp && esp.length > 0) {
+          this.especiesDisponibles.set(esp);
+          this.especie = esp[0].nomEspecie;
         }
       });
     }

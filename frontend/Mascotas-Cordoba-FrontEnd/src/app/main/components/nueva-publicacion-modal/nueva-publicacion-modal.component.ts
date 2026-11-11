@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
@@ -25,6 +25,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
   @Input() especiesInput?: IEspecie[];
+  isSaving = input<boolean>(false);
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<INuevaPublicacionRequest>();
 
@@ -194,20 +195,23 @@ export class NuevaPublicacionModalComponent implements OnInit {
   }
 
   onClose(): void {
+    if (this.isUploading || this.isSaving()) {
+      return;
+    }
     this.close.emit();
   }
 
   onSubmit(): void {
+    if (this.isUploading || this.isSaving()) {
+      return;
+    }
+
     if (!this.nombreMascota.trim() || !this.descripcion.trim()) {
       this._messageService.showMessage({
         title: 'Campos requeridos',
         text: 'Por favor complete el nombre de la mascota y las características.',
         type: 'warning'
       });
-      return;
-    }
-
-    if (this.isUploading) {
       return;
     }
 

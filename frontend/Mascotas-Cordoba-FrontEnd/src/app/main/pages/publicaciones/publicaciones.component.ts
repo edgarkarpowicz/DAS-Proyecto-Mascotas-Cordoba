@@ -1,6 +1,7 @@
 import { Component, ViewChild, computed, inject, input, model, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { NuevaPublicacionModalComponent } from '../../components/nueva-publicacion-modal/nueva-publicacion-modal.component';
 import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
@@ -48,6 +49,7 @@ export class PublicacionesComponent implements HasChangesComponent {
   searchQuery = signal<string>('');
   selectedEstado = signal<string>('Todos');
   showNuevaModal = signal<boolean>(false);
+  isSaving = signal<boolean>(false);
 
   // Dynamic states catalog from backend resolver
   estadosCatalogo = computed(() => this.estados() || []);
@@ -180,33 +182,56 @@ export class PublicacionesComponent implements HasChangesComponent {
   }
 
   cerrarNuevaModal(): void {
+    if (this.isSaving()) {
+      return;
+    }
+
+    if (this.modalComponent?.hasChanges()) {
+      this._confirmService.confirm(
+        'Descartar cambios',
+        '¿Está seguro de descartar sus cambios? Se perderán los datos ingresados en la publicación.'
+      ).subscribe((confirmed: boolean) => {
+        if (confirmed) {
+          this.showNuevaModal.set(false);
+        }
+      });
+      return;
+    }
+
     this.showNuevaModal.set(false);
   }
 
   guardarNuevaPublicacion(request: INuevaPublicacionRequest): void {
-    this._pubResource.crearPublicacion(request).subscribe({
-      next: (res) => {
-        this.cerrarNuevaModal();
-        this._messageService.showMessage({
-          title: 'Publicación Registrada',
-          text: res?.mensajeRespuesta || res?.mensaje || 'Se registró exitosamente la nueva publicación de adopción.',
-          type: 'success'
-        });
+    if (this.isSaving()) {
+      return;
+    }
 
-        // Recargar el listado actualizado de publicaciones desde el backend
-        const idRefugio = this._authService.idRefugio();
-        this._pubResource.getPublicacionesPorRefugio(idRefugio).subscribe({
-          next: (actualizadas) => this.publicaciones.set(actualizadas)
-        });
-      },
-      error: (err) => {
-        this._messageService.showMessage({
-          title: 'Error al registrar publicación',
-          text: err?.error?.mensajeRespuesta || err?.error?.mensaje || 'Ocurrió un error al intentar crear la publicación. Verifique los datos.',
-          type: 'error'
-        });
-      }
-    });
+    this.isSaving.set(true);
+    this._pubResource.crearPublicacion(request)
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: (res) => {
+          this.showNuevaModal.set(false);
+          this._messageService.showMessage({
+            title: 'Publicación Registrada',
+            text: res?.mensajeRespuesta || res?.mensaje || 'Se registró exitosamente la nueva publicación de adopción.',
+            type: 'success'
+          });
+
+          // Recargar el listado actualizado de publicaciones desde el backend
+          const idRefugio = this._authService.idRefugio();
+          this._pubResource.getPublicacionesPorRefugio(idRefugio).subscribe({
+            next: (actualizadas) => this.publicaciones.set(actualizadas)
+          });
+        },
+        error: (err) => {
+          this._messageService.showMessage({
+            title: 'Error al registrar publicación',
+            text: err?.error?.mensajeRespuesta || err?.error?.mensaje || 'Ocurrió un error al intentar crear la publicación. Verifique los datos.',
+            type: 'error'
+          });
+        }
+      });
   }
 
 }

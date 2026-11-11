@@ -1,5 +1,5 @@
-import { ApplicationConfig, ErrorHandler } from '@angular/core';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { ApplicationConfig, ErrorHandler, inject } from '@angular/core';
+import { provideRouter, Router, withComponentInputBinding, withNavigationErrorHandler } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { appHttpInterceptor } from './core/interceptors/app-http-interceptor';
@@ -9,7 +9,15 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(
       routes,
-      withComponentInputBinding()
+      withComponentInputBinding(),
+      withNavigationErrorHandler(() => {
+        const router = inject(Router);
+        if (!router.navigated) {
+          queueMicrotask(() => {
+            router.navigate(['/login']);
+          });
+        }
+      })
     ),
     provideHttpClient(
       withInterceptors([appHttpInterceptor])

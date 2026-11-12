@@ -40,3 +40,4 @@ describe('authGuard', () => {
     expect(router.serializeUrl(result as UrlTree)).toBe('/login');
   });
 });
+

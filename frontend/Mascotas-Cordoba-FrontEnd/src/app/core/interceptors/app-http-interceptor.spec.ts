@@ -56,3 +56,4 @@ describe('appHttpInterceptor', () => {
     expect(loaderService.loading()).toBeFalse();
   });
 });
+

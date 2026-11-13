@@ -117,6 +117,31 @@
   font-size: 0.875rem;
 }
 
+/* Remember Me */
+.remember-group {
+  margin-top: -0.25rem;
+  margin-bottom: 1.15rem;
+}
+
+.remember-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text-medium);
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-label input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+  margin: 0;
+}
+
 /* Submit Button */
 .submit-btn {
   width: 100%;
@@ -132,7 +157,6 @@
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 1.5rem;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 

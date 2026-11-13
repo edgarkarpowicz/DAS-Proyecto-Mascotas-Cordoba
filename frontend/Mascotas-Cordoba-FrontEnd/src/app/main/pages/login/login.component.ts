@@ -19,6 +19,7 @@ export class LoginComponent {
 
   cuil: string = '20-25999000-5';
   clave: string = 'pass123';
+  recordarme: boolean = false;
   error: string | null = null;
   loading: boolean = false;
 
@@ -31,7 +32,7 @@ export class LoginComponent {
     this.error = null;
     this.loading = true;
 
-    this._authService.login(this.cuil, this.clave).subscribe({
+    this._authService.login(this.cuil, this.clave, this.recordarme).subscribe({
       next: (response) => {
         this.loading = false;
         if (response && response.codigoRespuesta === 1 && response.usuario) {

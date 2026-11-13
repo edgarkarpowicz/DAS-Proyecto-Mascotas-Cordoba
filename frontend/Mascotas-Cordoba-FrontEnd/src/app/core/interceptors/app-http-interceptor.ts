@@ -21,6 +21,7 @@ export const appHttpInterceptor: HttpInterceptorFn = (req, next) => {
   };
 
   const isLoginRequest = req.url.endsWith('/auth/login');
+  const isMeRequest = req.url.endsWith('/auth/me');
   const token = session.token();
   if (token && !isLoginRequest) {
     headersConfig['Authorization'] = `Bearer ${token}`;
@@ -35,7 +36,9 @@ export const appHttpInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse && error.status === 401 && !isLoginRequest) {
         session.clearSession();
-        router.navigate(['/login']);
+        if (!isMeRequest) {
+          router.navigate(['/login']);
+        }
       }
       return throwError(() => error);
     }),

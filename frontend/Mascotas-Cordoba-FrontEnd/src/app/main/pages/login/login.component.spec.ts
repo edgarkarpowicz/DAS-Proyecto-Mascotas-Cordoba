@@ -45,9 +45,36 @@ describe('LoginComponent', () => {
 
     component.onSubmit();
 
+    expect(authServiceSpy.login).toHaveBeenCalledWith('20-25999000-5', 'pass123', false);
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/publicaciones']);
     expect(authServiceSpy.logout).not.toHaveBeenCalled();
     expect(component.error).toBeNull();
+  });
+
+  it('should pass recordarme=true to AuthService.login when checkbox is checked', () => {
+    authServiceSpy.login.and.returnValue(of({
+      codigoRespuesta: 1,
+      token: 'tok-refugio',
+      usuario: {
+        idCiudadano: 3,
+        apellido: 'Sánchez',
+        nombre: 'Roberto',
+        cuil: '20-25999000-5',
+        correo: 'roberto@patitas.org',
+        perfil: 'REFUGIO',
+        idRefugio: 1
+      }
+    }));
+
+    const checkbox: HTMLInputElement | null = fixture.nativeElement.querySelector('#recordarme');
+    expect(checkbox).not.toBeNull();
+    checkbox!.click();
+    fixture.detectChanges();
+
+    component.onSubmit();
+
+    expect(component.recordarme).toBeTrue();
+    expect(authServiceSpy.login).toHaveBeenCalledWith('20-25999000-5', 'pass123', true);
   });
 
   it('should reject non-REFUGIO profiles cleanly and revoke session', () => {

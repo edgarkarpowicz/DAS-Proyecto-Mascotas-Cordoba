@@ -28,6 +28,7 @@ describe('appHttpInterceptor', () => {
 
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -46,6 +47,7 @@ describe('appHttpInterceptor', () => {
   afterEach(() => {
     httpMock.verify();
     sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('should inject X-API-Key header and Bearer token when session exists', () => {
@@ -90,6 +92,24 @@ describe('appHttpInterceptor', () => {
     expect(authSession.isAuthenticated()).toBeFalse();
     expect(authSession.token()).toBeNull();
     expect(navSpy).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('should clear session without redirecting on 401 from /auth/me during startup check', () => {
+    authSession.setSession(mockUser, 'revoked-tok', true);
+    const navSpy = spyOn(router, 'navigate');
+
+    http.get('/auth/me').subscribe({
+      error: () => {
+        // esperado
+      }
+    });
+
+    const req = httpMock.expectOne('/auth/me');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(authSession.isAuthenticated()).toBeFalse();
+    expect(localStorage.getItem('mascotas_cba_token')).toBeNull();
+    expect(navSpy).not.toHaveBeenCalled();
   });
 
   it('should turn off loader when HTTP request fails', () => {

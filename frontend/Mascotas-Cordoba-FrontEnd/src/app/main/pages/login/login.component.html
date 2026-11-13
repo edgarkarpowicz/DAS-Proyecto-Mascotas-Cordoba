@@ -59,6 +59,19 @@
         </div>
       </div>
 
+      <!-- Remember Me Checkbox -->
+      <div class="remember-group">
+        <label class="remember-label" for="recordarme">
+          <input
+            id="recordarme"
+            type="checkbox"
+            [(ngModel)]="recordarme"
+            name="recordarme"
+          />
+          <span>Recordarme</span>
+        </label>
+      </div>
+
       <!-- Submit Button -->
       <button type="submit" class="submit-btn" [disabled]="loading">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

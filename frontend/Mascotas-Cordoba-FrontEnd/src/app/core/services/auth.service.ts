@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, catchError, finalize, of, tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
 import { AuthResource } from '../../main/api/resources/auth-resource';
 import { PerfilUsuario } from '../../main/api/models/i-usuario-refugio';
 import { ILoginResponse } from '../../main/api/models/i-login-response';
@@ -25,12 +25,33 @@ export class AuthService {
     return this._session.hasPerfil(...perfiles);
   }
 
-  login(cuil: string, clave: string): Observable<ILoginResponse> {
+  login(cuil: string, clave: string, recordarme = false): Observable<ILoginResponse> {
     return this._authResource.login({ cuil: cuil.trim(), clave: clave.trim() }).pipe(
       tap(response => {
         if (response && response.codigoRespuesta === 1 && response.usuario && response.token) {
-          this._session.setSession(response.usuario, response.token);
+          this._session.setSession(response.usuario, response.token, recordarme);
         }
+      })
+    );
+  }
+
+  restoreSession(): Observable<void> {
+    if (!this._session.token()) {
+      return of(void 0);
+    }
+
+    return this._authResource.me().pipe(
+      tap(usuario => {
+        if (usuario) {
+          this._session.updateUsuario(usuario);
+        }
+      }),
+      map(() => void 0),
+      catchError((error: { status?: number }) => {
+        if (error?.status === 401 || error?.status === 403) {
+          this._session.clearSession();
+        }
+        return of(void 0);
       })
     );
   }

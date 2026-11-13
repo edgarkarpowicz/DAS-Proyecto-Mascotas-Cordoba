@@ -1,7 +1,7 @@
 package ar.edu.ubp.das.mascotas.config;
 
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
- * Valida el token UUID enviado en Authorization: Bearer <token>,
+ * Valida el token JWT enviado en Authorization: Bearer <token>,
  * carga el contexto de usuario en UserContextHolder y lo limpia al finalizar el request (RF15).
  */
 @Component
@@ -28,7 +28,7 @@ import java.util.Optional;
 public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
-    private SesionRepository sesionRepository;
+    private JwtTokenService jwtTokenService;
 
     @Autowired
     @Qualifier("handlerExceptionResolver")
@@ -60,7 +60,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 );
             }
 
-            SesionUsuarioBE sesion = sesionRepository.validarSesion(tokenOpt.get())
+            SesionUsuarioBE sesion = jwtTokenService.validarToken(tokenOpt.get())
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.UNAUTHORIZED,
                             "Token de sesión inválido, revocado o expirado"

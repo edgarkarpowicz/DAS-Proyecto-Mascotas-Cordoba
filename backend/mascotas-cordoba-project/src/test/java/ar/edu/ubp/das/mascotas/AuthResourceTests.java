@@ -5,9 +5,9 @@ import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
 import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
 import ar.edu.ubp.das.mascotas.resources.auth.AuthResource;
 import ar.edu.ubp.das.mascotas.security.AuthorizationService;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,7 +33,7 @@ class AuthResourceTests {
     private AuthRepository authRepository;
 
     @Mock
-    private SesionRepository sesionRepository;
+    private JwtTokenService jwtTokenService;
 
     @Mock
     private AuthorizationService authorizationService;
@@ -48,7 +47,7 @@ class AuthResourceTests {
     }
 
     @Test
-    void testLoginExitosoPersisteTokenEnSesion() {
+    void testLoginExitosoEmiteJwtYEstableceContexto() {
         UsuarioRefugioBE mockUsuario = new UsuarioRefugioBE();
         mockUsuario.setIdCiudadano(3);
         mockUsuario.setNombre("Roberto");
@@ -58,8 +57,17 @@ class AuthResourceTests {
         mockUsuario.setIdRefugio(1);
         mockUsuario.setNombreRefugio("Refugio Patitas Felices");
 
+        SesionUsuarioBE expectedSesion = new SesionUsuarioBE();
+        expectedSesion.setToken("header.payload.signature");
+        expectedSesion.setIdCiudadano(3);
+        expectedSesion.setCuil("20-25999000-5");
+        expectedSesion.setPerfil("REFUGIO");
+        expectedSesion.setIdRefugio(1);
+
         when(authRepository.autenticarUsuario("20-25999000-5", "pass123"))
                 .thenReturn(Optional.of(mockUsuario));
+        when(jwtTokenService.generarToken(mockUsuario)).thenReturn("header.payload.signature");
+        when(jwtTokenService.construirSesion("header.payload.signature", mockUsuario)).thenReturn(expectedSesion);
 
         LoginRequestBE req = new LoginRequestBE("API_KEY", "20-25999000-5", "pass123");
         ResponseEntity<LoginResponseBE> response = authResource.login(null, req);
@@ -67,13 +75,12 @@ class AuthResourceTests {
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getCodigoRespuesta());
         String token = response.getBody().getToken();
-        assertNotNull(token);
-        assertEquals(32, token.length());
+        assertEquals("header.payload.signature", token);
         assertEquals("Roberto", response.getBody().getUsuario().getNombre());
         assertEquals("REFUGIO", response.getBody().getUsuario().getPerfil());
         assertEquals(1, response.getBody().getUsuario().getIdRefugio());
 
-        verify(sesionRepository, times(1)).crearSesion(eq(token), eq(mockUsuario));
+        verify(jwtTokenService, times(1)).generarToken(mockUsuario);
         assertNotNull(UserContextHolder.get());
         assertEquals("20-25999000-5", UserContextHolder.get().getCuil());
     }
@@ -88,7 +95,7 @@ class AuthResourceTests {
 
         assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
         assertTrue(ex.getReason().contains("Credenciales inválidas"));
-        verify(sesionRepository, never()).crearSesion(any(), any());
+        verify(jwtTokenService, never()).generarToken(any());
     }
 
     @Test
@@ -98,7 +105,7 @@ class AuthResourceTests {
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertTrue(ex.getReason().contains("obligatorios"));
-        verifyNoInteractions(authRepository, sesionRepository);
+        verifyNoInteractions(authRepository, jwtTokenService);
     }
 
     @Test
@@ -132,7 +139,7 @@ class AuthResourceTests {
 
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().get("codigoRespuesta"));
-        verify(sesionRepository, times(1)).revocarSesion("abc123sessiontoken");
+        verify(jwtTokenService, times(1)).revocarToken("abc123sessiontoken");
     }
 
 }

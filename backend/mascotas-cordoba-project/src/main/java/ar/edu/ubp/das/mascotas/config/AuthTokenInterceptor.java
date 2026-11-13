@@ -1,7 +1,7 @@
 package ar.edu.ubp.das.mascotas.config;
 
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import org.apache.cxf.binding.soap.SoapFault;
 import org.apache.cxf.binding.soap.SoapMessage;
@@ -14,17 +14,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Interceptor SOAP de Apache CXF que valida el token UUID de sesión (<token> o Authorization: Bearer)
+ * Interceptor SOAP de Apache CXF que valida el token JWT (<token> o Authorization: Bearer)
  * y establece el contexto de usuario autenticado (RF15).
  */
 public class AuthTokenInterceptor extends AbstractSoapInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
-    private final SesionRepository sesionRepository;
+    private final JwtTokenService jwtTokenService;
 
-    public AuthTokenInterceptor(SesionRepository sesionRepository) {
+    public AuthTokenInterceptor(JwtTokenService jwtTokenService) {
         super(Phase.PRE_PROTOCOL);
-        this.sesionRepository = sesionRepository;
+        this.jwtTokenService = jwtTokenService;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class AuthTokenInterceptor extends AbstractSoapInterceptor {
             throw new SoapFault("Missing or empty session token", SoapFault.FAULT_CODE_CLIENT);
         }
 
-        SesionUsuarioBE sesion = sesionRepository.validarSesion(token)
+        SesionUsuarioBE sesion = jwtTokenService.validarToken(token)
                 .orElseThrow(() -> new SoapFault("Invalid or expired session token", SoapFault.FAULT_CODE_CLIENT));
 
         UserContextHolder.set(sesion);

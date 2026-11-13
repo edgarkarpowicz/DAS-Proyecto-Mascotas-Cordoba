@@ -1,6 +1,6 @@
 package ar.edu.ubp.das.mascotas.config;
 
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.services.adopciones.IPublicacionesService;
 import ar.edu.ubp.das.mascotas.services.auth.IAuthService;
 import org.apache.cxf.Bus;
@@ -17,7 +17,7 @@ public class ServicesConfig {
     private String apiKey;
 
     @Autowired
-    private SesionRepository sesionRepository;
+    private JwtTokenService jwtTokenService;
 
     @Bean
     public EndpointImpl authEndpoint(Bus bus, IAuthService service) {
@@ -33,7 +33,7 @@ public class ServicesConfig {
         EndpointImpl endpoint = new EndpointImpl(bus, service);
         endpoint.getInInterceptors().add(new ApiKeyInterceptor(apiKey));
         if (requireSessionToken) {
-            endpoint.getInInterceptors().add(new AuthTokenInterceptor(sesionRepository));
+            endpoint.getInInterceptors().add(new AuthTokenInterceptor(jwtTokenService));
         }
         endpoint.publish(path);
         return endpoint;

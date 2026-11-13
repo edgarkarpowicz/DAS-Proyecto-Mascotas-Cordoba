@@ -5,13 +5,12 @@ import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
 import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import jakarta.jws.WebService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @WebService(
@@ -24,7 +23,7 @@ public class AuthService implements IAuthService {
     private AuthRepository authRepository;
 
     @Autowired
-    private SesionRepository sesionRepository;
+    private JwtTokenService jwtTokenService;
 
     @Override
     public LoginResponseBE login(LoginRequestBE request) {
@@ -44,8 +43,7 @@ public class AuthService implements IAuthService {
         }
 
         UsuarioRefugioBE usuario = usuarioOpt.get();
-        String token = UUID.randomUUID().toString().replace("-", "");
-        sesionRepository.crearSesion(token, usuario);
+        String token = jwtTokenService.generarToken(usuario);
         return LoginResponseBE.exitoso(token, usuario);
     }
 
@@ -55,11 +53,11 @@ public class AuthService implements IAuthService {
             return LoginResponseBE.error("El token de sesión es obligatorio para cerrar sesión");
         }
         String trimmed = token.trim();
-        Optional<SesionUsuarioBE> sesionOpt = sesionRepository.validarSesion(trimmed);
+        Optional<SesionUsuarioBE> sesionOpt = jwtTokenService.validarToken(trimmed);
         if (sesionOpt.isEmpty()) {
             return LoginResponseBE.error("Token de sesión inválido, revocado o expirado");
         }
-        sesionRepository.revocarSesion(trimmed);
+        jwtTokenService.revocarToken(trimmed);
         return LoginResponseBE.exitoso(null, sesionOpt.get().toUsuarioRefugioBE());
     }
 

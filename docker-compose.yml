@@ -24,9 +24,11 @@ services:
       - DB_NAME=${DB_NAME:-das-mascotas-cordoba}
       - DB_USER=${DB_USER:-master}
       - DB_PASSWORD=${DB_PASSWORD:-123}
-      # API Keys configuradas para seguridad REST y SOAP
+      # API Keys y JWT configurados para seguridad REST y SOAP
       - REST_API_KEY=UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6
       - SOAP_API_KEY=UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT
+      - JWT_SECRET=${JWT_SECRET:-MascotasCordoba-DAS-UBP-2026-HMAC-SHA256-Secret-Key}
+      - JWT_EXPIRATION_MINUTES=${JWT_EXPIRATION_MINUTES:-480}
       # Directorio de fotos dentro del contenedor Tomcat
       - FILE_UPLOAD_DIR=/usr/local/tomcat/uploads/publicaciones
     volumes:

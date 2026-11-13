@@ -5,8 +5,8 @@ import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
 import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
 import ar.edu.ubp.das.mascotas.security.AuthorizationService;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -26,14 +25,14 @@ public class AuthResource {
     private AuthRepository authRepository;
 
     @Autowired
-    private SesionRepository sesionRepository;
+    private JwtTokenService jwtTokenService;
 
     @Autowired
     private AuthorizationService authorizationService;
 
     /**
      * RF15 - Autenticar Usuarios (CIUDADANO, REFUGIO, VETERINARIA, MUNICIPALIDAD)
-     * Genera un token UUID persistido en base de datos para autorizar las operaciones posteriores.
+     * Emite un JWT firmado (HS256) con la identidad, perfil y contexto organizacional del usuario.
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponseBE> login(
@@ -50,18 +49,8 @@ public class AuthResource {
                 "Credenciales inválidas o usuario inhabilitado"
         ));
 
-        // Generar token único de sesión (32 caracteres hexadecimales) y persistirlo en BD
-        String token = UUID.randomUUID().toString().replace("-", "");
-        sesionRepository.crearSesion(token, usuario);
-
-        SesionUsuarioBE sesion = new SesionUsuarioBE();
-        sesion.setToken(token);
-        sesion.setIdCiudadano(usuario.getIdCiudadano());
-        sesion.setCuil(usuario.getCuil());
-        sesion.setPerfil(usuario.getPerfil());
-        sesion.setIdRefugio(usuario.getIdRefugio());
-        sesion.setIdVeterinaria(usuario.getIdVeterinaria());
-        UserContextHolder.set(sesion);
+        String token = jwtTokenService.generarToken(usuario);
+        UserContextHolder.set(jwtTokenService.construirSesion(token, usuario));
 
         return ResponseEntity.ok(
                 LoginResponseBE.exitoso(token, usuario)
@@ -78,12 +67,12 @@ public class AuthResource {
     }
 
     /**
-     * RF15 - Revoca el token de sesión actual en la base de datos.
+     * RF15 - Revoca en memoria el identificador jti del JWT actual al cerrar sesión.
      */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout() {
         SesionUsuarioBE sesion = authorizationService.requireAuthenticated();
-        sesionRepository.revocarSesion(sesion.getToken());
+        jwtTokenService.revocarToken(sesion.getToken());
 
         Map<String, Object> response = new HashMap<>();
         response.put("codigoRespuesta", 1);

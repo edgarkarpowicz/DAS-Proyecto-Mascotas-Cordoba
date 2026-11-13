@@ -2,7 +2,7 @@ package ar.edu.ubp.das.mascotas;
 
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.config.AuthTokenFilter;
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 class AuthTokenFilterTests {
 
     @Mock
-    private SesionRepository sesionRepository;
+    private JwtTokenService jwtTokenService;
 
     @Mock
     private HandlerExceptionResolver resolver;
@@ -57,7 +57,7 @@ class AuthTokenFilterTests {
         authTokenFilter.doFilter(request, response, filterChain);
 
         verify(filterChain, times(1)).doFilter(request, response);
-        verifyNoInteractions(sesionRepository, resolver);
+        verifyNoInteractions(jwtTokenService, resolver);
         assertNull(UserContextHolder.get());
     }
 
@@ -81,7 +81,7 @@ class AuthTokenFilterTests {
         request.addHeader("Authorization", "Bearer deadbeef1234");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        when(sesionRepository.validarSesion("deadbeef1234")).thenReturn(Optional.empty());
+        when(jwtTokenService.validarToken("deadbeef1234")).thenReturn(Optional.empty());
 
         authTokenFilter.doFilter(request, response, filterChain);
 
@@ -106,7 +106,7 @@ class AuthTokenFilterTests {
         sesion.setPerfil("REFUGIO");
         sesion.setIdRefugio(1);
 
-        when(sesionRepository.validarSesion("tok-valido-123")).thenReturn(Optional.of(sesion));
+        when(jwtTokenService.validarToken("tok-valido-123")).thenReturn(Optional.of(sesion));
 
         AtomicReference<SesionUsuarioBE> capturadaEnChain = new AtomicReference<>();
         doAnswer(invocation -> {

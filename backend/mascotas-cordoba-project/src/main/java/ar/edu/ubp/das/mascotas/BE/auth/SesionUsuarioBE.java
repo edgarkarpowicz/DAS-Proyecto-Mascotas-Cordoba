@@ -3,7 +3,7 @@ package ar.edu.ubp.das.mascotas.BE.auth;
 import java.time.LocalDateTime;
 
 /**
- * Contexto de sesión autenticada recuperado desde dbo.sesiones_usuario.
+ * Contexto de sesión autenticada extraído del JWT de autorización (RF15).
  */
 public class SesionUsuarioBE {
 

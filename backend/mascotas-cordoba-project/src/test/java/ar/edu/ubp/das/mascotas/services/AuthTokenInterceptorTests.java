@@ -2,7 +2,7 @@ package ar.edu.ubp.das.mascotas.services;
 
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.config.AuthTokenInterceptor;
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import org.apache.cxf.binding.soap.SoapFault;
 import org.apache.cxf.binding.soap.SoapMessage;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 class AuthTokenInterceptorTests {
 
     @Mock
-    private SesionRepository sesionRepository;
+    private JwtTokenService jwtTokenService;
 
     @AfterEach
     void tearDown() {
@@ -35,17 +35,17 @@ class AuthTokenInterceptorTests {
 
     @Test
     void testGetWsdlPermitidoSinToken() {
-        AuthTokenInterceptor interceptor = new AuthTokenInterceptor(sesionRepository);
+        AuthTokenInterceptor interceptor = new AuthTokenInterceptor(jwtTokenService);
         SoapMessage message = mock(SoapMessage.class);
         when(message.get(Message.HTTP_REQUEST_METHOD)).thenReturn("GET");
 
         assertDoesNotThrow(() -> interceptor.handleMessage(message));
-        verifyNoInteractions(sesionRepository);
+        verifyNoInteractions(jwtTokenService);
     }
 
     @Test
     void testSinTokenLanzaSoapFault() {
-        AuthTokenInterceptor interceptor = new AuthTokenInterceptor(sesionRepository);
+        AuthTokenInterceptor interceptor = new AuthTokenInterceptor(jwtTokenService);
         SoapMessage message = mock(SoapMessage.class);
         when(message.getHeaders()).thenReturn(null);
 
@@ -54,7 +54,7 @@ class AuthTokenInterceptorTests {
 
     @Test
     void testTokenSoapHeaderValidoEstableceContexto() {
-        AuthTokenInterceptor interceptor = new AuthTokenInterceptor(sesionRepository);
+        AuthTokenInterceptor interceptor = new AuthTokenInterceptor(jwtTokenService);
         SoapMessage message = mock(SoapMessage.class);
 
         Header tokenHeader = new Header(new QName("http://example.com", "token"), "tok-soap-999");
@@ -65,7 +65,7 @@ class AuthTokenInterceptorTests {
         sesion.setIdCiudadano(3);
         sesion.setPerfil("REFUGIO");
         sesion.setIdRefugio(1);
-        when(sesionRepository.validarSesion("tok-soap-999")).thenReturn(Optional.of(sesion));
+        when(jwtTokenService.validarToken("tok-soap-999")).thenReturn(Optional.of(sesion));
 
         assertDoesNotThrow(() -> interceptor.handleMessage(message));
         assertNotNull(UserContextHolder.get());
@@ -74,7 +74,7 @@ class AuthTokenInterceptorTests {
 
     @Test
     void testBearerProtocolHeaderValidoEstableceContexto() {
-        AuthTokenInterceptor interceptor = new AuthTokenInterceptor(sesionRepository);
+        AuthTokenInterceptor interceptor = new AuthTokenInterceptor(jwtTokenService);
         SoapMessage message = mock(SoapMessage.class);
 
         when(message.get(Message.HTTP_REQUEST_METHOD)).thenReturn("POST");
@@ -86,7 +86,7 @@ class AuthTokenInterceptorTests {
         sesion.setToken("tok-http-888");
         sesion.setIdCiudadano(6);
         sesion.setPerfil("MUNICIPALIDAD");
-        when(sesionRepository.validarSesion("tok-http-888")).thenReturn(Optional.of(sesion));
+        when(jwtTokenService.validarToken("tok-http-888")).thenReturn(Optional.of(sesion));
 
         assertDoesNotThrow(() -> interceptor.handleMessage(message));
         assertEquals("MUNICIPALIDAD", UserContextHolder.get().getPerfil());

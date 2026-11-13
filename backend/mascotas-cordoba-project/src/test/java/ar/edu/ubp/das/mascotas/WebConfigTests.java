@@ -2,7 +2,7 @@ package ar.edu.ubp.das.mascotas;
 
 import ar.edu.ubp.das.mascotas.config.AuthTokenFilter;
 import ar.edu.ubp.das.mascotas.config.WebConfig;
-import ar.edu.ubp.das.mascotas.repositories.auth.SesionRepository;
+import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.doAnswer;
 class WebConfigTests {
 
     @Mock
-    private SesionRepository sesionRepository;
+    private JwtTokenService jwtTokenService;
 
     @Mock
     private HandlerExceptionResolver resolver;

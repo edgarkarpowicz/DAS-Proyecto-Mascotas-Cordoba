@@ -100,7 +100,7 @@ export class PublicacionesComponent implements HasChangesComponent {
   }
 
   getEdadTexto(pub: IPublicacionAdopcion): string {
-    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento);
+    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento, pub.fechaNacimiento);
   }
 
   getFotoMascota(pub: IPublicacionAdopcion): string {

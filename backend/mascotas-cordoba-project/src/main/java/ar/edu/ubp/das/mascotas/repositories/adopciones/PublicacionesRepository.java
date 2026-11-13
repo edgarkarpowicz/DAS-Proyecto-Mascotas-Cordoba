@@ -16,7 +16,10 @@ import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.sql.Date;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +63,7 @@ public class PublicacionesRepository {
                             new SqlParameter("nombre_mascota", Types.VARCHAR),
                             new SqlParameter("sexo", Types.CHAR),
                             new SqlParameter("año_nacimiento", Types.INTEGER),
+                            new SqlParameter("fecha_nacimiento", Types.DATE),
                             new SqlParameter("especie", Types.VARCHAR),
                             new SqlParameter("raza", Types.VARCHAR),
                             new SqlParameter("fecha_publicacion", Types.DATE),
@@ -81,7 +85,20 @@ public class PublicacionesRepository {
             }
             params.put("sexo", sexoNormalizado);
 
-            params.put("año_nacimiento", req.getAñoNacimiento());
+            LocalDate fechaNacimiento;
+            try {
+                fechaNacimiento = parseFechaNacimiento(req.getFechaNacimiento());
+            } catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+            }
+
+            Integer añoNacimiento = req.getAñoNacimiento();
+            if (fechaNacimiento != null && añoNacimiento == null) {
+                añoNacimiento = fechaNacimiento.getYear();
+            }
+
+            params.put("año_nacimiento", añoNacimiento);
+            params.put("fecha_nacimiento", fechaNacimiento != null ? Date.valueOf(fechaNacimiento) : null);
             params.put("especie", req.getEspecie());
             params.put("raza", req.getRaza());
             params.put("fecha_publicacion", req.getFechaPublicacion());
@@ -223,6 +240,28 @@ public class PublicacionesRepository {
                     ex
             );
         }
+    }
+
+    /**
+     * Parsea y valida una fecha de nacimiento en formato ISO (YYYY-MM-DD), verificando que no sea futura.
+     */
+    public static LocalDate parseFechaNacimiento(String fechaNacimiento) {
+        if (fechaNacimiento == null || fechaNacimiento.trim().isEmpty()) {
+            return null;
+        }
+
+        final LocalDate parsed;
+        try {
+            parsed = LocalDate.parse(fechaNacimiento.trim());
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("La fecha de nacimiento debe tener formato YYYY-MM-DD");
+        }
+
+        if (parsed.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("La fecha de nacimiento no puede ser futura");
+        }
+
+        return parsed;
     }
 
 }

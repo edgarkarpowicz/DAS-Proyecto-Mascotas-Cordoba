@@ -38,14 +38,66 @@ export function formatFotoCaption(nombreMascota?: string, especie?: string): str
   return cleanEspecie ? `${nombre} · ${cleanEspecie}` : nombre;
 }
 
-export function getEdadTexto(edadAproximada?: number, anoNacimiento?: number): string {
-  if (edadAproximada && edadAproximada > 0) {
+interface ParsedCalendarDate {
+  year: number;
+  month: number;
+  day: number;
+}
+
+function parseIsoCalendarDate(fecha?: string): ParsedCalendarDate | null {
+  if (!fecha || !fecha.trim()) {
+    return null;
+  }
+  const isoDateMatch = fecha.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!isoDateMatch) {
+    return null;
+  }
+  const year = Number(isoDateMatch[1]);
+  const month = Number(isoDateMatch[2]);
+  const day = Number(isoDateMatch[3]);
+  const probe = new Date(year, month - 1, day);
+  if (
+    probe.getFullYear() !== year ||
+    probe.getMonth() !== month - 1 ||
+    probe.getDate() !== day
+  ) {
+    return null;
+  }
+  return { year, month, day };
+}
+
+export function getEdadTexto(edadAproximada?: number, anoNacimiento?: number, fechaNacimiento?: string): string {
+  const parsedBirthDate = parseIsoCalendarDate(fechaNacimiento);
+  if (parsedBirthDate) {
+    const today = new Date();
+    const totalMonths =
+      (today.getFullYear() - parsedBirthDate.year) * 12 +
+      (today.getMonth() - (parsedBirthDate.month - 1)) -
+      (today.getDate() < parsedBirthDate.day ? 1 : 0);
+
+    if (totalMonths <= 0) {
+      return 'Menos de 1 mes';
+    }
+    if (totalMonths < 12) {
+      return `${totalMonths} ${totalMonths === 1 ? 'mes' : 'meses'}`;
+    }
+    const years = Math.floor(totalMonths / 12);
+    return `${years} ${years === 1 ? 'año' : 'años'}`;
+  }
+
+  if (typeof edadAproximada === 'number' && edadAproximada >= 0) {
+    if (edadAproximada === 0) {
+      return 'Menos de 1 año';
+    }
     return `${edadAproximada} ${edadAproximada === 1 ? 'año' : 'años'}`;
   }
+
   if (anoNacimiento && anoNacimiento > 0) {
     const edadCalc = new Date().getFullYear() - anoNacimiento;
-    const years = edadCalc > 0 ? edadCalc : 1;
-    return `${years} ${years === 1 ? 'año' : 'años'}`;
+    if (edadCalc <= 0) {
+      return 'Menos de 1 año';
+    }
+    return `${edadCalc} ${edadCalc === 1 ? 'año' : 'años'}`;
   }
   return '2 años';
 }
@@ -58,15 +110,20 @@ export function getSexoLabel(sexo?: string): 'Hembra' | 'Macho' {
   return 'Macho';
 }
 
+export function formatFechaNacimiento(fecha?: string): string | null {
+  const parsed = parseIsoCalendarDate(fecha);
+  if (!parsed) {
+    return null;
+  }
+  const day = String(parsed.day).padStart(2, '0');
+  const month = String(parsed.month).padStart(2, '0');
+  return `${day}/${month}/${parsed.year}`;
+}
+
 export function formatFechaPublicacion(fecha?: string): string {
   if (!fecha || !fecha.trim()) {
     return 'Sin fecha registrada';
   }
-  const isoDateMatch = fecha.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoDateMatch) {
-    const [, year, month, day] = isoDateMatch;
-    return `${day}/${month}/${year}`;
-  }
-  return fecha.trim();
+  return formatFechaNacimiento(fecha) ?? fecha.trim();
 }
 

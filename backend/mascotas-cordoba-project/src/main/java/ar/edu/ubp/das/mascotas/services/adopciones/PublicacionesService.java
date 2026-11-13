@@ -78,6 +78,12 @@ public class PublicacionesService implements IPublicacionesService {
             return AdministrarPublicacionResponseBE.error("Debe especificar una mascota existente o ingresar los datos de una nueva mascota");
         }
 
+        try {
+            PublicacionesRepository.parseFechaNacimiento(request.getFechaNacimiento());
+        } catch (IllegalArgumentException ex) {
+            return AdministrarPublicacionResponseBE.error(ex.getMessage());
+        }
+
         if (request.getEstadoPublicacion() != null && !request.getEstadoPublicacion().trim().isEmpty()) {
             String estado = request.getEstadoPublicacion().trim();
             if (!publicacionesRepository.esEstadoValido(estado)) {

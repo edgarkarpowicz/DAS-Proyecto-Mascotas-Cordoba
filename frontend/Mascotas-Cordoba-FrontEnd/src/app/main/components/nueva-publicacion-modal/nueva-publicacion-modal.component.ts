@@ -5,6 +5,7 @@ import { PublicacionesResource } from '../../api/resources/publicaciones-resourc
 import { AuthService } from '../../../core/services/auth.service';
 import { AppMessageService } from '../../../core/services/app-message-service';
 import { AutofocusDirective } from '../../../shared/directives/autofocus';
+import { getEdadTexto } from '../../../shared/utils/mascota-formatters';
 import { IMascotaDisponible } from '../../api/models/i-mascota-disponible';
 import { IEspecie } from '../../api/models/i-especie';
 import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
@@ -37,9 +38,10 @@ export class NuevaPublicacionModalComponent implements OnInit {
   especie: string = 'Perro';
   raza: string = '';
   sexo: string = 'Hembra';
-  edad: string = '2 años';
-  edadAproximada: number = 2;
-  anoNacimiento: number = new Date().getFullYear() - 2;
+  fechaNacimiento: string = '';
+  readonly maxFechaNacimiento: string = this.getTodayIsoDate();
+  private anoNacimientoSeleccionado?: number;
+  private edadAproximadaSeleccionada?: number;
   nroRegMunicipal: string = '';
   condicionAdopcion: string = 'Hogar responsable y seguimiento veterinario';
   descripcion: string = '';
@@ -87,13 +89,14 @@ export class NuevaPublicacionModalComponent implements OnInit {
         this.especie = encontrada.especie || 'Perro';
         this.raza = encontrada.raza || '';
         this.sexo = (encontrada.sexo === 'M' || encontrada.sexo === 'm' || encontrada.sexo === 'Macho') ? 'Macho' : 'Hembra';
-        if (encontrada.añoNacimiento) {
-          this.anoNacimiento = encontrada.añoNacimiento;
-        } else if (encontrada.edadAproximada) {
-          this.anoNacimiento = new Date().getFullYear() - encontrada.edadAproximada;
+        if (encontrada.fechaNacimiento) {
+          this.fechaNacimiento = encontrada.fechaNacimiento.slice(0, 10);
+          this.anoNacimientoSeleccionado = encontrada.añoNacimiento ?? Number(this.fechaNacimiento.slice(0, 4));
+        } else {
+          this.fechaNacimiento = '';
+          this.anoNacimientoSeleccionado = encontrada.añoNacimiento;
         }
-        this.edadAproximada = encontrada.edadAproximada || (new Date().getFullYear() - this.anoNacimiento);
-        this.edad = `${this.edadAproximada} años (nac. ${this.anoNacimiento})`;
+        this.edadAproximadaSeleccionada = encontrada.edadAproximada;
         return;
       }
     }
@@ -105,9 +108,28 @@ export class NuevaPublicacionModalComponent implements OnInit {
     this.especie = this.especiesDisponibles()[0]?.nomEspecie || 'Perro';
     this.raza = '';
     this.sexo = 'Hembra';
-    this.anoNacimiento = new Date().getFullYear() - 2;
-    this.edadAproximada = 2;
-    this.edad = '2 años';
+    this.fechaNacimiento = '';
+    this.anoNacimientoSeleccionado = undefined;
+    this.edadAproximadaSeleccionada = undefined;
+  }
+
+  get edadCalculadaTexto(): string | null {
+    if (this.fechaNacimiento) {
+      return getEdadTexto(undefined, undefined, this.fechaNacimiento);
+    }
+    if (this.selectedNroReg() !== null && (this.anoNacimientoSeleccionado || this.edadAproximadaSeleccionada !== undefined)) {
+      const edad = getEdadTexto(this.edadAproximadaSeleccionada, this.anoNacimientoSeleccionado);
+      return this.anoNacimientoSeleccionado ? `${edad} (nac. ${this.anoNacimientoSeleccionado})` : edad;
+    }
+    return null;
+  }
+
+  private getTodayIsoDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   onEspecieChange(): void {
@@ -192,6 +214,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
     return Boolean(
       this.nombreMascota.trim() ||
       this.raza.trim() ||
+      this.fechaNacimiento ||
       this.descripcion.trim() ||
       this.selectedNroReg() ||
       this.selectedFile
@@ -214,6 +237,15 @@ export class NuevaPublicacionModalComponent implements OnInit {
       this._messageService.showMessage({
         title: 'Campos requeridos',
         text: 'Por favor complete el nombre de la mascota y las características.',
+        type: 'warning'
+      });
+      return;
+    }
+
+    if (this.fechaNacimiento && this.fechaNacimiento > this.maxFechaNacimiento) {
+      this._messageService.showMessage({
+        title: 'Fecha inválida',
+        text: 'La fecha de nacimiento no puede ser posterior a hoy.',
         type: 'warning'
       });
       return;
@@ -243,6 +275,11 @@ export class NuevaPublicacionModalComponent implements OnInit {
 
   private emitirGuardar(): void {
     const idRefugio = this._authService.idRefugio();
+    const fechaNacClean = this.fechaNacimiento.trim() || undefined;
+    const anoNacClean = fechaNacClean
+      ? Number(fechaNacClean.slice(0, 4))
+      : this.anoNacimientoSeleccionado;
+
     const req: INuevaPublicacionRequest = {
       idRefugio: idRefugio,
       nroRegMunicipal: this.selectedNroReg() ?? undefined,
@@ -250,7 +287,8 @@ export class NuevaPublicacionModalComponent implements OnInit {
       especie: this.especie,
       raza: this.raza.trim() || undefined,
       sexo: this.sexo,
-      añoNacimiento: this.anoNacimiento || (new Date().getFullYear() - (this.edadAproximada || 2)),
+      añoNacimiento: anoNacClean,
+      fechaNacimiento: fechaNacClean,
       caracteristicasMascota: this.descripcion.trim(),
       condicionAdopcion: this.condicionAdopcion.trim(),
       foto: this.foto.trim() || undefined,

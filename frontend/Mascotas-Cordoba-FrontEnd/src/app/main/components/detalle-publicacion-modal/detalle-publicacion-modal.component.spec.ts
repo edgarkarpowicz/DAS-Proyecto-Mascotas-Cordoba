@@ -94,5 +94,26 @@ describe('DetallePublicacionModalComponent', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(closeSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('should render formatted birth date and month age when fechaNacimiento is present', () => {
+    const today = new Date();
+    const birthDate = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+    const yyyy = birthDate.getFullYear();
+    const mm = String(birthDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(birthDate.getDate()).padStart(2, '0');
+    const isoDate = `${yyyy}-${mm}-${dd}`;
+
+    fixture.componentRef.setInput('publicacion', {
+      ...samplePub,
+      añoNacimiento: yyyy,
+      edadAproximada: 0,
+      fechaNacimiento: isoDate
+    });
+    fixture.detectChanges();
+
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('5 meses');
+    expect(el.textContent).toContain(`(nac. ${dd}/${mm}/${yyyy})`);
+  });
 });
 

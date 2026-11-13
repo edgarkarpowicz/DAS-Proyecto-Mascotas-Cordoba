@@ -11,6 +11,7 @@ export interface IPublicacionAdopcion {
   nombreMascota: string;
   sexo: string;
   añoNacimiento?: number;
+  fechaNacimiento?: string;
   edadAproximada?: number;
   especie?: string;
   raza?: string;

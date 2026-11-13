@@ -68,8 +68,8 @@
           <span class="spec-label">Edad aproximada</span>
           <span class="spec-value">
             {{ getEdad(pub) }}
-            @if (getAnoNacimiento(pub); as anoNac) {
-            <span class="spec-sub"> (nac. {{ anoNac }})</span>
+            @if (getNacimientoLabel(pub); as nacimiento) {
+            <span class="spec-sub"> (nac. {{ nacimiento }})</span>
             }
           </span>
         </div>

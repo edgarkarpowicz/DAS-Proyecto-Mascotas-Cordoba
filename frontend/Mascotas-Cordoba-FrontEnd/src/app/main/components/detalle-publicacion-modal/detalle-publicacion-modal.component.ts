@@ -5,6 +5,7 @@ import { ExpandImageButtonComponent } from '../../../shared/components/expand-im
 import { ImagenLightboxModalComponent } from '../../../shared/components/imagen-lightbox-modal/imagen-lightbox-modal.component';
 import {
   applyFallbackFoto,
+  formatFechaNacimiento,
   formatFechaPublicacion,
   formatFotoCaption,
   getDefaultFotoMascota,
@@ -74,7 +75,15 @@ export class DetallePublicacionModalComponent {
   }
 
   getEdad(pub: IPublicacionAdopcion): string {
-    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento);
+    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento, pub.fechaNacimiento);
+  }
+
+  getFechaNacimiento(pub: IPublicacionAdopcion): string | null {
+    return formatFechaNacimiento(pub.fechaNacimiento);
+  }
+
+  getNacimientoLabel(pub: IPublicacionAdopcion): string | null {
+    return this.getFechaNacimiento(pub) ?? (pub.añoNacimiento ? String(pub.añoNacimiento) : null);
   }
 
   getAnoNacimiento(pub: IPublicacionAdopcion): number | undefined {

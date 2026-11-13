@@ -108,5 +108,33 @@ describe('NuevaPublicacionModalComponent', () => {
     component.onSubmit();
     expect(saveSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('should render date input, emit selected fechaNacimiento with derived añoNacimiento, and block future dates', () => {
+    const dateInput: HTMLInputElement | null = fixture.nativeElement.querySelector('input[type="date"][name="fechaNacimiento"]');
+    expect(dateInput).toBeTruthy();
+
+    const saveSpy = spyOn(component.save, 'emit');
+    component.nombreMascota = 'Milo';
+    component.descripcion = 'Muy curioso';
+    component.fechaNacimiento = '2024-05-10';
+
+    expect(component.hasChanges()).toBeTrue();
+    component.onSubmit();
+
+    expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({
+      nombreMascota: 'Milo',
+      fechaNacimiento: '2024-05-10',
+      añoNacimiento: 2024
+    }));
+
+    const futureDate = new Date();
+    futureDate.setFullYear(futureDate.getFullYear() + 1);
+    component.fechaNacimiento = `${futureDate.getFullYear()}-01-01`;
+    component.onSubmit();
+
+    expect(messageSpy.showMessage).toHaveBeenCalledWith(jasmine.objectContaining({
+      title: 'Fecha inválida'
+    }));
+  });
 });
 

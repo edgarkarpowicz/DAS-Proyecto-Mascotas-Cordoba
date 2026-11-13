@@ -241,4 +241,32 @@ class PublicacionesResourceTests {
         assertEquals("20-25999000-5", req.getCuilPublicante());
     }
 
+    @Test
+    void testCrearPublicacionFechaNacimientoInvalidaLanzaBadRequest() {
+        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
+        req.setIdRefugio(1);
+        req.setNombreMascota("Toby");
+        req.setFechaNacimiento("10/05/2024");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesResource.crearPublicacion(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("YYYY-MM-DD"));
+    }
+
+    @Test
+    void testCrearPublicacionFechaNacimientoFuturaLanzaBadRequest() {
+        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
+        req.setIdRefugio(1);
+        req.setNombreMascota("Toby");
+        req.setFechaNacimiento("2099-01-01");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesResource.crearPublicacion(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("futura"));
+    }
+
 }

@@ -4,6 +4,7 @@ export interface INuevaPublicacionRequest {
   nombreMascota?: string;
   sexo?: string;
   añoNacimiento?: number;
+  fechaNacimiento?: string;
   especie?: string;
   raza?: string;
   fechaPublicacion?: string;

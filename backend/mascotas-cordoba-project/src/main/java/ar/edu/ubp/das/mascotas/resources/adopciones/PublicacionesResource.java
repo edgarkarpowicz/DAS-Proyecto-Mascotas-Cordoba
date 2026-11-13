@@ -179,6 +179,12 @@ public class PublicacionesResource {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe especificar una mascota existente o ingresar los datos de una nueva mascota");
         }
 
+        try {
+            PublicacionesRepository.parseFechaNacimiento(request.getFechaNacimiento());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
+
         if (request.getEstadoPublicacion() != null && !request.getEstadoPublicacion().trim().isEmpty()) {
             String estado = request.getEstadoPublicacion().trim();
             if (!publicacionesRepository.esEstadoValido(estado)) {

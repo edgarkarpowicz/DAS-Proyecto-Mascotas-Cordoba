@@ -182,6 +182,13 @@
   color: #059669;
 }
 
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-medium);
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;

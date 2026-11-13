@@ -144,6 +144,7 @@ CREATE TABLE mascotas (
     nombre VARCHAR(64) NOT NULL,
     sexo CHAR(1) NOT NULL,
     [año_nacimiento] INT NOT NULL,
+    fecha_nacimiento DATE NULL,
     microchip VARCHAR(64) NULL,
     vive BIT NOT NULL DEFAULT 1,
     id_responsable INT NULL,
@@ -548,7 +549,18 @@ BEGIN
            nombreMascota         = m.nombre,
            sexo                  = m.sexo,
            añoNacimiento         = m.[año_nacimiento],
-           edadAproximada        = (YEAR(GETDATE()) - m.[año_nacimiento]),
+           fechaNacimiento       = CONVERT(VARCHAR(10), m.fecha_nacimiento, 23),
+           edadAproximada        = CASE
+               WHEN m.fecha_nacimiento IS NOT NULL THEN
+                   CASE
+                       WHEN DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE))
+                            - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE)), m.fecha_nacimiento) > CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END < 0
+                       THEN 0
+                       ELSE DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE))
+                            - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE)), m.fecha_nacimiento) > CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END
+                   END
+               ELSE (YEAR(GETDATE()) - m.[año_nacimiento])
+           END,
            especie               = COALESCE(
                (SELECT TOP 1 cm.valor_caracteristica 
                   FROM dbo.caracteristicas_mascotas cm (NOLOCK) 
@@ -583,6 +595,7 @@ CREATE OR ALTER PROCEDURE dbo.ins_publicacion_adopcion
     @nombre_mascota           VARCHAR(64) = NULL,
     @sexo                     CHAR(1) = 'M',
     @año_nacimiento           INT = NULL,
+    @fecha_nacimiento         DATE = NULL,
     @especie                  VARCHAR(64) = NULL,
     @raza                     VARCHAR(64) = NULL,
     @fecha_publicacion        DATE = NULL,
@@ -604,11 +617,14 @@ BEGIN
     BEGIN
         SELECT @nrm = COALESCE(MAX(nro_reg_municipal), 100000) + 1 FROM dbo.mascotas;
 
+        IF @fecha_nacimiento IS NOT NULL
+            SET @año_nacimiento = YEAR(@fecha_nacimiento);
+
         IF @año_nacimiento IS NULL
             SET @año_nacimiento = YEAR(GETDATE());
 
-        INSERT INTO dbo.mascotas (nro_reg_municipal, nombre, sexo, [año_nacimiento], microchip, vive, id_responsable, id_refugio)
-        VALUES (@nrm, COALESCE(@nombre_mascota, 'Sin Nombre'), @sexo, @año_nacimiento, NULL, 1, NULL, @id_refugio);
+        INSERT INTO dbo.mascotas (nro_reg_municipal, nombre, sexo, [año_nacimiento], fecha_nacimiento, microchip, vive, id_responsable, id_refugio)
+        VALUES (@nrm, COALESCE(@nombre_mascota, 'Sin Nombre'), @sexo, @año_nacimiento, @fecha_nacimiento, NULL, 1, NULL, @id_refugio);
 
         -- Registrar Especie (cod_rasgo = 1)
         IF @especie IS NOT NULL AND TRIM(@especie) <> ''
@@ -689,7 +705,18 @@ BEGIN
            nombre          = m.nombre,
            sexo            = m.sexo,
            añoNacimiento   = m.[año_nacimiento],
-           edadAproximada  = (YEAR(GETDATE()) - m.[año_nacimiento]),
+           fechaNacimiento = CONVERT(VARCHAR(10), m.fecha_nacimiento, 23),
+           edadAproximada  = CASE
+               WHEN m.fecha_nacimiento IS NOT NULL THEN
+                   CASE
+                       WHEN DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE))
+                            - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE)), m.fecha_nacimiento) > CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END < 0
+                       THEN 0
+                       ELSE DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE))
+                            - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE)), m.fecha_nacimiento) > CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END
+                   END
+               ELSE (YEAR(GETDATE()) - m.[año_nacimiento])
+           END,
            especie         = COALESCE(
                (SELECT TOP 1 cm.valor_caracteristica 
                   FROM dbo.caracteristicas_mascotas cm (NOLOCK) 

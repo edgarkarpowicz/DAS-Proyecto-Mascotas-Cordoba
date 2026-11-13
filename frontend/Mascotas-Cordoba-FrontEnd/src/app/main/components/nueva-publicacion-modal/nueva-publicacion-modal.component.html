@@ -93,15 +93,23 @@
           </select>
         </div>
         <div class="form-group flex-1">
-          <label>Edad / Año de Nacimiento</label>
-          <input 
-            type="text" 
-            [(ngModel)]="edad" 
-            name="edad" 
-            placeholder="Ej: 3 años" 
-            [readonly]="selectedNroReg() !== null"
+          <label for="fechaNacimientoInput">Fecha de Nacimiento</label>
+          <input
+            id="fechaNacimientoInput"
+            type="date"
+            [(ngModel)]="fechaNacimiento"
+            name="fechaNacimiento"
+            [max]="maxFechaNacimiento"
+            [disabled]="selectedNroReg() !== null"
             [class.input-locked]="selectedNroReg() !== null"
           />
+          @if (edadCalculadaTexto; as edadPreview) {
+            <span class="field-hint">
+              {{ selectedNroReg() !== null && !fechaNacimiento ? 'Edad registrada: ' + edadPreview : 'Edad calculada: ' + edadPreview }}
+            </span>
+          } @else {
+            <span class="field-hint">Elegí una fecha en el calendario</span>
+          }
         </div>
       </div>
 

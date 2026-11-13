@@ -15,9 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -94,7 +91,6 @@ public class JwtTokenService {
     }
 
     public SesionUsuarioBE construirSesion(String token, UsuarioRefugioBE usuario) {
-        long expEpoch = clock.instant().getEpochSecond() + (expirationMinutes * 60L);
         SesionUsuarioBE sesion = new SesionUsuarioBE();
         sesion.setToken(token);
         sesion.setIdCiudadano(usuario.getIdCiudadano());
@@ -107,8 +103,6 @@ public class JwtTokenService {
         sesion.setNombreRefugio(usuario.getNombreRefugio());
         sesion.setIdVeterinaria(usuario.getIdVeterinaria());
         sesion.setNombreVeterinaria(usuario.getNombreVeterinaria());
-        sesion.setFechaExpiracion(LocalDateTime.ofInstant(Instant.ofEpochSecond(expEpoch), ZoneOffset.UTC));
-        sesion.setActiva(true);
         return sesion;
     }
 
@@ -127,11 +121,6 @@ public class JwtTokenService {
             sesion.setNombreRefugio(asString(claims.get("nombreRefugio")));
             sesion.setIdVeterinaria(asInteger(claims.get("idVeterinaria")));
             sesion.setNombreVeterinaria(asString(claims.get("nombreVeterinaria")));
-            Long exp = asLong(claims.get("exp"));
-            if (exp != null) {
-                sesion.setFechaExpiracion(LocalDateTime.ofInstant(Instant.ofEpochSecond(exp), ZoneOffset.UTC));
-            }
-            sesion.setActiva(true);
             return sesion;
         });
     }

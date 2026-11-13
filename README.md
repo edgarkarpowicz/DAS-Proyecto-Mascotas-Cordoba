@@ -257,7 +257,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
   {
     "codigoRespuesta": 1,
     "mensajeRespuesta": "Usuario autenticado exitosamente",
-    "token": "4a7b9c2e1f3d4a5b6c7d8e9f0a1b2c3d",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.<payload>.<firma>",
     "usuario": {
       "idCiudadano": 5,
       "apellido": "Pérez",
@@ -395,7 +395,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
            <response>
               <codigoRespuesta>1</codigoRespuesta>
               <mensajeRespuesta>Usuario autenticado exitosamente</mensajeRespuesta>
-              <token>4a7b9c2e1f3d4a5b6c7d8e9f0a1b2c3d</token>
+              <token>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.&lt;payload&gt;.&lt;firma&gt;</token>
               <usuario>
                  <idCiudadano>5</idCiudadano>
                  <nombre>Juan</nombre>

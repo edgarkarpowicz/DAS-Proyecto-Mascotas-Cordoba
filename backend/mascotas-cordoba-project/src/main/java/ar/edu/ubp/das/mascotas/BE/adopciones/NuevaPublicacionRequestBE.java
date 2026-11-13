@@ -2,8 +2,6 @@ package ar.edu.ubp.das.mascotas.BE.adopciones;
 
 public class NuevaPublicacionRequestBE {
 
-    private String apiKey;
-    private String token;
     private Integer idRefugio;
     private Integer nroRegMunicipal;
 
@@ -25,22 +23,6 @@ public class NuevaPublicacionRequestBE {
 
     public NuevaPublicacionRequestBE() {
         this.estadoPublicacion = "Activa";
-    }
-
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
     }
 
     public Integer getIdRefugio() {
@@ -158,9 +140,7 @@ public class NuevaPublicacionRequestBE {
     @Override
     public String toString() {
         return "NuevaPublicacionRequestBE{" +
-                "apiKey='***'" +
-                ", token='***'" +
-                ", idRefugio=" + idRefugio +
+                "idRefugio=" + idRefugio +
                 ", nroRegMunicipal=" + nroRegMunicipal +
                 ", nombreMascota='" + nombreMascota + '\'' +
                 ", especie='" + especie + '\'' +

@@ -30,9 +30,11 @@ spring.datasource.username=${DB_USER:master}
 spring.datasource.password=${DB_PASSWORD:123}
 spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
 
-# Claves de Seguridad (API Keys)
+# Claves de Seguridad (API Keys y JWT)
 security.soap.api-key=${SOAP_API_KEY:UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT}
 security.rest.api-key=${REST_API_KEY:UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6}
+security.jwt.secret=${JWT_SECRET:MascotasCordoba-DAS-UBP-2026-HMAC-SHA256-Secret-Key}
+security.jwt.expiration-minutes=${JWT_EXPIRATION_MINUTES:480}
 
 # Ruta base de Apache CXF para servicios SOAP
 cxf.path=/services

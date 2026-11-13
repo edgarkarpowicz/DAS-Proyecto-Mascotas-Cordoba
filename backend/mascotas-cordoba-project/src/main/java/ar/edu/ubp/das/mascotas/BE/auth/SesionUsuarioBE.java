@@ -1,7 +1,5 @@
 package ar.edu.ubp.das.mascotas.BE.auth;
 
-import java.time.LocalDateTime;
-
 /**
  * Contexto de sesión autenticada extraído del JWT de autorización (RF15).
  */
@@ -18,8 +16,6 @@ public class SesionUsuarioBE {
     private Integer idVeterinaria;
     private String nombreRefugio;
     private String nombreVeterinaria;
-    private LocalDateTime fechaExpiracion;
-    private Boolean activa;
 
     public String getToken() {
         return token;
@@ -107,22 +103,6 @@ public class SesionUsuarioBE {
 
     public void setNombreVeterinaria(String nombreVeterinaria) {
         this.nombreVeterinaria = nombreVeterinaria;
-    }
-
-    public LocalDateTime getFechaExpiracion() {
-        return fechaExpiracion;
-    }
-
-    public void setFechaExpiracion(LocalDateTime fechaExpiracion) {
-        this.fechaExpiracion = fechaExpiracion;
-    }
-
-    public Boolean getActiva() {
-        return activa;
-    }
-
-    public void setActiva(Boolean activa) {
-        this.activa = activa;
     }
 
     public boolean esPerfil(PerfilUsuario esperado) {

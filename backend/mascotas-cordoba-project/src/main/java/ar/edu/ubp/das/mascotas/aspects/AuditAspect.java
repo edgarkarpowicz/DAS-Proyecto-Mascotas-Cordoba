@@ -187,7 +187,7 @@ public class AuditAspect {
                         return "null";
                     }
                     String str = String.valueOf(arg);
-                    if (str.length() == 32 && str.matches("[0-9a-fA-F]{32}")) {
+                    if (str.matches("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+")) {
                         return "***";
                     }
                     return arg;

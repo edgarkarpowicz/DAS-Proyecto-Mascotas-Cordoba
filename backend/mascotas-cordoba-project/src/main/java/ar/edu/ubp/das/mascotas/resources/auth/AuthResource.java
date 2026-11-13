@@ -35,9 +35,7 @@ public class AuthResource {
      * Emite un JWT firmado (HS256) con la identidad, perfil y contexto organizacional del usuario.
      */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseBE> login(
-            @RequestHeader(value = "X-API-Key", required = false) String apiKeyHeader,
-            @RequestBody LoginRequestBE request) {
+    public ResponseEntity<LoginResponseBE> login(@RequestBody LoginRequestBE request) {
 
         validarLoginRequest(request);
 

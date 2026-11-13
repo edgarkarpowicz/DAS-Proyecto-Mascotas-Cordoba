@@ -69,8 +69,8 @@ class AuthResourceTests {
         when(jwtTokenService.generarToken(mockUsuario)).thenReturn("header.payload.signature");
         when(jwtTokenService.construirSesion("header.payload.signature", mockUsuario)).thenReturn(expectedSesion);
 
-        LoginRequestBE req = new LoginRequestBE("API_KEY", "20-25999000-5", "pass123");
-        ResponseEntity<LoginResponseBE> response = authResource.login(null, req);
+        LoginRequestBE req = new LoginRequestBE("20-25999000-5", "pass123");
+        ResponseEntity<LoginResponseBE> response = authResource.login(req);
 
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getCodigoRespuesta());
@@ -90,8 +90,8 @@ class AuthResourceTests {
         when(authRepository.autenticarUsuario("20259990005", "wrongpass"))
                 .thenReturn(Optional.empty());
 
-        LoginRequestBE req = new LoginRequestBE("API_KEY", "20259990005", "wrongpass");
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authResource.login(null, req));
+        LoginRequestBE req = new LoginRequestBE("20259990005", "wrongpass");
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authResource.login(req));
 
         assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
         assertTrue(ex.getReason().contains("Credenciales inválidas"));
@@ -100,8 +100,8 @@ class AuthResourceTests {
 
     @Test
     void testLoginParametrosVaciosLanzaException() {
-        LoginRequestBE req = new LoginRequestBE("API_KEY", "", "");
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authResource.login(null, req));
+        LoginRequestBE req = new LoginRequestBE("", "");
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authResource.login(req));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertTrue(ex.getReason().contains("obligatorios"));

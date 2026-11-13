@@ -499,42 +499,6 @@ END
 GO
 
 /* -----------------------------------------------------------------------------
-   Procedimiento: autenticar_usuario_refugio (RF15 - Compatibilidad)
-   Autentica a un usuario por CUIL y clave, validando que sea el responsable
-   de un refugio habilitado en el programa.
------------------------------------------------------------------------------ */
-CREATE OR ALTER PROCEDURE dbo.autenticar_usuario_refugio
-(
-    @cuil  VARCHAR(20),
-    @clave VARCHAR(128)
-)
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    -- Normalizar CUIL removiendo guiones y espacios si los hubiere
-    DECLARE @cuil_clean VARCHAR(20) = REPLACE(REPLACE(TRIM(@cuil), '-', ''), ' ', '');
-
-    SELECT idCiudadano           = c.id_ciudadano,
-           apellido              = c.apellido,
-           nombre                = c.nombre,
-           cuil                  = c.cuil,
-           correo                = c.correo,
-           perfil                = 'REFUGIO',
-           idRefugio             = r.id_refugio,
-           nombreRefugio         = COALESCE(r.nombre, r.razon_social),
-           razonSocialRefugio    = r.razon_social,
-           habilitacionMunicipal = r.habilitacion_municipal
-      FROM dbo.ciudadanos c (NOLOCK)
-      JOIN dbo.refugios r (NOLOCK)
-        ON r.id_responsable = c.id_ciudadano
-     WHERE (c.cuil = @cuil OR REPLACE(REPLACE(c.cuil, '-', ''), ' ', '') = @cuil_clean)
-       AND c.clave = @clave
-       AND c.habilitado = 1;
-END
-GO
-
-/* -----------------------------------------------------------------------------
    Procedimiento: registrar_auditoria_operacion (RF15 / RNF08)
    Registra la identidad del usuario y el resultado de operaciones trazables.
 ----------------------------------------------------------------------------- */

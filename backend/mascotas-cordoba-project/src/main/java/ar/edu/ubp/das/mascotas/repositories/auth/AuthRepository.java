@@ -26,14 +26,6 @@ public class AuthRepository {
         return ejecutarAutenticacion("exec dbo.autenticar_usuario ?, ?", cuil, clave);
     }
 
-    /**
-     * Autentica a un usuario por CUIL y clave, validando que pertenezca
-     * a un refugio habilitado en el programa mediante el procedimiento almacenado.
-     */
-    public Optional<UsuarioRefugioBE> autenticarRefugio(String cuil, String clave) {
-        return ejecutarAutenticacion("exec dbo.autenticar_usuario_refugio ?, ?", cuil, clave);
-    }
-
     private Optional<UsuarioRefugioBE> ejecutarAutenticacion(String sql, String cuil, String clave) {
         try {
             List<UsuarioRefugioBE> resultados = jdbcTemplate.query(

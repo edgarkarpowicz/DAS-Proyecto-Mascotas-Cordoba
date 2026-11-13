@@ -51,7 +51,6 @@ class JwtTokenServiceTests {
         assertEquals(1, sesion.getIdRefugio());
         assertEquals("Refugio Patitas Felices", sesion.getNombreRefugio());
         assertNull(sesion.getIdVeterinaria());
-        assertTrue(Boolean.TRUE.equals(sesion.getActiva()));
     }
 
     @Test

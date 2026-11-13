@@ -142,7 +142,7 @@ class PublicacionesResourceTests {
         when(publicacionesRepository.crearPublicacion(any(NuevaPublicacionRequestBE.class)))
                 .thenReturn(50);
 
-        ResponseEntity<AdministrarPublicacionResponseBE> response = publicacionesResource.crearPublicacion(null, req);
+        ResponseEntity<AdministrarPublicacionResponseBE> response = publicacionesResource.crearPublicacion(req);
 
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getCodigoRespuesta());
@@ -156,7 +156,7 @@ class PublicacionesResourceTests {
         req.setIdRefugio(null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> publicacionesResource.crearPublicacion(null, req));
+                () -> publicacionesResource.crearPublicacion(req));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertTrue(ex.getReason().contains("obligatorio"));
@@ -173,7 +173,7 @@ class PublicacionesResourceTests {
                 .thenReturn(false);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> publicacionesResource.crearPublicacion(null, req));
+                () -> publicacionesResource.crearPublicacion(req));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertTrue(ex.getReason().contains("Estado no válido"));
@@ -233,7 +233,7 @@ class PublicacionesResourceTests {
         when(publicacionesRepository.crearPublicacion(any(NuevaPublicacionRequestBE.class)))
                 .thenReturn(77);
 
-        ResponseEntity<AdministrarPublicacionResponseBE> response = publicacionesResource.crearPublicacion(null, req);
+        ResponseEntity<AdministrarPublicacionResponseBE> response = publicacionesResource.crearPublicacion(req);
 
         assertNotNull(response.getBody());
         assertEquals(77, response.getBody().getNroPublicacion());

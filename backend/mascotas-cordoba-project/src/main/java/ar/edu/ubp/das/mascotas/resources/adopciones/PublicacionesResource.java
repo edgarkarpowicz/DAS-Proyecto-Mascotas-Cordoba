@@ -91,7 +91,6 @@ public class PublicacionesResource {
      */
     @PostMapping("/publicaciones")
     public ResponseEntity<AdministrarPublicacionResponseBE> crearPublicacion(
-            @RequestHeader(value = "X-API-Key", required = false) String apiKeyHeader,
             @RequestBody NuevaPublicacionRequestBE request) {
 
         Integer requestedRefugio = (request != null && request.getIdRefugio() != null && request.getIdRefugio() > 0)

@@ -1,7 +1,9 @@
 package ar.edu.ubp.das.mascotas.resources.adopciones;
 
 import ar.edu.ubp.das.mascotas.BE.adopciones.*;
+import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.repositories.adopciones.PublicacionesRepository;
+import ar.edu.ubp.das.mascotas.security.AuthorizationService;
 import ar.edu.ubp.das.mascotas.services.adopciones.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,9 @@ public class PublicacionesResource {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    private AuthorizationService authorizationService;
+
     /**
      * RF13 - Carga y almacenamiento local de fotos de mascotas para adopción.
      * Recibe un archivo de imagen (MultipartFile), valida y guarda en el disco del servidor.
@@ -32,6 +37,7 @@ public class PublicacionesResource {
     @PostMapping("/publicaciones/fotos")
     public ResponseEntity<Map<String, Object>> subirFoto(
             @RequestParam("archivo") MultipartFile archivo) {
+        authorizationService.requireRefugio(null);
         String urlFoto = storageService.almacenarFoto(archivo);
 
         Map<String, Object> response = new HashMap<>();
@@ -48,6 +54,7 @@ public class PublicacionesResource {
      */
     @GetMapping("/publicaciones/estados")
     public ResponseEntity<List<EstadoPublicacionBE>> getEstadosPublicacion() {
+        authorizationService.requireAuthenticated();
         return ResponseEntity.ok(
                 publicacionesRepository.getEstadosPublicacion()
         );
@@ -59,6 +66,7 @@ public class PublicacionesResource {
      */
     @GetMapping({"/especies", "/publicaciones/especies"})
     public ResponseEntity<List<EspecieBE>> getEspecies() {
+        authorizationService.requireAuthenticated();
         return ResponseEntity.ok(
                 publicacionesRepository.getEspecies()
         );
@@ -70,9 +78,10 @@ public class PublicacionesResource {
     @GetMapping("/{idRefugio}/publicaciones")
     public ResponseEntity<List<PublicacionAdopcionBE>> getPublicaciones(
             @PathVariable int idRefugio) {
+        SesionUsuarioBE sesion = authorizationService.requireRefugio(idRefugio > 0 ? idRefugio : null);
         validarIdRefugio(idRefugio);
         return ResponseEntity.ok(
-                publicacionesRepository.getPublicacionesPorRefugio(idRefugio)
+                publicacionesRepository.getPublicacionesPorRefugio(sesion.getIdRefugio())
         );
     }
 
@@ -85,7 +94,16 @@ public class PublicacionesResource {
             @RequestHeader(value = "X-API-Key", required = false) String apiKeyHeader,
             @RequestBody NuevaPublicacionRequestBE request) {
 
+        Integer requestedRefugio = (request != null && request.getIdRefugio() != null && request.getIdRefugio() > 0)
+                ? request.getIdRefugio()
+                : null;
+        SesionUsuarioBE sesion = authorizationService.requireRefugio(requestedRefugio);
+
         validarNuevaPublicacion(request);
+        request.setIdRefugio(sesion.getIdRefugio());
+        if (request.getCuilPublicante() == null || request.getCuilPublicante().isBlank()) {
+            request.setCuilPublicante(sesion.getCuil());
+        }
 
         int nroPublicacion = publicacionesRepository.crearPublicacion(request);
 
@@ -103,13 +121,19 @@ public class PublicacionesResource {
             @PathVariable int nroPublicacion,
             @RequestBody CambioEstadoRequestBE request) {
 
+        Integer requestedRefugio = (request != null && request.getIdRefugio() != null && request.getIdRefugio() > 0)
+                ? request.getIdRefugio()
+                : null;
+        SesionUsuarioBE sesion = authorizationService.requireRefugio(requestedRefugio);
+
         validarActualizarEstado(nroPublicacion, request);
+        request.setIdRefugio(sesion.getIdRefugio());
 
         String nuevoEstado = request.getNuevoEstado().trim();
 
         boolean actualizado = publicacionesRepository.actualizarEstado(
                 nroPublicacion,
-                request.getIdRefugio(),
+                sesion.getIdRefugio(),
                 nuevoEstado
         );
 
@@ -131,9 +155,10 @@ public class PublicacionesResource {
     @GetMapping("/{idRefugio}/mascotas-disponibles")
     public ResponseEntity<List<MascotaDisponibleBE>> getMascotasDisponibles(
             @PathVariable int idRefugio) {
+        SesionUsuarioBE sesion = authorizationService.requireRefugio(idRefugio > 0 ? idRefugio : null);
         validarIdRefugio(idRefugio);
         return ResponseEntity.ok(
-                publicacionesRepository.getMascotasDisponibles(idRefugio)
+                publicacionesRepository.getMascotasDisponibles(sesion.getIdRefugio())
         );
     }
 

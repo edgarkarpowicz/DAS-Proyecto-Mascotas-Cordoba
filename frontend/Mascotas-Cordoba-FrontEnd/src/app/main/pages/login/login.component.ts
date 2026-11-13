@@ -34,7 +34,13 @@ export class LoginComponent {
     this._authService.login(this.cuil, this.clave).subscribe({
       next: (response) => {
         this.loading = false;
-        if (response && response.codigoRespuesta === 1) {
+        if (response && response.codigoRespuesta === 1 && response.usuario) {
+          const perfil = (response.usuario.perfil || '').toUpperCase();
+          if (perfil !== 'REFUGIO') {
+            this._authService.logout(false);
+            this.error = `Usuario autenticado con perfil ${perfil || 'desconocido'}. Este módulo es exclusivo para usuarios con perfil REFUGIO.`;
+            return;
+          }
           this._router.navigate(['/publicaciones']);
         } else {
           this.error = response?.mensajeRespuesta || response?.mensaje || 'Credenciales inválidas para el refugio';
@@ -42,7 +48,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err?.error?.message || err?.error?.mensaje || 'Error de autenticación. Verifique sus credenciales.';
+        this.error = err?.error?.mensajeRespuesta || err?.error?.message || err?.error?.mensaje || 'Error de autenticación. Verifique sus credenciales.';
       }
     });
   }

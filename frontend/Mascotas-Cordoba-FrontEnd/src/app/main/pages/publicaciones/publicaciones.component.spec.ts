@@ -20,13 +20,15 @@ describe('PublicacionesComponent', () => {
     nroPublicacion: 1,
     nroRegMunicipal: 100004,
     idRefugio: 1,
+    fechaPublicacion: '2026-10-01',
     caracteristicasMascota: 'Muy cariñoso',
     condicionAdopcion: 'Patio cerrado',
     estadoPublicacion: 'Activa',
     nombreMascota: 'Rocco',
     sexo: 'M',
     añoNacimiento: 2023,
-    especie: 'Perro'
+    especie: 'Perro',
+    raza: 'Mestizo'
   };
 
   beforeEach(async () => {
@@ -111,6 +113,47 @@ describe('PublicacionesComponent', () => {
     confirmSpy.confirm.and.returnValue(of(true));
     component.cerrarNuevaModal();
     expect(component.showNuevaModal()).toBeFalse();
+  });
+
+  it('should open detail modal when clicking a card and render full pet details', () => {
+    const card: HTMLElement = fixture.nativeElement.querySelector('.pet-card');
+    expect(card).toBeTruthy();
+
+    card.click();
+    fixture.detectChanges();
+
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+    expect(dialog.textContent).toContain('Rocco');
+    expect(dialog.textContent).toContain('Mestizo');
+    expect(dialog.textContent).toContain('Patio cerrado');
+    expect(dialog.textContent).toContain('Muy cariñoso');
+  });
+
+  it('should not open detail modal when clicking footer action buttons', () => {
+    pubResourceSpy.actualizarEstado.and.returnValue(of({ codigoRespuesta: 0, nroPublicacion: 1 }));
+    const pauseBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.btn-pause');
+    expect(pauseBtn).toBeTruthy();
+
+    pauseBtn.click();
+    fixture.detectChanges();
+
+    expect(pubResourceSpy.actualizarEstado).toHaveBeenCalledTimes(1);
+    expect(component.selectedPublicacion()).toBeNull();
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('should open full image lightbox from card bottom-right button without opening detail modal', () => {
+    const expandBtn: HTMLButtonElement | null = fixture.nativeElement.querySelector('.card-expand-btn .expand-image-btn');
+    expect(expandBtn).toBeTruthy();
+
+    expandBtn!.click();
+    fixture.detectChanges();
+
+    expect(component.selectedPublicacion()).toBeNull();
+    expect(component.lightboxPublicacion()).toEqual(samplePub);
+    expect(fixture.nativeElement.querySelector('.lightbox-image')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.detail-card')).toBeNull();
   });
 });
 

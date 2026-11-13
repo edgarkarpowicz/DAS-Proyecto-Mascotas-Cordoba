@@ -154,4 +154,17 @@ public class NuevaPublicacionRequestBE {
     public void setEstadoPublicacion(String estadoPublicacion) {
         this.estadoPublicacion = estadoPublicacion;
     }
+
+    @Override
+    public String toString() {
+        return "NuevaPublicacionRequestBE{" +
+                "apiKey='***'" +
+                ", token='***'" +
+                ", idRefugio=" + idRefugio +
+                ", nroRegMunicipal=" + nroRegMunicipal +
+                ", nombreMascota='" + nombreMascota + '\'' +
+                ", especie='" + especie + '\'' +
+                ", estadoPublicacion='" + estadoPublicacion + '\'' +
+                '}';
+    }
 }

@@ -14,4 +14,8 @@ public interface IAuthService {
     @WebResult(name = "response")
     LoginResponseBE login(@WebParam(name = "request") LoginRequestBE request);
 
+    @WebMethod
+    @WebResult(name = "response")
+    LoginResponseBE logout(@WebParam(name = "token") String token);
+
 }

@@ -8,6 +8,15 @@ CREATE DATABASE [das-mascotas-cordoba];
 USE [das-mascotas-cordoba];
 
 -- =============================================================================
+-- TABLA: perfiles (RF15 - Perfiles de acceso a la plataforma)
+-- =============================================================================
+CREATE TABLE perfiles (
+    cod_perfil  VARCHAR(30)  NOT NULL,
+    descripcion VARCHAR(128) NOT NULL,
+    CONSTRAINT pk_perfiles PRIMARY KEY (cod_perfil)
+);
+
+-- =============================================================================
 -- TABLA: ciudadanos
 -- =============================================================================
 CREATE TABLE ciudadanos (
@@ -19,9 +28,12 @@ CREATE TABLE ciudadanos (
     correo VARCHAR(128) NOT NULL,
     telefono VARCHAR(32) NOT NULL,
     domicilio VARCHAR(128) NOT NULL,
+    cod_perfil VARCHAR(30) NOT NULL DEFAULT 'CIUDADANO',
     habilitado BIT NOT NULL DEFAULT 1,
     CONSTRAINT pk_ciudadanos PRIMARY KEY (id_ciudadano),
-    CONSTRAINT uq_ciudadanos_cuil UNIQUE (cuil)
+    CONSTRAINT uq_ciudadanos_cuil UNIQUE (cuil),
+    CONSTRAINT fk_ciudadanos_perfiles FOREIGN KEY (cod_perfil)
+        REFERENCES perfiles(cod_perfil)
 );
 
 -- =============================================================================
@@ -38,7 +50,10 @@ CREATE TABLE veterinarias (
     habilitada BIT NOT NULL DEFAULT 1,
     horarios VARCHAR(128) NOT NULL,
     servicios_prestados VARCHAR(500) NOT NULL,
-    CONSTRAINT pk_veterinarias PRIMARY KEY (id_veterinaria)
+    id_responsable INT NULL,
+    CONSTRAINT pk_veterinarias PRIMARY KEY (id_veterinaria),
+    CONSTRAINT fk_veterinarias_ciudadanos FOREIGN KEY (id_responsable)
+        REFERENCES ciudadanos(id_ciudadano)
 );
 
 -- =============================================================================
@@ -224,24 +239,74 @@ CREATE TABLE publicaciones_adopcion (
 );
 
 -- =============================================================================
+-- TABLA: sesiones_usuario (Tokens UUID de sesión persistidos en servidor)
+-- =============================================================================
+CREATE TABLE sesiones_usuario (
+    token            VARCHAR(64) NOT NULL,
+    id_ciudadano     INT         NOT NULL,
+    cuil             VARCHAR(20) NOT NULL,
+    perfil           VARCHAR(30) NOT NULL,
+    id_refugio       INT         NULL,
+    id_veterinaria   INT         NULL,
+    fecha_creacion   DATETIME2   NOT NULL DEFAULT SYSDATETIME(),
+    fecha_expiracion DATETIME2   NOT NULL,
+    activa           BIT         NOT NULL DEFAULT 1,
+    CONSTRAINT pk_sesiones_usuario PRIMARY KEY (token),
+    CONSTRAINT fk_sesiones_ciudadanos FOREIGN KEY (id_ciudadano)
+        REFERENCES ciudadanos(id_ciudadano)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_sesiones_perfiles FOREIGN KEY (perfil)
+        REFERENCES perfiles(cod_perfil),
+    CONSTRAINT fk_sesiones_refugios FOREIGN KEY (id_refugio)
+        REFERENCES refugios(id_refugio),
+    CONSTRAINT fk_sesiones_veterinarias FOREIGN KEY (id_veterinaria)
+        REFERENCES veterinarias(id_veterinaria)
+);
+
+-- =============================================================================
+-- TABLA: auditoria_operaciones (Trazabilidad con identidad del usuario)
+-- =============================================================================
+CREATE TABLE auditoria_operaciones (
+    id_auditoria BIGINT       IDENTITY(1,1) NOT NULL,
+    fecha_hora   DATETIME2    NOT NULL DEFAULT SYSDATETIME(),
+    id_ciudadano INT          NULL,
+    cuil         VARCHAR(20)  NULL,
+    perfil       VARCHAR(30)  NULL,
+    canal        VARCHAR(20)  NOT NULL,
+    operacion    VARCHAR(150) NOT NULL,
+    resultado    VARCHAR(30)  NOT NULL,
+    detalle      VARCHAR(500) NULL,
+    CONSTRAINT pk_auditoria_operaciones PRIMARY KEY (id_auditoria)
+);
+
+-- =============================================================================
 -- DATOS SEMILLA / INICIALES (Catálogos, Entidades y Tablas Intermedias)
 -- =============================================================================
 
--- 1. Ciudadanos (Propietarios y Responsables de Refugios para CiDi)
+-- 0. Perfiles de Acceso (RF15)
+INSERT INTO perfiles (cod_perfil, descripcion) VALUES
+('CIUDADANO',     'Ciudadano propietario de mascotas o interesado en adopción'),
+('REFUGIO',       'Usuario autorizado perteneciente a un refugio adherido'),
+('VETERINARIA',   'Usuario autorizado perteneciente a una veterinaria adherida'),
+('MUNICIPALIDAD', 'Personal autorizado de la Municipalidad de Córdoba');
+
+-- 1. Ciudadanos (Propietarios, Responsables de Refugios, Veterinarias y Municipalidad)
 SET IDENTITY_INSERT ciudadanos ON;
-INSERT INTO ciudadanos (id_ciudadano, apellido, nombre, cuil, clave, correo, telefono, domicilio, habilitado) VALUES
-(1, 'Pérez', 'Juan Carlos', '20-28555666-3', 'pass123', 'juan.perez@gmail.com', '3514567890', 'San Jerónimo 450, Córdoba', 1),
-(2, 'Gómez', 'María Belén', '27-34777888-4', 'pass123', 'maria.gomez@gmail.com', '3515678901', 'Av. General Paz 1230, Córdoba', 1),
-(3, 'Sánchez', 'Roberto', '20-25999000-5', 'pass123', 'roberto.sanchez@patitasfelices.org', '3516789012', 'Camino a 60 Cuadras Km 8, Córdoba', 1),
-(4, 'Morales', 'Ana Carolina', '27-38123456-9', 'pass123', 'ana.morales@hogaranimal.org', '3517890123', 'Bv. San Juan 890, Córdoba', 1);
+INSERT INTO ciudadanos (id_ciudadano, apellido, nombre, cuil, clave, correo, telefono, domicilio, cod_perfil, habilitado) VALUES
+(1, 'Pérez', 'Juan Carlos', '20-28555666-3', 'pass123', 'juan.perez@gmail.com', '3514567890', 'San Jerónimo 450, Córdoba', 'CIUDADANO', 1),
+(2, 'Gómez', 'María Belén', '27-34777888-4', 'pass123', 'maria.gomez@gmail.com', '3515678901', 'Av. General Paz 1230, Córdoba', 'CIUDADANO', 1),
+(3, 'Sánchez', 'Roberto', '20-25999000-5', 'pass123', 'roberto.sanchez@patitasfelices.org', '3516789012', 'Camino a 60 Cuadras Km 8, Córdoba', 'REFUGIO', 1),
+(4, 'Morales', 'Ana Carolina', '27-38123456-9', 'pass123', 'ana.morales@hogaranimal.org', '3517890123', 'Bv. San Juan 890, Córdoba', 'REFUGIO', 1),
+(5, 'Quito', 'Esteban', '20-30111222-8', 'pass123', 'esteban.quito@sanantoniovet.com', '3514001122', 'Av. San Martín 120, Villa Carlos Paz', 'VETERINARIA', 1),
+(6, 'Benítez', 'Laura', '27-22333444-1', 'pass123', 'laura.benitez@cordoba.gob.ar', '3514285600', 'Marcelo T. de Alvear 120, Córdoba', 'MUNICIPALIDAD', 1);
 SET IDENTITY_INSERT ciudadanos OFF;
 
 -- 2. Veterinarias Adheridas (RF17)
 SET IDENTITY_INSERT veterinarias ON;
-INSERT INTO veterinarias (id_veterinaria, nombre, razon_social, correo, telefono, domicilio, habilitacion_municipal, habilitada, horarios, servicios_prestados) VALUES
-(1, 'San Antonio Vet', 'Veterinaria San Antonio S.R.L.', 'sanantonio@gmail.com', '543423431', 'Roca 221, Villa Carlos Paz, Córdoba', 'HAB-MUNI-00123', 1, '13:00 - 22:00', 'Castración, Desparasitación, Vacunación, Guardia 24hs'),
-(2, 'Veterinaria Central Córdoba', 'Centro Veterinario Cba S.A.', 'contacto@vetcentralcba.com', '3514223344', 'Av. Colón 750, Córdoba', 'HAB-MUNI-00456', 1, '08:00 - 20:00', 'Vacunación, Esterilización, Consulta clínica'),
-(3, 'Clínica Veterinaria Alta Córdoba', 'Alta Córdoba Mascotas S.A.', 'info@vetaltacba.com', '3514712000', 'Mariano Fragueiro 1950, Córdoba', 'HAB-MUNI-00789', 1, '09:00 - 19:00', 'Vacunación, Castración, Cirugía general');
+INSERT INTO veterinarias (id_veterinaria, nombre, razon_social, correo, telefono, domicilio, habilitacion_municipal, habilitada, horarios, servicios_prestados, id_responsable) VALUES
+(1, 'San Antonio Vet', 'Veterinaria San Antonio S.R.L.', 'sanantonio@gmail.com', '543423431', 'Roca 221, Villa Carlos Paz, Córdoba', 'HAB-MUNI-00123', 1, '13:00 - 22:00', 'Castración, Desparasitación, Vacunación, Guardia 24hs', 5),
+(2, 'Veterinaria Central Córdoba', 'Centro Veterinario Cba S.A.', 'contacto@vetcentralcba.com', '3514223344', 'Av. Colón 750, Córdoba', 'HAB-MUNI-00456', 1, '08:00 - 20:00', 'Vacunación, Esterilización, Consulta clínica', NULL),
+(3, 'Clínica Veterinaria Alta Córdoba', 'Alta Córdoba Mascotas S.A.', 'info@vetaltacba.com', '3514712000', 'Mariano Fragueiro 1950, Córdoba', 'HAB-MUNI-00789', 1, '09:00 - 19:00', 'Vacunación, Castración, Cirugía general', NULL);
 SET IDENTITY_INSERT veterinarias OFF;
 
 -- 3. Atributos de Sistema (Metadatos de integración técnica - RF04)
@@ -411,7 +476,55 @@ GO
 -- =============================================================================
 
 /* -----------------------------------------------------------------------------
-   Procedimiento: autenticar_usuario_refugio (RF15)
+   Procedimiento: autenticar_usuario (RF15)
+   Autentica a un usuario por CUIL y clave distinguiendo los perfiles:
+   CIUDADANO, REFUGIO, VETERINARIA y MUNICIPALIDAD.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.autenticar_usuario
+(
+    @cuil  VARCHAR(20),
+    @clave VARCHAR(128)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Normalizar CUIL removiendo guiones y espacios si los hubiere
+    DECLARE @cuil_clean VARCHAR(20) = REPLACE(REPLACE(TRIM(@cuil), '-', ''), ' ', '');
+
+    SELECT idCiudadano           = c.id_ciudadano,
+           apellido              = c.apellido,
+           nombre                = c.nombre,
+           cuil                  = c.cuil,
+           correo                = c.correo,
+           perfil                = UPPER(c.cod_perfil),
+           idRefugio             = r.id_refugio,
+           nombreRefugio         = COALESCE(r.nombre, r.razon_social),
+           razonSocialRefugio    = r.razon_social,
+           habilitacionMunicipal = COALESCE(r.habilitacion_municipal, v.habilitacion_municipal),
+           idVeterinaria         = v.id_veterinaria,
+           nombreVeterinaria     = v.nombre
+      FROM dbo.ciudadanos c (NOLOCK)
+      LEFT JOIN dbo.refugios r (NOLOCK)
+        ON r.id_responsable = c.id_ciudadano
+       AND UPPER(c.cod_perfil) = 'REFUGIO'
+      LEFT JOIN dbo.veterinarias v (NOLOCK)
+        ON v.id_responsable = c.id_ciudadano
+       AND v.habilitada = 1
+       AND UPPER(c.cod_perfil) = 'VETERINARIA'
+     WHERE (c.cuil = @cuil OR REPLACE(REPLACE(c.cuil, '-', ''), ' ', '') = @cuil_clean)
+       AND c.clave = @clave
+       AND c.habilitado = 1
+       AND (
+           UPPER(c.cod_perfil) IN ('CIUDADANO', 'MUNICIPALIDAD')
+           OR (UPPER(c.cod_perfil) = 'REFUGIO' AND r.id_refugio IS NOT NULL)
+           OR (UPPER(c.cod_perfil) = 'VETERINARIA' AND v.id_veterinaria IS NOT NULL)
+       );
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: autenticar_usuario_refugio (RF15 - Compatibilidad)
    Autentica a un usuario por CUIL y clave, validando que sea el responsable
    de un refugio habilitado en el programa.
 ----------------------------------------------------------------------------- */
@@ -443,6 +556,114 @@ BEGIN
      WHERE (c.cuil = @cuil OR REPLACE(REPLACE(c.cuil, '-', ''), ' ', '') = @cuil_clean)
        AND c.clave = @clave
        AND c.habilitado = 1;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: crear_sesion_usuario (RF15)
+   Almacena el token UUID de sesión junto con el perfil y contexto organizacional.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.crear_sesion_usuario
+(
+    @token            VARCHAR(64),
+    @id_ciudadano     INT,
+    @cuil             VARCHAR(20),
+    @perfil           VARCHAR(30),
+    @id_refugio       INT = NULL,
+    @id_veterinaria   INT = NULL,
+    @duracion_minutos INT = 480
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.sesiones_usuario
+        (token, id_ciudadano, cuil, perfil, id_refugio, id_veterinaria, fecha_creacion, fecha_expiracion, activa)
+    VALUES
+        (@token, @id_ciudadano, @cuil, UPPER(@perfil), @id_refugio, @id_veterinaria,
+         SYSDATETIME(), DATEADD(MINUTE, @duracion_minutos, SYSDATETIME()), 1);
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: validar_sesion_usuario (RF15)
+   Verifica que el token exista, esté activo, no haya expirado y devuelve el contexto.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.validar_sesion_usuario
+(
+    @token VARCHAR(64)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT token              = s.token,
+           idCiudadano        = s.id_ciudadano,
+           apellido           = c.apellido,
+           nombre             = c.nombre,
+           cuil               = s.cuil,
+           correo             = c.correo,
+           perfil             = UPPER(s.perfil),
+           idRefugio          = s.id_refugio,
+           idVeterinaria      = s.id_veterinaria,
+           nombreRefugio      = COALESCE(r.nombre, r.razon_social),
+           nombreVeterinaria  = v.nombre,
+           fechaExpiracion    = s.fecha_expiracion,
+           activa             = s.activa
+      FROM dbo.sesiones_usuario s (NOLOCK)
+      JOIN dbo.ciudadanos c (NOLOCK)
+        ON c.id_ciudadano = s.id_ciudadano
+      LEFT JOIN dbo.refugios r (NOLOCK)
+        ON r.id_refugio = s.id_refugio
+      LEFT JOIN dbo.veterinarias v (NOLOCK)
+        ON v.id_veterinaria = s.id_veterinaria
+     WHERE s.token = @token
+       AND s.activa = 1
+       AND s.fecha_expiracion > SYSDATETIME()
+       AND c.habilitado = 1;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: revocar_sesion_usuario (RF15)
+   Invalida el token de sesión al cerrar sesión (logout).
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.revocar_sesion_usuario
+(
+    @token VARCHAR(64)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.sesiones_usuario
+       SET activa = 0
+     WHERE token = @token;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: registrar_auditoria_operacion (RF15 / RNF08)
+   Registra la identidad del usuario y el resultado de operaciones trazables.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.registrar_auditoria_operacion
+(
+    @id_ciudadano INT = NULL,
+    @cuil         VARCHAR(20) = NULL,
+    @perfil       VARCHAR(30) = NULL,
+    @canal        VARCHAR(20),
+    @operacion    VARCHAR(150),
+    @resultado    VARCHAR(30),
+    @detalle      VARCHAR(500) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.auditoria_operaciones
+        (fecha_hora, id_ciudadano, cuil, perfil, canal, operacion, resultado, detalle)
+    VALUES
+        (SYSDATETIME(), @id_ciudadano, @cuil, @perfil, @canal, @operacion, @resultado, @detalle);
 END
 GO
 

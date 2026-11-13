@@ -57,11 +57,27 @@ describe('NuevaPublicacionModalComponent', () => {
     component.onMascotaSelect({ target: { value: '100006' } } as unknown as Event);
     expect(component.selectedNroReg()).toBe(100006);
     expect(component.nombreMascota).toBe('Thor');
+    expect(component.raza).toBe('Mestizo Canino');
     expect(component.sexo).toBe('Macho');
 
     component.onMascotaSelect({ target: { value: '0' } } as unknown as Event);
     expect(component.selectedNroReg()).toBeNull();
     expect(component.nombreMascota).toBe('');
+    expect(component.raza).toBe('');
+  });
+
+  it('should include raza when emitting save payload', () => {
+    const saveSpy = spyOn(component.save, 'emit');
+    component.nombreMascota = 'Lola';
+    component.raza = 'Siamés';
+    component.descripcion = 'Tranquila';
+
+    component.onSubmit();
+
+    expect(saveSpy).toHaveBeenCalledWith(jasmine.objectContaining({
+      nombreMascota: 'Lola',
+      raza: 'Siamés'
+    }));
   });
 
   it('should track unsaved changes accurately', () => {

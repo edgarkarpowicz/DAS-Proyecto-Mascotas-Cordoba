@@ -1,0 +1,35 @@
+:host {
+  display: inline-flex;
+}
+
+.expand-image-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(17, 24, 39, 0.58);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.expand-image-btn:hover {
+  background: rgba(17, 24, 39, 0.85);
+  transform: scale(1.06);
+}
+
+.expand-image-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.expand-image-btn svg {
+  width: 17px;
+  height: 17px;
+}
+

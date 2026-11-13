@@ -74,7 +74,15 @@
     @if (filtradas.length > 0) {
       <section class="cards-grid">
         @for (pub of filtradas; track pub.nroPublicacion) {
-        <article class="pet-card">
+        <article
+          class="pet-card"
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="'Ver detalle completo de ' + pub.nombreMascota"
+          (click)="abrirDetalleModal(pub)"
+          (keydown.enter)="abrirDetalleModal(pub)"
+          (keydown.space)="$event.preventDefault(); abrirDetalleModal(pub)"
+        >
           
           <!-- Pet Image & Floating Status Badge -->
           <div class="card-image-wrapper">
@@ -105,6 +113,12 @@
                 <span>Finalizada</span>
               </div>
             }
+
+            <app-expand-image-button
+              class="card-expand-btn"
+              [ariaLabel]="'Ampliar fotografía de ' + pub.nombreMascota"
+              (expand)="abrirImagenAmpliada(pub)"
+            ></app-expand-image-button>
           </div>
 
           <!-- Card Body -->
@@ -136,20 +150,27 @@
                 </svg>
                 <span>{{ getEdadTexto(pub) }}</span>
               </span>
+              @if (pub.raza) {
+                <span class="pill-attr">{{ pub.raza }}</span>
+              }
             </div>
 
             <!-- Description -->
             <p class="pet-description">{{ pub.caracteristicasMascota || pub.condicionAdopcion || 'Sin descripción detallada.' }}</p>
 
             <!-- Action Buttons Footer -->
-            <div class="card-actions-footer">
+            <div
+              class="card-actions-footer"
+              (keydown.enter)="$event.stopPropagation()"
+              (keydown.space)="$event.stopPropagation()"
+            >
               
               <!-- Pause / Resume Toggle Button -->
               @if (pub.estadoPublicacion === 'Activa') {
                 <button
                   type="button"
                   class="action-btn btn-pause"
-                  (click)="toggleEstado(pub)"
+                  (click)="$event.stopPropagation(); toggleEstado(pub)"
                   title="Pausar publicación"
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor">
@@ -160,7 +181,7 @@
                 <button
                   type="button"
                   class="action-btn btn-delete"
-                  (click)="finalizarPublicacion(pub)"
+                  (click)="$event.stopPropagation(); finalizarPublicacion(pub)"
                   title="Finalizar publicación"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -171,7 +192,7 @@
                 <button
                   type="button"
                   class="action-btn btn-resume"
-                  (click)="toggleEstado(pub)"
+                  (click)="$event.stopPropagation(); toggleEstado(pub)"
                   title="Reanudar publicación"
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor">
@@ -181,7 +202,7 @@
                 <button
                   type="button"
                   class="action-btn btn-delete"
-                  (click)="finalizarPublicacion(pub)"
+                  (click)="$event.stopPropagation(); finalizarPublicacion(pub)"
                   title="Finalizar publicación"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -192,7 +213,7 @@
                 <button
                   type="button"
                   class="action-btn btn-resume"
-                  (click)="toggleEstado(pub)"
+                  (click)="$event.stopPropagation(); toggleEstado(pub)"
                   title="Reactivar publicación"
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor">
@@ -230,5 +251,26 @@
     (close)="cerrarNuevaModal()"
     (save)="guardarNuevaPublicacion($event)"
   ></app-nueva-publicacion-modal>
+}
+
+<!-- Modal Detalle Completo de Publicación -->
+@if (selectedPublicacion(); as pubDetalle) {
+  <app-detalle-publicacion-modal
+    [publicacion]="pubDetalle"
+    (close)="cerrarDetalleModal()"
+    (toggleEstado)="toggleEstado($event)"
+    (finalizar)="finalizarPublicacion($event)"
+  ></app-detalle-publicacion-modal>
+}
+
+<!-- Lightbox Imagen Completa -->
+@if (lightboxPublicacion(); as pubLightbox) {
+  <app-imagen-lightbox-modal
+    [imageUrl]="getFotoMascota(pubLightbox)"
+    [fallbackUrl]="getDefaultFoto(pubLightbox)"
+    [altText]="pubLightbox.nombreMascota"
+    [caption]="getLightboxCaption(pubLightbox)"
+    (close)="cerrarImagenAmpliada()"
+  ></app-imagen-lightbox-modal>
 }
 

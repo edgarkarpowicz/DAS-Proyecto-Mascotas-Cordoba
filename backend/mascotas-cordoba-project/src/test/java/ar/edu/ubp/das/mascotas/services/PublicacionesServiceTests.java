@@ -1,18 +1,23 @@
 package ar.edu.ubp.das.mascotas.services;
 
 import ar.edu.ubp.das.mascotas.BE.adopciones.*;
+import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.repositories.adopciones.PublicacionesRepository;
+import ar.edu.ubp.das.mascotas.security.AuthorizationService;
 import ar.edu.ubp.das.mascotas.services.adopciones.PublicacionesService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,8 +26,26 @@ class PublicacionesServiceTests {
     @Mock
     private PublicacionesRepository publicacionesRepository;
 
+    @Mock
+    private AuthorizationService authorizationService;
+
     @InjectMocks
     private PublicacionesService publicacionesService;
+
+    private SesionUsuarioBE sesionRefugio;
+
+    @BeforeEach
+    void setUp() {
+        sesionRefugio = new SesionUsuarioBE();
+        sesionRefugio.setToken("tok-soap-refugio");
+        sesionRefugio.setIdCiudadano(3);
+        sesionRefugio.setCuil("20-25999000-5");
+        sesionRefugio.setPerfil("REFUGIO");
+        sesionRefugio.setIdRefugio(1);
+
+        lenient().when(authorizationService.requireAuthenticated()).thenReturn(sesionRefugio);
+        lenient().when(authorizationService.requireRefugio(any())).thenReturn(sesionRefugio);
+    }
 
     @Test
     void testGetEstadosPublicacion() {
@@ -77,9 +100,9 @@ class PublicacionesServiceTests {
         pet.setNroRegMunicipal(100006);
         pet.setNombre("Thor");
 
-        when(publicacionesRepository.getMascotasDisponibles(2)).thenReturn(List.of(pet));
+        when(publicacionesRepository.getMascotasDisponibles(1)).thenReturn(List.of(pet));
 
-        List<MascotaDisponibleBE> res = publicacionesService.getMascotasDisponibles(2);
+        List<MascotaDisponibleBE> res = publicacionesService.getMascotasDisponibles(1);
 
         assertNotNull(res);
         assertEquals(1, res.size());
@@ -163,6 +186,20 @@ class PublicacionesServiceTests {
         assertNotNull(response);
         assertEquals(-1, response.getCodigoRespuesta());
         assertTrue(response.getMensajeRespuesta().contains("No se encontró"));
+    }
+
+    @Test
+    void testCrearPublicacionPerfilNoAutorizadoLanzaForbidden() {
+        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
+        req.setIdRefugio(1);
+        req.setNombreMascota("Max");
+
+        when(authorizationService.requireRefugio(1)).thenThrow(
+                new ResponseStatusException(HttpStatus.FORBIDDEN, "Perfil no autorizado")
+        );
+
+        assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+        verifyNoInteractions(publicacionesRepository);
     }
 
 }

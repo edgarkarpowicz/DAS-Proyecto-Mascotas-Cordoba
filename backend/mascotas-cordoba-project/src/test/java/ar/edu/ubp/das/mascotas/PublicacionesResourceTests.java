@@ -1,9 +1,12 @@
 package ar.edu.ubp.das.mascotas;
 
 import ar.edu.ubp.das.mascotas.BE.adopciones.*;
+import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.repositories.adopciones.PublicacionesRepository;
 import ar.edu.ubp.das.mascotas.resources.adopciones.PublicacionesResource;
+import ar.edu.ubp.das.mascotas.security.AuthorizationService;
 import ar.edu.ubp.das.mascotas.services.adopciones.StorageService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,7 +23,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PublicacionesResourceTests {
@@ -31,8 +34,26 @@ class PublicacionesResourceTests {
     @Mock
     private StorageService storageService;
 
+    @Mock
+    private AuthorizationService authorizationService;
+
     @InjectMocks
     private PublicacionesResource publicacionesResource;
+
+    private SesionUsuarioBE sesionRefugio;
+
+    @BeforeEach
+    void setUp() {
+        sesionRefugio = new SesionUsuarioBE();
+        sesionRefugio.setToken("tok-refugio-1");
+        sesionRefugio.setIdCiudadano(3);
+        sesionRefugio.setCuil("20-25999000-5");
+        sesionRefugio.setPerfil("REFUGIO");
+        sesionRefugio.setIdRefugio(1);
+
+        lenient().when(authorizationService.requireAuthenticated()).thenReturn(sesionRefugio);
+        lenient().when(authorizationService.requireRefugio(any())).thenReturn(sesionRefugio);
+    }
 
     @Test
     void testGetEstadosPublicacion() {
@@ -187,6 +208,37 @@ class PublicacionesResourceTests {
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertTrue(ex.getReason().contains("Estado no válido"));
+    }
+
+    @Test
+    void testGetPublicacionesOtroRefugioLanzaForbidden() {
+        when(authorizationService.requireRefugio(2)).thenThrow(
+                new ResponseStatusException(HttpStatus.FORBIDDEN, "No está autorizado a operar sobre publicaciones de otro refugio")
+        );
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesResource.getPublicaciones(2));
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+        verifyNoInteractions(publicacionesRepository);
+    }
+
+    @Test
+    void testCrearPublicacionAsignaCuilYRefugioDeSesion() {
+        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
+        req.setIdRefugio(1);
+        req.setNombreMascota("Toby");
+
+        when(publicacionesRepository.esEstadoValido("Activa")).thenReturn(true);
+        when(publicacionesRepository.crearPublicacion(any(NuevaPublicacionRequestBE.class)))
+                .thenReturn(77);
+
+        ResponseEntity<AdministrarPublicacionResponseBE> response = publicacionesResource.crearPublicacion(null, req);
+
+        assertNotNull(response.getBody());
+        assertEquals(77, response.getBody().getNroPublicacion());
+        assertEquals(1, req.getIdRefugio());
+        assertEquals("20-25999000-5", req.getCuilPublicante());
     }
 
 }

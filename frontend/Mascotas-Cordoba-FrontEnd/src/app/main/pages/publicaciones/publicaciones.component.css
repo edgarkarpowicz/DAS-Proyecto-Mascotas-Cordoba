@@ -223,11 +223,17 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .pet-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.pet-card:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* Image & Badge */
@@ -248,6 +254,13 @@
 
 .pet-card:hover .pet-image {
   transform: scale(1.02);
+}
+
+.card-expand-btn {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
 }
 
 .status-badge {

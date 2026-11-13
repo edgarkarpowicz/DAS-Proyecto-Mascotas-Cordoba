@@ -19,13 +19,25 @@ public class AuthRepository {
     private JdbcTemplate jdbcTemplate;
 
     /**
+     * Autentica a un usuario por CUIL y clave distinguiendo su perfil
+     * (CIUDADANO, REFUGIO, VETERINARIA o MUNICIPALIDAD) mediante dbo.autenticar_usuario.
+     */
+    public Optional<UsuarioRefugioBE> autenticarUsuario(String cuil, String clave) {
+        return ejecutarAutenticacion("exec dbo.autenticar_usuario ?, ?", cuil, clave);
+    }
+
+    /**
      * Autentica a un usuario por CUIL y clave, validando que pertenezca
      * a un refugio habilitado en el programa mediante el procedimiento almacenado.
      */
     public Optional<UsuarioRefugioBE> autenticarRefugio(String cuil, String clave) {
+        return ejecutarAutenticacion("exec dbo.autenticar_usuario_refugio ?, ?", cuil, clave);
+    }
+
+    private Optional<UsuarioRefugioBE> ejecutarAutenticacion(String sql, String cuil, String clave) {
         try {
             List<UsuarioRefugioBE> resultados = jdbcTemplate.query(
-                    "exec dbo.autenticar_usuario_refugio ?, ?",
+                    sql,
                     new BeanPropertyRowMapper<>(UsuarioRefugioBE.class),
                     cuil,
                     clave

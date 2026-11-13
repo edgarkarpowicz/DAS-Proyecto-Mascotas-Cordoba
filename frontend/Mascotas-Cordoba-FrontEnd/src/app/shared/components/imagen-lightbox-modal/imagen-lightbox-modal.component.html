@@ -1,0 +1,17 @@
+<div class="lightbox-backdrop" (click)="onBackdropClick($event)" role="dialog" aria-modal="true"
+  [attr.aria-label]="'Vista completa de ' + altText()">
+  <button type="button" class="lightbox-close-btn" (click)="cerrar()" aria-label="Cerrar vista ampliada"
+    title="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+
+  <figure class="lightbox-figure" (click)="$event.stopPropagation()">
+    <img [src]="imageUrl()" (error)="onImageError($event)" [alt]="altText()" class="lightbox-image" />
+    @if (caption()) {
+      <figcaption class="lightbox-caption">{{ caption() }}</figcaption>
+    }
+  </figure>
+</div>
+

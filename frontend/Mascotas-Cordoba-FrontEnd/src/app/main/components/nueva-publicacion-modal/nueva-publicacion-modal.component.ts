@@ -35,6 +35,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
 
   nombreMascota: string = '';
   especie: string = 'Perro';
+  raza: string = '';
   sexo: string = 'Hembra';
   edad: string = '2 años';
   edadAproximada: number = 2;
@@ -84,6 +85,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
         this.nroRegMunicipal = String(encontrada.nroRegMunicipal);
         this.nombreMascota = encontrada.nombre || '';
         this.especie = encontrada.especie || 'Perro';
+        this.raza = encontrada.raza || '';
         this.sexo = (encontrada.sexo === 'M' || encontrada.sexo === 'm' || encontrada.sexo === 'Macho') ? 'Macho' : 'Hembra';
         if (encontrada.añoNacimiento) {
           this.anoNacimiento = encontrada.añoNacimiento;
@@ -101,6 +103,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
     this.nroRegMunicipal = '';
     this.nombreMascota = '';
     this.especie = this.especiesDisponibles()[0]?.nomEspecie || 'Perro';
+    this.raza = '';
     this.sexo = 'Hembra';
     this.anoNacimiento = new Date().getFullYear() - 2;
     this.edadAproximada = 2;
@@ -188,6 +191,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
   hasChanges(): boolean {
     return Boolean(
       this.nombreMascota.trim() ||
+      this.raza.trim() ||
       this.descripcion.trim() ||
       this.selectedNroReg() ||
       this.selectedFile
@@ -244,6 +248,7 @@ export class NuevaPublicacionModalComponent implements OnInit {
       nroRegMunicipal: this.selectedNroReg() ?? undefined,
       nombreMascota: this.nombreMascota.trim(),
       especie: this.especie,
+      raza: this.raza.trim() || undefined,
       sexo: this.sexo,
       añoNacimiento: this.anoNacimiento || (new Date().getFullYear() - (this.edadAproximada || 2)),
       caracteristicasMascota: this.descripcion.trim(),

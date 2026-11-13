@@ -17,4 +17,8 @@ export class AuthResource {
     return this._http.post<ILoginResponse>(`${this._baseUrl}/login`, request);
   }
 
+  logout(): Observable<{ codigoRespuesta: number; mensajeRespuesta: string }> {
+    return this._http.post<{ codigoRespuesta: number; mensajeRespuesta: string }>(`${this._baseUrl}/logout`, {});
+  }
+
 }

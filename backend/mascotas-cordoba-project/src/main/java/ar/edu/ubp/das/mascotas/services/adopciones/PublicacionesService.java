@@ -7,7 +7,9 @@ import ar.edu.ubp.das.mascotas.BE.adopciones.EstadoPublicacionBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.MascotaDisponibleBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.NuevaPublicacionRequestBE;
 import ar.edu.ubp.das.mascotas.BE.adopciones.PublicacionAdopcionBE;
+import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.repositories.adopciones.PublicacionesRepository;
+import ar.edu.ubp.das.mascotas.security.AuthorizationService;
 import jakarta.jws.WebService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,34 +27,46 @@ public class PublicacionesService implements IPublicacionesService {
     @Autowired
     private PublicacionesRepository publicacionesRepository;
 
+    @Autowired
+    private AuthorizationService authorizationService;
+
     @Override
     public List<EstadoPublicacionBE> getEstadosPublicacion() {
+        authorizationService.requireAuthenticated();
         return publicacionesRepository.getEstadosPublicacion();
     }
 
     @Override
     public List<EspecieBE> getEspecies() {
+        authorizationService.requireAuthenticated();
         return publicacionesRepository.getEspecies();
     }
 
     @Override
     public List<PublicacionAdopcionBE> getPublicacionesPorRefugio(int idRefugio) {
+        SesionUsuarioBE sesion = authorizationService.requireRefugio(idRefugio > 0 ? idRefugio : null);
         if (idRefugio <= 0) {
             return Collections.emptyList();
         }
-        return publicacionesRepository.getPublicacionesPorRefugio(idRefugio);
+        return publicacionesRepository.getPublicacionesPorRefugio(sesion.getIdRefugio());
     }
 
     @Override
     public List<MascotaDisponibleBE> getMascotasDisponibles(int idRefugio) {
+        SesionUsuarioBE sesion = authorizationService.requireRefugio(idRefugio > 0 ? idRefugio : null);
         if (idRefugio <= 0) {
             return Collections.emptyList();
         }
-        return publicacionesRepository.getMascotasDisponibles(idRefugio);
+        return publicacionesRepository.getMascotasDisponibles(sesion.getIdRefugio());
     }
 
     @Override
     public AdministrarPublicacionResponseBE crearPublicacion(NuevaPublicacionRequestBE request) {
+        Integer requestedRefugio = (request != null && request.getIdRefugio() != null && request.getIdRefugio() > 0)
+                ? request.getIdRefugio()
+                : null;
+        SesionUsuarioBE sesion = authorizationService.requireRefugio(requestedRefugio);
+
         if (request == null || request.getIdRefugio() == null || request.getIdRefugio() <= 0) {
             return AdministrarPublicacionResponseBE.error("El identificador del refugio es obligatorio");
         }
@@ -71,12 +85,22 @@ public class PublicacionesService implements IPublicacionesService {
             }
         }
 
+        request.setIdRefugio(sesion.getIdRefugio());
+        if (request.getCuilPublicante() == null || request.getCuilPublicante().isBlank()) {
+            request.setCuilPublicante(sesion.getCuil());
+        }
+
         int nroPublicacion = publicacionesRepository.crearPublicacion(request);
         return AdministrarPublicacionResponseBE.exitoso("Publicación de adopción creada exitosamente", nroPublicacion);
     }
 
     @Override
     public AdministrarPublicacionResponseBE actualizarEstado(int nroPublicacion, CambioEstadoRequestBE request) {
+        Integer requestedRefugio = (request != null && request.getIdRefugio() != null && request.getIdRefugio() > 0)
+                ? request.getIdRefugio()
+                : null;
+        SesionUsuarioBE sesion = authorizationService.requireRefugio(requestedRefugio);
+
         if (nroPublicacion <= 0) {
             return AdministrarPublicacionResponseBE.error("El número de publicación debe ser un valor positivo");
         }
@@ -91,9 +115,11 @@ public class PublicacionesService implements IPublicacionesService {
             return AdministrarPublicacionResponseBE.error("Estado no válido para la publicación: " + nuevoEstado);
         }
 
+        request.setIdRefugio(sesion.getIdRefugio());
+
         boolean actualizado = publicacionesRepository.actualizarEstado(
                 nroPublicacion,
-                request.getIdRefugio(),
+                sesion.getIdRefugio(),
                 nuevoEstado
         );
 

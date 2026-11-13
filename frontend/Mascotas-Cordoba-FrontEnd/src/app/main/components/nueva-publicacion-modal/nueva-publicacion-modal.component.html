@@ -105,9 +105,22 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Condiciones de Adopción</label>
-        <input type="text" [(ngModel)]="condicionAdopcion" name="condicionAdopcion" placeholder="Ej: Hogar responsable, patio cerrado, compromiso de castración" />
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Raza</label>
+          <input
+            type="text"
+            [(ngModel)]="raza"
+            name="raza"
+            placeholder="Ej: Mestizo, Labrador, Siamés"
+            [readonly]="selectedNroReg() !== null"
+            [class.input-locked]="selectedNroReg() !== null"
+          />
+        </div>
+        <div class="form-group flex-2">
+          <label>Condiciones de Adopción</label>
+          <input type="text" [(ngModel)]="condicionAdopcion" name="condicionAdopcion" placeholder="Ej: Hogar responsable, patio cerrado, compromiso de castración" />
+        </div>
       </div>
 
       <!-- File upload area for pet picture -->

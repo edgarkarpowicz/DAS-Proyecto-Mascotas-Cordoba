@@ -12,6 +12,8 @@ public class UsuarioRefugioBE {
     private String nombreRefugio;
     private String razonSocialRefugio;
     private String habilitacionMunicipal;
+    private Integer idVeterinaria;
+    private String nombreVeterinaria;
 
     public UsuarioRefugioBE() {
     }
@@ -94,6 +96,22 @@ public class UsuarioRefugioBE {
 
     public void setHabilitacionMunicipal(String habilitacionMunicipal) {
         this.habilitacionMunicipal = habilitacionMunicipal;
+    }
+
+    public Integer getIdVeterinaria() {
+        return idVeterinaria;
+    }
+
+    public void setIdVeterinaria(Integer idVeterinaria) {
+        this.idVeterinaria = idVeterinaria;
+    }
+
+    public String getNombreVeterinaria() {
+        return nombreVeterinaria;
+    }
+
+    public void setNombreVeterinaria(String nombreVeterinaria) {
+        this.nombreVeterinaria = nombreVeterinaria;
     }
 
     @Override

@@ -43,7 +43,16 @@ export class AppErrorHandler implements ErrorHandler {
       if (error.status === 401) {
         return {
           title: 'Acceso No Autorizado',
-          text: this.getHttpErrorMessage(error) || 'Credenciales inválidas o API Key no autorizada.',
+          text: this.getHttpErrorMessage(error) || 'Credenciales inválidas, sesión expirada o API Key no autorizada.',
+          num: error.status,
+          type: 'warning'
+        };
+      }
+
+      if (error.status === 403) {
+        return {
+          title: 'Operación No Permitida',
+          text: this.getHttpErrorMessage(error) || 'Su perfil o refugio no tiene permisos para realizar esta acción.',
           num: error.status,
           type: 'warning'
         };

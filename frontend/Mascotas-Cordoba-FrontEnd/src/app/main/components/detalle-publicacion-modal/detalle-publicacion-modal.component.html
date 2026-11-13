@@ -1,0 +1,129 @@
+<div class="detail-backdrop" (click)="onBackdropClick($event)">
+  @if (publicacion(); as pub) {
+  <div class="detail-card" role="dialog" aria-modal="true" aria-labelledby="detalle-pet-title">
+    <!-- Hero Image & Status -->
+    <div class="detail-hero">
+      <img [src]="getFotoUrl(pub)" (error)="onImageError($event, pub)" [alt]="pub.nombreMascota"
+        class="detail-hero-img" />
+      <div class="detail-hero-overlay"></div>
+
+      <button type="button" class="detail-close-btn" (click)="cerrar()" aria-label="Cerrar detalle de publicación"
+        title="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div class="detail-hero-badges">
+        <span class="detail-status-badge" [class.badge-activa]="pub.estadoPublicacion === 'Activa'"
+          [class.badge-pausada]="pub.estadoPublicacion === 'Pausada'"
+          [class.badge-finalizada]="pub.estadoPublicacion !== 'Activa' && pub.estadoPublicacion !== 'Pausada'">
+          {{ pub.estadoPublicacion }}
+        </span>
+        <!-- <span class="detail-meta-pill">Publicación #{{ pub.nroPublicacion }}</span> -->
+      </div>
+
+      <app-expand-image-button
+        class="detail-expand-btn"
+        [ariaLabel]="'Ampliar fotografía de ' + pub.nombreMascota"
+        (expand)="abrirImagenAmpliada()"
+      ></app-expand-image-button>
+    </div>
+
+    <!-- Body -->
+    <div class="detail-body">
+      <div class="detail-header-row">
+        <div>
+          <h2 id="detalle-pet-title" class="detail-pet-name">{{ pub.nombreMascota }}</h2>
+          <p class="detail-subtitle">
+            NRM: <strong>{{ pub.nroRegMunicipal ? pub.nroRegMunicipal : 'Sin NRM previo' }}</strong>
+            <span class="detail-dot">·</span>
+            Publicada: {{ getFecha(pub) }}
+          </p>
+        </div>
+        <span class="detail-species-badge">{{ pub.especie || 'Mascota' }}</span>
+      </div>
+
+      <!-- Characteristics Grid -->
+      <div class="detail-specs-grid">
+        <div class="spec-item">
+          <span class="spec-label">Especie</span>
+          <span class="spec-value">{{ pub.especie || 'No especificada' }}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Raza</span>
+          <span class="spec-value">{{ pub.raza || 'Mestizo' }}</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Sexo</span>
+          <span class="spec-value">
+            <span class="gender-icon" [class.female]="getSexo(pub) === 'Hembra'"
+              [class.male]="getSexo(pub) === 'Macho'">
+              {{ getSexo(pub) === 'Hembra' ? '♀' : '♂' }}
+            </span>
+            {{ getSexo(pub) }}
+          </span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">Edad aproximada</span>
+          <span class="spec-value">
+            {{ getEdad(pub) }}
+            @if (getAnoNacimiento(pub); as anoNac) {
+            <span class="spec-sub"> (nac. {{ anoNac }})</span>
+            }
+          </span>
+        </div>
+      </div>
+
+      <!-- Description Section -->
+      <section class="detail-section">
+        <h3 class="section-heading">Descripción general</h3>
+        <p class="section-text">{{ pub.caracteristicasMascota || 'Sin descripción detallada.' }}</p>
+      </section>
+
+      <!-- Adoption Conditions Section -->
+      <section class="detail-section detail-section-highlight">
+        <h3 class="section-heading">Condiciones básicas de adopción</h3>
+        <p class="section-text">{{ pub.condicionAdopcion || 'No se especificaron condiciones particulares.' }}</p>
+      </section>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="detail-footer">
+      <div class="detail-state-actions">
+        @if (pub.estadoPublicacion === 'Activa') {
+        <button type="button" class="btn-outline-warn" (click)="onToggleEstado()">
+          Pausar publicación
+        </button>
+        <button type="button" class="btn-outline-danger" (click)="onFinalizar()">
+          Finalizar publicación
+        </button>
+        } @else if (pub.estadoPublicacion === 'Pausada') {
+        <button type="button" class="btn-outline-primary" (click)="onToggleEstado()">
+          Reanudar publicación
+        </button>
+        <button type="button" class="btn-outline-danger" (click)="onFinalizar()">
+          Finalizar publicación
+        </button>
+        } @else {
+        <button type="button" class="btn-outline-primary" (click)="onToggleEstado()">
+          Reactivar publicación
+        </button>
+        }
+      </div>
+
+      <button type="button" class="btn-close-footer" (click)="cerrar()">Cerrar</button>
+    </div>
+  </div>
+  }
+</div>
+
+@if (showImageLightbox() && publicacion(); as pubLightbox) {
+  <app-imagen-lightbox-modal
+    [imageUrl]="getFotoUrl(pubLightbox)"
+    [fallbackUrl]="getDefaultFotoUrl(pubLightbox)"
+    [altText]="pubLightbox.nombreMascota"
+    [caption]="getLightboxCaption(pubLightbox)"
+    (close)="cerrarImagenAmpliada()"
+  ></app-imagen-lightbox-modal>
+}

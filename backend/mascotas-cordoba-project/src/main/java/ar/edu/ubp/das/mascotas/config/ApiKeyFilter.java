@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -16,6 +17,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import java.io.IOException;
 
 @Component
+@Order(1)
 public class ApiKeyFilter extends OncePerRequestFilter {
 
     @Value("${security.rest.api-key:${security.api-key:}}")
@@ -32,24 +34,8 @@ public class ApiKeyFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Permitir solicitudes preflight CORS OPTIONS sin bloquear
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Delegar seguridad de endpoints SOAP (/services/*) a Apache CXF (ApiKeyInterceptor)
-        String requestPath = request.getRequestURI();
-        if (request.getContextPath() != null && !request.getContextPath().isEmpty()) {
-            requestPath = requestPath.substring(request.getContextPath().length());
-        }
-        if (requestPath.startsWith("/services")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Permitir acceso directo a recursos estáticos subidos (/uploads/*) para etiquetas <img>
-        if (requestPath.startsWith("/uploads")) {
+        String requestPath = SecurityHttpSupport.resolveRequestPath(request);
+        if (SecurityHttpSupport.shouldBypassRestSecurity(request, requestPath)) {
             filterChain.doFilter(request, response);
             return;
         }

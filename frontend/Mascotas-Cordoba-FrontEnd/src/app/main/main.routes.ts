@@ -16,6 +16,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/publicaciones/publicaciones.component').then(m => m.PublicacionesComponent),
     canActivate: [authGuard],
     canDeactivate: [controlarCambiosGuard],
+    data: { perfilesPermitidos: ['REFUGIO'] },
     resolve: {
       publicaciones: publicacionesResolver,
       estados: estadosResolver,

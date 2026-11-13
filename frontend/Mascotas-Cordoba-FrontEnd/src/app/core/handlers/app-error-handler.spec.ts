@@ -49,5 +49,22 @@ describe('AppErrorHandler', () => {
       })
     );
   });
+
+  it('should show warning dialog on HTTP 403 Forbidden', () => {
+    const httpError = new HttpErrorResponse({
+      status: 403,
+      error: { mensajeRespuesta: 'Perfil CIUDADANO no autorizado' }
+    });
+    handler.handleError(httpError);
+
+    expect(messageServiceSpy.showMessage).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        title: 'Operación No Permitida',
+        text: 'Perfil CIUDADANO no autorizado',
+        num: 403,
+        type: 'warning'
+      })
+    );
+  });
 });
 

@@ -4,18 +4,27 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { NuevaPublicacionModalComponent } from '../../components/nueva-publicacion-modal/nueva-publicacion-modal.component';
+import { DetallePublicacionModalComponent } from '../../components/detalle-publicacion-modal/detalle-publicacion-modal.component';
+import { ExpandImageButtonComponent } from '../../../shared/components/expand-image-button/expand-image-button.component';
+import { ImagenLightboxModalComponent } from '../../../shared/components/imagen-lightbox-modal/imagen-lightbox-modal.component';
 import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppMessageService } from '../../../core/services/app-message-service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { AutofocusDirective } from '../../../shared/directives/autofocus';
 import { FiltrarPorPipe } from '../../../shared/pipes/filtrar-por-pipe';
+import {
+  applyFallbackFoto,
+  formatFotoCaption,
+  getDefaultFotoMascota,
+  getEdadTexto,
+  getFotoMascotaUrl
+} from '../../../shared/utils/mascota-formatters';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { IEstadoPublicacion } from '../../api/models/i-estado-publicacion';
 import { IEspecie } from '../../api/models/i-especie';
 import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
 import { HasChangesComponent } from '../../guards/controlar-cambios-guard';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-publicaciones',
@@ -25,6 +34,9 @@ import { environment } from '../../../../environments/environment';
     FormsModule,
     NavbarComponent,
     NuevaPublicacionModalComponent,
+    DetallePublicacionModalComponent,
+    ExpandImageButtonComponent,
+    ImagenLightboxModalComponent,
     AutofocusDirective,
     FiltrarPorPipe
   ],
@@ -49,7 +61,18 @@ export class PublicacionesComponent implements HasChangesComponent {
   searchQuery = signal<string>('');
   selectedEstado = signal<string>('Todos');
   showNuevaModal = signal<boolean>(false);
+  selectedPublicacionNro = signal<number | null>(null);
+  lightboxPublicacion = signal<IPublicacionAdopcion | null>(null);
   isSaving = signal<boolean>(false);
+
+  // Selected publication synced with latest publications state
+  selectedPublicacion = computed(() => {
+    const nro = this.selectedPublicacionNro();
+    if (nro === null) {
+      return null;
+    }
+    return this.publicaciones().find(p => p.nroPublicacion === nro) ?? null;
+  });
 
   // Dynamic states catalog from backend resolver
   estadosCatalogo = computed(() => this.estados() || []);
@@ -77,43 +100,39 @@ export class PublicacionesComponent implements HasChangesComponent {
   }
 
   getEdadTexto(pub: IPublicacionAdopcion): string {
-    if (pub.edadAproximada && pub.edadAproximada > 0) {
-      return `${pub.edadAproximada} años`;
-    }
-    if (pub.añoNacimiento && pub.añoNacimiento > 0) {
-      const edadCalc = new Date().getFullYear() - pub.añoNacimiento;
-      return `${edadCalc > 0 ? edadCalc : 1} años`;
-    }
-    return '2 años';
+    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento);
   }
 
   getFotoMascota(pub: IPublicacionAdopcion): string {
-    const foto = pub.foto?.trim();
-    // Si la URL es nula, vacía o apunta al dominio de pruebas simulado, usar placeholder
-    if (!foto || foto.includes('mascotas.cordoba.gob.ar')) {
-      return this.getDefaultFoto(pub);
-    }
-    // Si es una ruta relativa servida localmente por el backend
-    if (foto.startsWith('/uploads/')) {
-      return `${environment.apiUrl}${foto}`;
-    }
-    return foto;
+    return getFotoMascotaUrl(pub.foto, pub.especie);
   }
 
   getDefaultFoto(pub: IPublicacionAdopcion): string {
-    const especie = (pub.especie || '').toLowerCase();
-    if (especie.includes('gato') || especie.includes('gata') || especie.includes('felin')) {
-      return 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80';
-    }
-    return 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80';
+    return getDefaultFotoMascota(pub.especie);
+  }
+
+  abrirDetalleModal(pub: IPublicacionAdopcion): void {
+    this.selectedPublicacionNro.set(pub.nroPublicacion);
+  }
+
+  cerrarDetalleModal(): void {
+    this.selectedPublicacionNro.set(null);
+  }
+
+  abrirImagenAmpliada(pub: IPublicacionAdopcion): void {
+    this.lightboxPublicacion.set(pub);
+  }
+
+  cerrarImagenAmpliada(): void {
+    this.lightboxPublicacion.set(null);
+  }
+
+  getLightboxCaption(pub: IPublicacionAdopcion): string {
+    return formatFotoCaption(pub.nombreMascota, pub.especie);
   }
 
   onImageError(event: Event, pub: IPublicacionAdopcion): void {
-    const target = event.target as HTMLImageElement;
-    if (target && !target.dataset['fallback']) {
-      target.dataset['fallback'] = 'true';
-      target.src = this.getDefaultFoto(pub);
-    }
+    applyFallbackFoto(event, pub.especie);
   }
 
   toggleEstado(pub: IPublicacionAdopcion): void {

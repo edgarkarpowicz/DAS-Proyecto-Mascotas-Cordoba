@@ -1,0 +1,4 @@
+# Preserve binary document contents and Unix shell script line endings.
+*.pdf binary
+*.docx binary
+*.sh text eol=lf

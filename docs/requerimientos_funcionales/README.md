@@ -45,6 +45,175 @@ Todos los cambios son de documentación. En RF13 y RF15 se documentó el código
 - **RF16:** `MostrarPortalWeb()` pasa a llamarse `ConsultarServiciosHabilitados()`, porque la operación devuelve datos de navegación y no una pantalla.
 - **Nombre del cliente (RF04, RF06, RF09, RF10, RF11 y RF16):** se usa siempre *Portal Mascotas Córdoba* indicando el perfil, en lugar de "Plataforma Angular", "Portal ciudadano" o "Portal administrativo". En RF10 este es el único cambio y su diagrama se copió sin modificaciones. Los RF sin renovado2 conservan su nomenclatura.
 
+## Versión renovado3: análisis SOA según la devolución de la cátedra
+
+Después de la presentación del 13/11/2026, la cátedra indicó que el análisis SOA debe considerar **solo las integraciones entre sistemas distintos**. El portal Angular y la base de datos son parte de Mascotas Córdoba y no cuentan como integraciones. Los terceros autorizados de RF11 son actores, no sistemas. Las integraciones son tres, y en todas Mascotas Córdoba es el cliente:
+
+| Integración | RF | Tipo | Operaciones del sistema externo |
+| --- | --- | --- | --- |
+| Mascotas Córdoba → Sistema de Gestión de la Veterinaria | RF06, RF09 (configurada en RF04) | Por lotes | `ObtenerMascotasSinNRM()`, `InformarNRM()`, `ObtenerAtencionesSanitarias()` |
+| Mascotas Córdoba → Ciudadano Digital (CiDi) | RF15 | En línea | `ValidarIdentidadCiudadana()` |
+| Mascotas Córdoba → Servicio de IA generativa | RF21 | En línea, con contexto fijo | `GenerarRespuestaAsistente()` |
+
+Los contratos renovado3 analizan solo el proceso de Mascotas Córdoba con el sistema externo, sin pantallas ni el intercambio del portal con el backend:
+
+- **RF06:** [DOCX](obligatorios/rf_06/renovado3/plantilla_rf06_renovado3.docx) · [PDF](obligatorios/rf_06/renovado3/RF06%20-%20Registrar%20Mascota%20-%20renovado3.pdf)
+- **RF09:** [DOCX](obligatorios/rf_09/renovado3/plantilla_rf09_renovado3.docx) · [PDF](obligatorios/rf_09/renovado3/RF09%20-%20Registrar%20Informaci%C3%B3n%20Sanitaria%20-%20renovado3.pdf)
+- **RF15:** [DOCX](obligatorios/rf_15/renovado3/plantilla_rf15_renovado3.docx) · [PDF](obligatorios/rf_15/renovado3/RF15%20-%20Autenticar%20Usuarios%20-%20renovado3.pdf)
+- **RF21:** [DOCX](obligatorios/rf_21/renovado3/plantilla_rf21_renovado3.docx) · [PDF](obligatorios/rf_21/renovado3/RF21%20-%20Consultar%20Asistente%20Virtual%20-%20renovado3.pdf)
+
+Los diagramas muestran sólo el proceso de Mascotas Córdoba con el sistema externo: el lote que recorre las veterinarias (RF06 y RF09) y los flujos en línea de CiDi (RF15) y la IA (RF21). El rectángulo con doble barra marca la invocación al sistema externo.
+
+## Versión renovado4: diagramas y contratos según el modelo de la cátedra
+
+La versión renovado4 rehace los diagramas y contratos de las tres integraciones tomando como modelo los ejercicios resueltos por la cátedra (SUBE, procesos por lote). El renovado3 se conserva sin cambios.
+
+| Integración | RF | Tipo | Operaciones del sistema externo |
+| --- | --- | --- | --- |
+| Mascotas Córdoba → Sistema de Gestión de la Veterinaria | RF06, RF09 (configurada en RF04) | Por lote | `ObtenerMascotasSinNRM()`, `InformarNRM()`, `ObtenerAtencionesSanitarias()` |
+| Mascotas Córdoba → Ciudadano Digital (CiDi) | RF15 | En línea | `ValidarIdentidadCiudadana()` |
+| Mascotas Córdoba → Servicio de IA generativa | RF21 | En línea | `GenerarRespuestaAsistente()` |
+
+Cambios respecto del renovado3:
+
+- **Procesos por lote (RF06 y RF09):** Inicio → determinar veterinarias configuradas → decisión "> 0" → obtener primera veterinaria → subproceso (invocación a la veterinaria) → decisión "Éxito" → base de datos (registrar y lote procesado) → decisión "Éxito" → vuelve a "> 0". Ante un error: "Enviar correo al administrador" → "Registrar log", y se continúa con la siguiente veterinaria. Un solo Fin.
+- **Lotes en los contratos:** cada operación lleva `Token` e `idLote`; las mascotas, los NRM y las atenciones viajan como listas (JSON). `InformarNRM()` se invoca una vez por veterinaria, no una vez por mascota.
+- **Procesos en línea (RF15 y RF21):** dos decisiones después del subproceso ("¿Transacción exitosa?" y el resultado de negocio), figura de base de datos con su decisión de éxito, un solo camino de error y un solo Fin. CiDi devuelve códigos de negocio (1, 2, 3, -1). La IA recibe un contexto público o según el perfil.
+- **Documentos:** la Ubicación es el sistema externo, la Descripción indica "Este es un proceso por lote" o "en línea", y cada proceso suma una "Justificación del diseño".
+
+Archivos:
+
+- **RF06:** [DOCX](obligatorios/rf_06/renovado4/plantilla_rf06_renovado4.docx) · [PDF](obligatorios/rf_06/renovado4/RF06%20-%20Registrar%20Mascota%20-%20renovado4.pdf)
+- **RF09:** [DOCX](obligatorios/rf_09/renovado4/plantilla_rf09_renovado4.docx) · [PDF](obligatorios/rf_09/renovado4/RF09%20-%20Registrar%20Informaci%C3%B3n%20Sanitaria%20-%20renovado4.pdf)
+- **RF15:** [DOCX](obligatorios/rf_15/renovado4/plantilla_rf15_renovado4.docx) · [PDF](obligatorios/rf_15/renovado4/RF15%20-%20Autenticar%20Usuarios%20-%20renovado4.pdf)
+- **RF21:** [DOCX](obligatorios/rf_21/renovado4/plantilla_rf21_renovado4.docx) · [PDF](obligatorios/rf_21/renovado4/RF21%20-%20Consultar%20Asistente%20Virtual%20-%20renovado4.pdf)
+
+## Versión renovado5: renovado4 con los ajustes de la revisión del equipo
+
+La versión renovado5 mantiene la notación y el patrón por lote del renovado4 e incorpora cuatro mejoras surgidas de la revisión de los diagramas. El renovado4 se conserva sin cambios.
+
+- **RF06:** `InformarNRM()` devuelve un acuse por mascota. El NRM se guarda primero como pendiente de informar y se confirma al recibir su acuse; lo no confirmado se informa en el próximo lote, sin deshacer el alta ni generar otro NRM.
+- **RF09:** el avance se guarda con un cursor (`cursor` / `cursorSiguiente`) en lugar de una fecha. El cursor sólo se adelanta si todas las atenciones del conjunto se registraron con éxito.
+- **RF15:** se agrega la decisión "¿Perfil habilitado?": CiDi identifica y Mascotas Córdoba autoriza.
+- **RF21:** la primera decisión es "¿Requiere información personalizada?"; si la requiere, el usuario debe estar autenticado y autorizado. El contrato usa `tipoContexto` (PUBLICO o AUTORIZADO) y no envía datos identificatorios.
+
+La lógica interna (duplicados, filtrado de prácticas, anonimizado) no se dibuja como subproceso: queda en la "Justificación del diseño" y en las observaciones de cada contrato.
+
+- **RF06:** [DOCX](obligatorios/rf_06/renovado5/plantilla_rf06_renovado5.docx) · [PDF](obligatorios/rf_06/renovado5/RF06%20-%20Registrar%20Mascota%20-%20renovado5.pdf)
+- **RF09:** [DOCX](obligatorios/rf_09/renovado5/plantilla_rf09_renovado5.docx) · [PDF](obligatorios/rf_09/renovado5/RF09%20-%20Registrar%20Informaci%C3%B3n%20Sanitaria%20-%20renovado5.pdf)
+- **RF15:** [DOCX](obligatorios/rf_15/renovado5/plantilla_rf15_renovado5.docx) · [PDF](obligatorios/rf_15/renovado5/RF15%20-%20Autenticar%20Usuarios%20-%20renovado5.pdf)
+- **RF21:** [DOCX](obligatorios/rf_21/renovado5/plantilla_rf21_renovado5.docx) · [PDF](obligatorios/rf_21/renovado5/RF21%20-%20Consultar%20Asistente%20Virtual%20-%20renovado5.pdf)
+
+## Versión renovado6: precisiones de texto sobre el renovado5
+
+La versión renovado6 no cambia la estructura de los diagramas: precisa textos, notas y observaciones. El renovado5 se conserva sin cambios.
+
+- **RF06 y RF09:** "Obtener siguiente veterinaria"; la veterinaria que se toma sale de las pendientes de la ejecución aunque falle, y se reintenta en el próximo lote.
+- **RF06:** se aclara que al registrar se buscan coincidencias y se reutiliza el NRM existente, y que se informan también los NRM pendientes de lotes anteriores.
+- **RF09:** cada atención se asocia a una mascota ya registrada; un reintento no duplica ni pierde historial; lo pendiente impide adelantar el cursor.
+- **RF15:** el retorno de CiDi queda como precondición; el último paso es "Iniciar sesión con perfil y permisos; mostrar pantalla principal"; los códigos son la convención del contrato diseñado, no códigos propios de CiDi.
+- **RF21:** se define "Respuesta válida", el mensaje al usuario depende de la causa y el filtrado de consulta y contexto queda como precondición del consumidor (lo hace Mascotas Córdoba antes de invocar).
+
+- **RF06:** [DOCX](obligatorios/rf_06/renovado6/plantilla_rf06_renovado6.docx) · [PDF](obligatorios/rf_06/renovado6/RF06%20-%20Registrar%20Mascota%20-%20renovado6.pdf)
+- **RF09:** [DOCX](obligatorios/rf_09/renovado6/plantilla_rf09_renovado6.docx) · [PDF](obligatorios/rf_09/renovado6/RF09%20-%20Registrar%20Informaci%C3%B3n%20Sanitaria%20-%20renovado6.pdf)
+- **RF15:** [DOCX](obligatorios/rf_15/renovado6/plantilla_rf15_renovado6.docx) · [PDF](obligatorios/rf_15/renovado6/RF15%20-%20Autenticar%20Usuarios%20-%20renovado6.pdf)
+- **RF21:** [DOCX](obligatorios/rf_21/renovado6/plantilla_rf21_renovado6.docx) · [PDF](obligatorios/rf_21/renovado6/RF21%20-%20Consultar%20Asistente%20Virtual%20-%20renovado6.pdf)
+
+## Versión renovado7: datos de RF06 exigidos por la especificación
+
+El único cambio de contenido respecto del renovado6 está en el contrato de RF06: `MascotaVeterinaria` suma `castrado` y `edadAproximada` (alternativa a `fechaNacimiento`), y `responsable` suma `cuil`, porque RF06 los pide expresamente. RF09, RF15 y RF21 son iguales al renovado6 y se incluyen para que la versión esté completa. El renovado6 se conserva sin cambios.
+
+- **RF06:** [DOCX](obligatorios/rf_06/renovado7/plantilla_rf06_renovado7.docx) · [PDF](obligatorios/rf_06/renovado7/RF06%20-%20Registrar%20Mascota%20-%20renovado7.pdf)
+- **RF09:** [DOCX](obligatorios/rf_09/renovado7/plantilla_rf09_renovado7.docx) · [PDF](obligatorios/rf_09/renovado7/RF09%20-%20Registrar%20Informaci%C3%B3n%20Sanitaria%20-%20renovado7.pdf)
+- **RF15:** [DOCX](obligatorios/rf_15/renovado7/plantilla_rf15_renovado7.docx) · [PDF](obligatorios/rf_15/renovado7/RF15%20-%20Autenticar%20Usuarios%20-%20renovado7.pdf)
+- **RF21:** [DOCX](obligatorios/rf_21/renovado7/plantilla_rf21_renovado7.docx) · [PDF](obligatorios/rf_21/renovado7/RF21%20-%20Consultar%20Asistente%20Virtual%20-%20renovado7.pdf)
+- **RF07** (no obligatorio): [DOCX](no_obligatorios/rf_07/renovado7/plantilla_rf07_renovado7.docx) · [PDF](no_obligatorios/rf_07/renovado7/RF07%20-%20Actualizar%20Informaci%C3%B3n%20de%20Mascotas%20-%20renovado7.pdf)
+
+RF07 se suma como tercer proceso por lote con las veterinarias: `ObtenerMascotasModificadas()` es una operación más del mismo servicio de RF06 y RF09. La especificación no fija el origen de las actualizaciones; se propone la veterinaria como una de las fuentes. No es una integración nueva: los sistemas externos siguen siendo tres.
+
+Pendientes conocidos, no corregidos a propósito (RF09 no se implementa): la clave de duplicados de atenciones debería ser veterinaria + `nroAtencion`, y el cursor puede dejar atrás atenciones de mascotas que reciben su NRM más tarde.
+
+## Renovado10 en el resto de los RF (sin integración)
+
+Con la misma etiqueta **renovado10** se rehicieron los 16 RF que no son integraciones: RF01, RF02, RF03, RF04, RF05, RF08, RF10, RF11, RF12, RF13, RF14, RF16, RF17, RF18, RF19 y RF20. Sus versiones anteriores (renovado y renovado2) usaban el criterio que la cátedra rechazó (el portal como integración) y se conservan sin cambios.
+
+Cada uno tiene, en `rf_XX/renovado10/`:
+
+- **Diagrama** del proceso interno con la notación de la cátedra (entrada manual, proceso, base de datos, decisión, pantalla), sin subprocesos de integración.
+- **DOCX de plantilla**: pasos 1 y 2 completos (la tabla de actividades indica "Integración: No"), pasos 3 a 5 y SERVICIOS como "No corresponde", y la ficha **"Por qué no es una integración"**. RF11, RF12 y RF13 remiten a las candidatas D, A y B.
+
+Las candidatas A, B, E y F también se alinearon con las correcciones (rango de fechas, paginación y, en F, información planchada). Sus versiones anteriores están en `integraciones/candidatas/versiones_anteriores/`.
+
+**Versión vigente de cada RF:** la carpeta `renovado10` (RF15, `renovado8`).
+
+## Versión renovado10: correcciones de la profesora tras la presentación (23/11/2026)
+
+**Es la versión vigente.** Rehace RF06, RF09 y RF21 (y alinea RF07, candidata); RF15 sigue en renovado8.
+
+- **Veterinarias (RF06 y RF09):** se reemplazó `idLote` (y el cursor de RF09) por un **rango de fechas** (`fechaDesde`, `fechaHasta`). Mascotas Córdoba guarda la última fecha procesada de cada veterinaria y solo la adelanta cuando el lote se registró con éxito. Se agregó **paginación opcional** (`pagina`, `tamanioPagina`, `totalPaginas`).
+- **Información sanitaria planchada (RF09):** la operación devuelve `practicas`, un registro plano por práctica, sin listas anidadas; los datos del profesional van concatenados en un solo campo.
+- **IA (RF21):** el **RAG se hace al armar el prompt**, en un mismo paso ("Recuperar información (RAG) y armar prompt ReAct"). Se quitó el ciclo de acciones: hay una sola invocación por consulta, y el contrato vuelve a recibir `contexto`.
+
+Archivos en `obligatorios/rf_06/renovado10/`, `rf_09/renovado10/`, `rf_21/renovado10/` y `no_obligatorios/rf_07/renovado10/`. El informe breve y el anexo de `integraciones/identificadas/` ya incluyen esta versión; los anteriores quedaron en `versiones_anteriores/`.
+
+## Versión renovado9: RF21 como ReAct prompting y RAG
+
+La devolución de la profesora indica dos cosas: que el registro de mascotas y la información sanitaria son procesos por lote (ya lo eran desde el renovado4) y que el proceso de IA debe diagramarse como **ReAct prompting y RAG**. El renovado9 rehace solo RF21; RF06, RF09 y RF15 siguen en renovado8.
+
+- **ReAct:** el subproceso de IA queda dentro de un ciclo. En cada paso la IA devuelve una acción (pedir información) o la respuesta final. El contrato suma `herramientas`, `pasos`, `razonamiento`, `accion` y `entradaAccion`, y el código 2 "solicita una acción".
+- **RAG:** la información que pide la IA se recupera de la base de la propia plataforma y se agrega al prompt. Las herramientas (`BuscarInformacionPrograma`, `ConsultarMisMascotas`) son consultas internas, no integraciones.
+- Antes de recuperar se verifica que el usuario esté autorizado, y el ciclo tiene un máximo de pasos.
+
+- **RF21:** [DOCX](obligatorios/rf_21/renovado9/plantilla_rf21_renovado9.docx) · [PDF](obligatorios/rf_21/renovado9/RF21%20-%20Consultar%20Asistente%20Virtual%20-%20renovado9.pdf)
+
+El informe breve y el anexo de `integraciones/identificadas/` ya incluyen esta versión.
+
+## Dónde está lo que se presenta
+
+Todo el análisis de integraciones está reunido en **[integraciones/](integraciones/LEEME.md)**: `identificadas/` (las tres integraciones, con el informe, los diagramas y los contratos) y `candidatas/` (las evaluadas y no tomadas). Las carpetas por RF conservan el historial de versiones.
+
+## Versión renovado8: ajustes de plantilla y documento breve
+
+**Es la versión a presentar.** El renovado7 se conserva sin cambios.
+
+Documentos de lectura:
+
+- **[Integraciones - Mascotas Cordoba.pdf](integraciones/identificadas/Integraciones%20-%20Mascotas%20Cordoba.pdf)** (11 páginas): el documento para exponer. Una portada con las tres integraciones y las candidatas descartadas, y para cada integración: descripción, diagrama y contrato.
+- **[Anexo - Analisis SOA detallado - Mascotas Cordoba.pdf](integraciones/identificadas/Anexo%20-%20Analisis%20SOA%20detallado%20-%20Mascotas%20Cordoba.pdf)** (25 páginas): el mismo contenido con criterios de diseño, lectura paso a paso de cada diagrama y RF07.
+- `integraciones/identificadas/versiones_anteriores/Analisis SOA - Integraciones - Mascotas Cordoba.pdf` es la versión anterior del anexo (contenido renovado7) y se conserva.
+
+Cambios respecto del renovado7, a partir de dos revisiones externas:
+
+- **Plantilla:** la columna Tipo usa sólo Mandatorio y Opcional (se quitó "Condicional"); la columna de ejemplo tiene valores de muestra; "Ingresar consulta" usa la figura de entrada manual; el Alcance es una oración y el resto pasó a la Descripción.
+- **RF09:** la veterinaria devuelve todas las atenciones a partir del cursor (ya no filtra por NRM), con `idMascota` y `nroDetalle`; la atención se identifica por veterinaria, mascota, número de atención, tipo y detalle. Así el cursor no deja atenciones atrás y se elimina una contradicción del contrato. `cursorSiguiente` admite vacío.
+- **RF06:** primero se reconoce la mascota ya recibida de esa veterinaria (veterinaria e `idMascota`); se agregó un ejemplo de mascota.
+- **RF15:** el último paso se separó en "Iniciar sesión con perfil y permisos" y "Mostrar pantalla principal"; se definió el nivel mínimo de cuenta como parámetro y la regla para el ciudadano recién registrado.
+- **RF21:** se quitó `tipoContexto` de la solicitud (el proveedor no lo necesita) y se acotó `longitudMaxima`.
+- **RF07:** se declaró la regla de precedencia entre fuentes y el requisito de seguimiento de cambios en la veterinaria. No se expone como integración; queda en el anexo.
+
+Archivos:
+
+- **RF06:** [DOCX](obligatorios/rf_06/renovado8/plantilla_rf06_renovado8.docx) · [PDF](obligatorios/rf_06/renovado8/RF06%20-%20Registrar%20Mascota%20-%20renovado8.pdf)
+- **RF09:** [DOCX](obligatorios/rf_09/renovado8/plantilla_rf09_renovado8.docx) · [PDF](obligatorios/rf_09/renovado8/RF09%20-%20Registrar%20Informaci%C3%B3n%20Sanitaria%20-%20renovado8.pdf)
+- **RF15:** [DOCX](obligatorios/rf_15/renovado8/plantilla_rf15_renovado8.docx) · [PDF](obligatorios/rf_15/renovado8/RF15%20-%20Autenticar%20Usuarios%20-%20renovado8.pdf)
+- **RF21:** [DOCX](obligatorios/rf_21/renovado8/plantilla_rf21_renovado8.docx) · [PDF](obligatorios/rf_21/renovado8/RF21%20-%20Consultar%20Asistente%20Virtual%20-%20renovado8.pdf)
+- **RF07** (no obligatorio): [DOCX](no_obligatorios/rf_07/renovado8/plantilla_rf07_renovado8.docx) · [PDF](no_obligatorios/rf_07/renovado8/RF07%20-%20Actualizar%20Informaci%C3%B3n%20de%20Mascotas%20-%20renovado8.pdf)
+
+## Integraciones candidatas (evaluadas y no tomadas)
+
+Además de las tres integraciones identificadas, se prepararon el diagrama y el contrato de los puntos que **podrían** considerarse integraciones y que no se tomaron. Sirven de respaldo si en la defensa se señala alguno. Están en [integraciones/candidatas/](integraciones/candidatas/) y reunidos en **[Integraciones candidatas - Mascotas Cordoba.pdf](integraciones/candidatas/Integraciones%20candidatas%20-%20Mascotas%20Cordoba.pdf)** (18 páginas), que explica para cada una por qué podría ser una integración, por qué no se tomó y cómo sería.
+
+| | Candidata | RF | Sistema externo | Tipo | Rol de Mascotas Córdoba | Operaciones |
+| --- | --- | --- | --- | --- | --- | --- |
+| A | Refugios: animales bajo cuidado | RF12 | Sistema de Gestión del Refugio | Por lote | Consumidora | `ObtenerAnimalesSinNRM()`, `InformarNRM()` |
+| B | Refugios: publicaciones de adopción | RF13 | Sistema de Gestión del Refugio | Por lote | Consumidora | `ObtenerPublicacionesModificadas()` |
+| C | Identificación del personal municipal | RF15 | Sistema de Identificación Municipal | En línea | Consumidora | `AutenticarPersonalMunicipal()` |
+| D | Terceros autorizados: validar carnet | RF11 | Sistema del tercero autorizado | En línea | Proveedora | `ValidarCarnetSanitario()` |
+| E | Veterinaria que envía mascotas | RF06 | Sistema de Gestión de la Veterinaria | Por lote | Proveedora | `RegistrarMascotas()` |
+| F | Veterinaria que envía información sanitaria | RF09 | Sistema de Gestión de la Veterinaria | Por lote | Proveedora | `RegistrarAtencionesSanitarias()` |
+
+RF07 también es una candidata evaluada; su material está en `no_obligatorios/rf_07/renovado8/` y en el anexo detallado.
+
 ## Archivos por RF
 
 - **RF06** (obligatorios) — anterior: [DOCX](obligatorios/rf_06/anterior/plantilla_rf06_anterior.docx) · [PDF](obligatorios/rf_06/anterior/RF06%20-%20Registrar%20Mascota%20-%20anterior.pdf) — renovado: [DOCX](obligatorios/rf_06/renovado/plantilla_rf06_renovado.docx) · [PDF](obligatorios/rf_06/renovado/RF06%20-%20Registrar%20Mascota%20-%20renovado.pdf) — renovado2: [DOCX](obligatorios/rf_06/renovado2/plantilla_rf06_renovado2.docx) · [PDF](obligatorios/rf_06/renovado2/RF06%20-%20Registrar%20Mascota%20-%20renovado2.pdf)

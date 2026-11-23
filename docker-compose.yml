@@ -6,7 +6,7 @@
 
 services:
   # ----------------------------------------------------------------------------
-  # Servicio 1: Backend Spring Boot (REST + SOAP CXF) sobre Apache Tomcat 10.1
+  # Servicio 1: Backend Spring Boot (REST + SOAP CXF) sobre Apache Tomcat 11
   # ----------------------------------------------------------------------------
   backend:
     build:

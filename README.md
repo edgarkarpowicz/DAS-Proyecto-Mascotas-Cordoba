@@ -3,6 +3,8 @@
 
 Proyecto desarrollado en el marco de la asignatura **Diseño Avanzado de Software (DAS)** — 10° Cuatrimestre, **Ingeniería en Informática (Plan 2014)**, **Universidad Blas Pascal (UBP)**.
 
+Para levantar frontend, backend y una base SQL Server local con datos de prueba, seguir [Arranque local completo con Docker](docs/ARRANQUE_LOCAL.md).
+
 ---
 
 ## 📋 Descripción del Proyecto
@@ -118,7 +120,7 @@ DAS-Proyecto-Mascotas-Cordoba/
 
 ## 🐳 Ejecución con Docker (Recomendada / Contenedores)
 
-El proyecto cuenta con configuración integral de **Docker** y **Docker Compose** siguiendo las pautas de la cátedra DAS (`Resueltos-Profesora/Spring-Boot/03-docker`). Esta modalidad permite levantar el **Backend Spring Boot** (sobre Apache Tomcat 10.1) y el **Frontend Angular** (sobre Nginx) de forma automatizada con un solo comando, conectándose al SQL Server local de la máquina anfitriona.
+El proyecto cuenta con configuración de **Docker** y **Docker Compose** siguiendo las pautas de la cátedra DAS (`Resueltos-Profesora/Spring-Boot/03-docker`). El archivo base permite levantar el **Backend Spring Boot** (sobre Apache Tomcat 11, compatible con Spring Boot 4) y el **Frontend Angular** (sobre Nginx), conectándose a un SQL Server de la máquina anfitriona. Para incluir también SQL Server y su inicialización automática, seguir [Arranque local completo](docs/ARRANQUE_LOCAL.md).
 
 ### Prerrequisitos
 1. **Docker Desktop** instalado y en ejecución en el sistema.
@@ -126,7 +128,7 @@ El proyecto cuenta con configuración integral de **Docker** y **Docker Compose*
    > Asegurarse de que el protocolo **TCP/IP** esté habilitado en el *SQL Server Configuration Manager* sobre el puerto estándar `1433`.
 
 ### Estructura de Servicios Docker
-* **`backend` (Puerto 8080):** Contenedor multi-stage basado en `maven:3.9-eclipse-temurin-17` y runtime en `tomcat:10.1-jdk17-temurin`.
+* **`backend` (Puerto 8080):** Contenedor multi-stage basado en `maven:3.9-eclipse-temurin-17` y runtime en `tomcat:11.0-jdk17-temurin`.
   * Se conecta a la base de datos host mediante `host.docker.internal:1433`.
   * Monta un volumen persistente `./uploads:/usr/local/tomcat/uploads` para que las fotos subidas no se pierdan.
 * **`frontend` (Puerto 4200):** Contenedor multi-stage basado en `node:20-alpine` y servidor `nginx:alpine`.

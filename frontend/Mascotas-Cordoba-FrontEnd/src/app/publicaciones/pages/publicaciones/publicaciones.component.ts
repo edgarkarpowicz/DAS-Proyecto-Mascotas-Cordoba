@@ -1,4 +1,4 @@
-import { Component, Injector, computed, inject, input, linkedSignal } from '@angular/core';
+import { Component, Injector, computed, inject, input, linkedSignal, ChangeDetectionStrategy } from '@angular/core';
 import { LowerCasePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -46,6 +46,7 @@ const ETIQUETA_PESTANIA: Record<string, string> = {
     FiltrarPorPipe
   ],
   templateUrl: './publicaciones.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./publicaciones.component.css']
 })
 export class PublicacionesComponent implements HasChangesComponent {

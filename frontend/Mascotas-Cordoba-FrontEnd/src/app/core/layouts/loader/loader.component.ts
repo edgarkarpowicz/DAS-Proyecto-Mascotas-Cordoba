@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { LoaderService } from '../../services/loader-service';
 
@@ -6,6 +6,7 @@ import { LoaderService } from '../../services/loader-service';
     selector: 'app-loader',
     imports: [],
     templateUrl: './loader.component.html',
+    changeDetection: ChangeDetectionStrategy.Eager,
     styleUrls: ['./loader.component.css']
 })
 export class LoaderComponent {

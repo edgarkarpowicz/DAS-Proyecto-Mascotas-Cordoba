@@ -1,9 +1,10 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-expand-image-button',
   standalone: true,
   templateUrl: './expand-image-button.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./expand-image-button.component.css']
 })
 export class ExpandImageButtonComponent {

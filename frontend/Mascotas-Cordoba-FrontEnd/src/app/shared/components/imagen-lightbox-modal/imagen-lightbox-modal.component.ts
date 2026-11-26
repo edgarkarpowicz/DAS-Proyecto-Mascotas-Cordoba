@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { applyFallbackFoto } from '../../utils/mascota-formatters';
 
@@ -16,6 +16,7 @@ export interface IImagenLightboxData {
 @Component({
   selector: 'app-imagen-lightbox-modal',
   templateUrl: './imagen-lightbox-modal.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./imagen-lightbox-modal.component.css']
 })
 export class ImagenLightboxModalComponent {

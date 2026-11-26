@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { EstadoPublicacion, EstadoPublicacionService } from '../../services/estado-publicacion.service';
@@ -28,6 +28,7 @@ export interface IDetallePublicacionData {
   selector: 'app-detalle-publicacion-modal',
   imports: [ExpandImageButtonComponent],
   templateUrl: './detalle-publicacion-modal.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./detalle-publicacion-modal.component.css']
 })
 export class DetallePublicacionModalComponent {

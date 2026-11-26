@@ -1,6 +1,6 @@
 import { APP_INITIALIZER, ApplicationConfig, ErrorHandler, inject } from '@angular/core';
 import { provideRouter, Router, withComponentInputBinding, withNavigationErrorHandler } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { appHttpInterceptor } from './core/interceptors/app-http-interceptor';
@@ -21,7 +21,7 @@ export const appConfig: ApplicationConfig = {
         }
       })
     ),
-    provideHttpClient(
+    provideHttpClient(withXhr(), 
       withInterceptors([appHttpInterceptor])
     ),
     {

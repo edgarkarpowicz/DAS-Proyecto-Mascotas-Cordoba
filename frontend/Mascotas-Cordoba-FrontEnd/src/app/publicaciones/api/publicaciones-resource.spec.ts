@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { PublicacionesResource } from './publicaciones-resource';
 import { environment } from '../../../environments/environment';
@@ -13,7 +13,7 @@ describe('PublicacionesResource', () => {
     TestBed.configureTestingModule({
       providers: [
         PublicacionesResource,
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting()
       ]
     });

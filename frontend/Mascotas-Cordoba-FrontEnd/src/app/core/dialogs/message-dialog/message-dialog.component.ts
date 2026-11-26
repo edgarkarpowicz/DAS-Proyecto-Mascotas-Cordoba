@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { IMessage } from '../../services/app-message-service';
 
@@ -9,6 +9,7 @@ import { IMessage } from '../../services/app-message-service';
 @Component({
   selector: 'app-message-dialog',
   templateUrl: './message-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./message-dialog.component.css']
 })
 export class MessageDialogComponent {

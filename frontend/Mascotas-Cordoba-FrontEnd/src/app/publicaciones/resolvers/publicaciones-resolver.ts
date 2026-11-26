@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { ResolveFn } from '@angular/router';
-import { PublicacionesResource } from '../api/resources/publicaciones-resource';
+import { PublicacionesResource } from '../api/publicaciones-resource';
 import { AuthService } from '../../core/services/auth.service';
 import { IPublicacionAdopcion } from '../api/models/i-publicacion-adopcion';
 

@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ILoginRequest } from '../models/i-login-request';
-import { ILoginResponse } from '../models/i-login-response';
-import { IUsuarioRefugio } from '../models/i-usuario-refugio';
+import { environment } from '../../../environments/environment';
+import { ILoginRequest } from './models/i-login-request';
+import { ILoginResponse } from './models/i-login-response';
+import { IUsuarioRefugio } from './models/i-usuario-refugio';
 
 @Injectable({
   providedIn: 'root'

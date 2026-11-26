@@ -2,12 +2,12 @@ import { Component, ViewChild, computed, inject, input, model, signal } from '@a
 
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { NavbarComponent } from '../../components/navbar/navbar.component';
+import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { NuevaPublicacionModalComponent } from '../../components/nueva-publicacion-modal/nueva-publicacion-modal.component';
 import { DetallePublicacionModalComponent } from '../../components/detalle-publicacion-modal/detalle-publicacion-modal.component';
 import { ExpandImageButtonComponent } from '../../../shared/components/expand-image-button/expand-image-button.component';
 import { ImagenLightboxModalComponent } from '../../../shared/components/imagen-lightbox-modal/imagen-lightbox-modal.component';
-import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
+import { PublicacionesResource } from '../../api/publicaciones-resource';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppMessageService } from '../../../core/services/app-message-service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
@@ -22,9 +22,8 @@ import {
 } from '../../../shared/utils/mascota-formatters';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { IEstadoPublicacion } from '../../api/models/i-estado-publicacion';
-import { IEspecie } from '../../api/models/i-especie';
 import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
-import { HasChangesComponent } from '../../guards/controlar-cambios-guard';
+import { HasChangesComponent } from '../../../core/guards/controlar-cambios-guard';
 
 @Component({
     selector: 'app-publicaciones',
@@ -53,7 +52,6 @@ export class PublicacionesComponent implements HasChangesComponent {
   // Resolved inputs from router (withComponentInputBinding)
   publicaciones = model<IPublicacionAdopcion[]>([]);
   estados = input<IEstadoPublicacion[]>([]);
-  especies = input<IEspecie[]>([]);
 
   // Local state signals
   searchQuery = signal<string>('');

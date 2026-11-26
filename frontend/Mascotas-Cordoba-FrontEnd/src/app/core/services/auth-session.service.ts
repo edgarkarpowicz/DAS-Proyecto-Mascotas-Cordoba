@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { IUsuarioRefugio, PerfilUsuario } from '../../main/api/models/i-usuario-refugio';
+import { IUsuarioRefugio, PerfilUsuario } from '../api/models/i-usuario-refugio';
 
 const STORAGE_USER_KEY = 'mascotas_cba_user';
 const STORAGE_TOKEN_KEY = 'mascotas_cba_token';

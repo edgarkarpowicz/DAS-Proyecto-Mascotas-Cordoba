@@ -1,15 +1,15 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { IEstadoPublicacion } from '../models/i-estado-publicacion';
-import { IEspecie } from '../models/i-especie';
-import { IPublicacionAdopcion } from '../models/i-publicacion-adopcion';
-import { IMascotaDisponible } from '../models/i-mascota-disponible';
-import { INuevaPublicacionRequest } from '../models/i-nueva-publicacion-request';
-import { ICambioEstadoRequest } from '../models/i-cambio-estado-request';
-import { IAdministrarPublicacionResponse } from '../models/i-administrar-publicacion-response';
-import { ISubirFotoResponse } from '../models/i-subir-foto-response';
+import { environment } from '../../../environments/environment';
+import { IEstadoPublicacion } from './models/i-estado-publicacion';
+import { IEspecie } from './models/i-especie';
+import { IPublicacionAdopcion } from './models/i-publicacion-adopcion';
+import { IMascotaDisponible } from './models/i-mascota-disponible';
+import { INuevaPublicacionRequest } from './models/i-nueva-publicacion-request';
+import { ICambioEstadoRequest } from './models/i-cambio-estado-request';
+import { IAdministrarPublicacionResponse } from './models/i-administrar-publicacion-response';
+import { ISubirFotoResponse } from './models/i-subir-foto-response';
 
 @Injectable()
 export class PublicacionesResource {

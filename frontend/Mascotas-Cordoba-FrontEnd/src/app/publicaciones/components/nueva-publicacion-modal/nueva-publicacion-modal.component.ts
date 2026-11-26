@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, input, signal } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
-import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
+import { PublicacionesResource } from '../../api/publicaciones-resource';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppMessageService } from '../../../core/services/app-message-service';
 import { AutofocusDirective } from '../../../shared/directives/autofocus';

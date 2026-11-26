@@ -246,7 +246,6 @@
 <!-- Modal Nueva Publicación -->
 @if (showNuevaModal()) {
   <app-nueva-publicacion-modal
-    [especiesInput]="especies()"
     [isSaving]="isSaving()"
     (close)="cerrarNuevaModal()"
     (save)="guardarNuevaPublicacion($event)"

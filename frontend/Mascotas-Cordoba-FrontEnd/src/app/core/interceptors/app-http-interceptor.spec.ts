@@ -5,7 +5,7 @@ import { provideRouter, Router } from '@angular/router';
 import { appHttpInterceptor } from './app-http-interceptor';
 import { LoaderService } from '../services/loader-service';
 import { AuthSessionService } from '../services/auth-session.service';
-import { IUsuarioRefugio } from '../../main/api/models/i-usuario-refugio';
+import { IUsuarioRefugio } from '../api/models/i-usuario-refugio';
 import { environment } from '../../../environments/environment';
 
 describe('appHttpInterceptor', () => {

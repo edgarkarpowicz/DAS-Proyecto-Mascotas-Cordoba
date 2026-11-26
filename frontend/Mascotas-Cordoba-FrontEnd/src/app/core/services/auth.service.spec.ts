@@ -3,8 +3,8 @@ import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { AuthSessionService } from './auth-session.service';
-import { AuthResource } from '../../main/api/resources/auth-resource';
-import { IUsuarioRefugio } from '../../main/api/models/i-usuario-refugio';
+import { AuthResource } from '../api/auth-resource';
+import { IUsuarioRefugio } from '../api/models/i-usuario-refugio';
 
 describe('AuthService', () => {
   let service: AuthService;

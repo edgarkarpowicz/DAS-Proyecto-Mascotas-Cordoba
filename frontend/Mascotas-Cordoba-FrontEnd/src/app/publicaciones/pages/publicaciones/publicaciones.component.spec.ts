@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { PublicacionesComponent } from './publicaciones.component';
-import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
+import { PublicacionesResource } from '../../api/publicaciones-resource';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppMessageService } from '../../../core/services/app-message-service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
@@ -61,7 +61,6 @@ describe('PublicacionesComponent', () => {
     component = fixture.componentInstance;
     fixture.componentRef.setInput('publicaciones', [samplePub]);
     fixture.componentRef.setInput('estados', [{ codEstado: 'Activa', descripcion: 'Activa' }]);
-    fixture.componentRef.setInput('especies', [{ nroValorDominio: 1, nomEspecie: 'Perro' }]);
     fixture.detectChanges();
   });
 

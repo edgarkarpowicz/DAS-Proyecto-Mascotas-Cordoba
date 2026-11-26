@@ -1,0 +1,26 @@
+import { Routes } from '@angular/router';
+import { authGuard } from '../core/guards/auth-guard';
+import { controlarCambiosGuard } from '../core/guards/controlar-cambios-guard';
+import { publicacionesResolver } from './resolvers/publicaciones-resolver';
+import { estadosResolver } from './resolvers/estados-resolver';
+import { PublicacionesResource } from './api/publicaciones-resource';
+
+export const PUBLICACIONES_ROUTES: Routes = [
+  {
+    path: '',
+    providers: [PublicacionesResource],
+    canActivate: [authGuard],
+    data: { perfilesPermitidos: ['REFUGIO'] },
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/publicaciones/publicaciones.component').then(m => m.PublicacionesComponent),
+        canDeactivate: [controlarCambiosGuard],
+        resolve: {
+          publicaciones: publicacionesResolver,
+          estados: estadosResolver
+        }
+      }
+    ]
+  }
+];

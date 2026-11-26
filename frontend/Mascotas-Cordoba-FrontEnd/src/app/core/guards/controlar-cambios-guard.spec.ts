@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { of, Observable } from 'rxjs';
 import { controlarCambiosGuard, HasChangesComponent } from './controlar-cambios-guard';
-import { ConfirmDialogService } from '../../core/services/confirm-dialog.service';
+import { ConfirmDialogService } from '../services/confirm-dialog.service';
 
 describe('controlarCambiosGuard', () => {
   let confirmSpy: jasmine.SpyObj<ConfirmDialogService>;

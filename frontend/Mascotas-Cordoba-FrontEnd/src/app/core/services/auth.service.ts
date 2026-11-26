@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
-import { AuthResource } from '../../main/api/resources/auth-resource';
-import { PerfilUsuario } from '../../main/api/models/i-usuario-refugio';
-import { ILoginResponse } from '../../main/api/models/i-login-response';
+import { AuthResource } from '../api/auth-resource';
+import { PerfilUsuario } from '../api/models/i-usuario-refugio';
+import { ILoginResponse } from '../api/models/i-login-response';
 import { AuthSessionService } from './auth-session.service';
 
 @Injectable({

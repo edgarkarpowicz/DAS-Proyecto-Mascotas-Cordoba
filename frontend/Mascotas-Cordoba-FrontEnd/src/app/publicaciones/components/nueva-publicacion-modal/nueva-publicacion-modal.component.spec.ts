@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { NuevaPublicacionModalComponent } from './nueva-publicacion-modal.component';
-import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
+import { PublicacionesResource } from '../../api/publicaciones-resource';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppMessageService } from '../../../core/services/app-message-service';
 import { IMascotaDisponible } from '../../api/models/i-mascota-disponible';

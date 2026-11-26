@@ -4,17 +4,16 @@ import { IUsuarioRefugio, PerfilUsuario } from '../api/models/i-usuario-refugio'
 const STORAGE_USER_KEY = 'mascotas_cba_user';
 const STORAGE_TOKEN_KEY = 'mascotas_cba_token';
 
-type SessionStorageKind = 'local' | 'session';
-
 interface StoredSessionState {
   usuario: IUsuarioRefugio | null;
   token: string | null;
-  storageKind: SessionStorageKind;
 }
 
 /**
  * Estado reactivo de la sesión autenticada sin dependencias HTTP
  * para evitar ciclos de inyección con AuthService y appHttpInterceptor.
+ * La sesión vive en sessionStorage: se mantiene al recargar la pestaña
+ * y se pierde al cerrarla.
  */
 @Injectable({
   providedIn: 'root'
@@ -22,7 +21,6 @@ interface StoredSessionState {
 export class AuthSessionService {
 
   private readonly _initialState = this.loadInitialState();
-  private _storageKind: SessionStorageKind = this._initialState.storageKind;
 
   private readonly _usuario = signal<IUsuarioRefugio | null>(this._initialState.usuario);
   private readonly _token = signal<string | null>(this._initialState.token);
@@ -49,22 +47,18 @@ export class AuthSessionService {
     return perfiles.some(p => p.toUpperCase() === currentPerfil);
   }
 
-  setSession(user: IUsuarioRefugio, token: string, rememberMe = false): void {
+  setSession(user: IUsuarioRefugio, token: string): void {
     const cleanToken = token?.trim() ?? '';
-    this._storageKind = rememberMe ? 'local' : 'session';
     this._usuario.set(user);
     this._token.set(cleanToken || null);
-    this.removeFromBothStorages();
-    if (!cleanToken) {
-      return;
-    }
-    const target = this.getStorage(this._storageKind);
-    if (!target) {
+    this.removeFromStorage();
+    const storage = this.getStorage();
+    if (!cleanToken || !storage) {
       return;
     }
     try {
-      target.setItem(STORAGE_USER_KEY, JSON.stringify(user));
-      target.setItem(STORAGE_TOKEN_KEY, cleanToken);
+      storage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
+      storage.setItem(STORAGE_TOKEN_KEY, cleanToken);
     } catch (e) {
       console.warn('No se pudo guardar la sesión en storage:', e);
     }
@@ -72,12 +66,12 @@ export class AuthSessionService {
 
   updateUsuario(user: IUsuarioRefugio): void {
     this._usuario.set(user);
-    const target = this.getStorage(this._storageKind);
-    if (!target) {
+    const storage = this.getStorage();
+    if (!storage) {
       return;
     }
     try {
-      target.setItem(STORAGE_USER_KEY, JSON.stringify(user));
+      storage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
     } catch (e) {
       console.warn('No se pudo actualizar el usuario en storage:', e);
     }
@@ -86,56 +80,52 @@ export class AuthSessionService {
   clearSession(): void {
     this._usuario.set(null);
     this._token.set(null);
-    this._storageKind = 'session';
-    this.removeFromBothStorages();
+    this.removeFromStorage();
   }
 
-  private removeFromBothStorages(): void {
-    for (const kind of ['session', 'local'] as const) {
-      const storage = this.getStorage(kind);
-      if (!storage) {
-        continue;
-      }
-      try {
-        storage.removeItem(STORAGE_USER_KEY);
-        storage.removeItem(STORAGE_TOKEN_KEY);
-      } catch (e) {
-        console.warn('Error al limpiar la sesión en storage:', e);
-      }
+  private removeFromStorage(): void {
+    const storage = this.getStorage();
+    if (!storage) {
+      return;
+    }
+    try {
+      storage.removeItem(STORAGE_USER_KEY);
+      storage.removeItem(STORAGE_TOKEN_KEY);
+    } catch (e) {
+      console.warn('Error al limpiar la sesión en storage:', e);
     }
   }
 
   private loadInitialState(): StoredSessionState {
-    for (const kind of ['session', 'local'] as const) {
-      const storage = this.getStorage(kind);
-      if (!storage) {
-        continue;
-      }
-      try {
-        const rawToken = storage.getItem(STORAGE_TOKEN_KEY);
-        const token = rawToken && rawToken.trim().length > 0 ? rawToken.trim() : null;
-        if (!token) {
-          continue;
-        }
-        if (this.isTokenExpired(token)) {
-          storage.removeItem(STORAGE_USER_KEY);
-          storage.removeItem(STORAGE_TOKEN_KEY);
-          continue;
-        }
-        const rawUser = storage.getItem(STORAGE_USER_KEY);
-        let usuario: IUsuarioRefugio | null = null;
-        if (rawUser) {
-          try {
-            usuario = JSON.parse(rawUser) as IUsuarioRefugio;
-          } catch {
-            usuario = null;
-          }
-        }
-        return { usuario, token, storageKind: kind };
-      } catch {
-      }
+    const vacio: StoredSessionState = { usuario: null, token: null };
+    const storage = this.getStorage();
+    if (!storage) {
+      return vacio;
     }
-    return { usuario: null, token: null, storageKind: 'session' };
+    try {
+      const rawToken = storage.getItem(STORAGE_TOKEN_KEY);
+      const token = rawToken && rawToken.trim().length > 0 ? rawToken.trim() : null;
+      if (!token) {
+        return vacio;
+      }
+      if (this.isTokenExpired(token)) {
+        storage.removeItem(STORAGE_USER_KEY);
+        storage.removeItem(STORAGE_TOKEN_KEY);
+        return vacio;
+      }
+      const rawUser = storage.getItem(STORAGE_USER_KEY);
+      let usuario: IUsuarioRefugio | null = null;
+      if (rawUser) {
+        try {
+          usuario = JSON.parse(rawUser) as IUsuarioRefugio;
+        } catch {
+          usuario = null;
+        }
+      }
+      return { usuario, token };
+    } catch {
+      return vacio;
+    }
   }
 
   private isTokenExpired(token: string): boolean {
@@ -156,12 +146,8 @@ export class AuthSessionService {
     }
   }
 
-  private getStorage(kind: SessionStorageKind): Storage | null {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-    return kind === 'local' ? window.localStorage : window.sessionStorage;
+  private getStorage(): Storage | null {
+    return typeof window === 'undefined' ? null : window.sessionStorage;
   }
 
 }
-

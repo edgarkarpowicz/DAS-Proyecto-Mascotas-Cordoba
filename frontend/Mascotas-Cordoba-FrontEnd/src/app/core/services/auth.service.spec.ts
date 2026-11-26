@@ -59,7 +59,7 @@ describe('AuthService', () => {
     expect(service.usuario()).toBeNull();
   });
 
-  it('should store user and token in sessionStorage when recordarme is false', () => {
+  it('should store user and token only in sessionStorage', () => {
     authResourceSpy.login.and.returnValue(of({
       codigoRespuesta: 1,
       token: 'abc-token',
@@ -81,37 +81,22 @@ describe('AuthService', () => {
     expect(localStorage.getItem('mascotas_cba_token')).toBeNull();
   });
 
-  it('should persist user and token in localStorage when recordarme is true', () => {
-    const validJwt = buildJwt(Math.floor(Date.now() / 1000) + 3600);
-    authResourceSpy.login.and.returnValue(of({
-      codigoRespuesta: 1,
-      token: validJwt,
-      usuario: mockUser
-    }));
-
-    service.login('27-12345678-9', 'pass123', true).subscribe();
-
-    expect(localStorage.getItem('mascotas_cba_token')).toBe(validJwt);
-    expect(sessionStorage.getItem('mascotas_cba_token')).toBeNull();
-    expect(service.isAuthenticated()).toBeTrue();
-  });
-
-  it('should ignore expired JWT stored in localStorage when creating AuthSessionService', () => {
+  it('should ignore expired JWT stored in sessionStorage when creating AuthSessionService', () => {
     const expiredJwt = buildJwt(Math.floor(Date.now() / 1000) - 60);
-    localStorage.setItem('mascotas_cba_token', expiredJwt);
-    localStorage.setItem('mascotas_cba_user', JSON.stringify(mockUser));
+    sessionStorage.setItem('mascotas_cba_token', expiredJwt);
+    sessionStorage.setItem('mascotas_cba_user', JSON.stringify(mockUser));
 
     const freshSession = new AuthSessionService();
 
     expect(freshSession.token()).toBeNull();
     expect(freshSession.isAuthenticated()).toBeFalse();
-    expect(localStorage.getItem('mascotas_cba_token')).toBeNull();
+    expect(sessionStorage.getItem('mascotas_cba_token')).toBeNull();
   });
 
   it('should hydrate usuario via /auth/me on restoreSession and clear on 401', () => {
     const validJwt = buildJwt(Math.floor(Date.now() / 1000) + 3600);
-    localStorage.setItem('mascotas_cba_token', validJwt);
-    localStorage.setItem('mascotas_cba_user', JSON.stringify(mockUser));
+    sessionStorage.setItem('mascotas_cba_token', validJwt);
+    sessionStorage.setItem('mascotas_cba_user', JSON.stringify(mockUser));
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
@@ -128,13 +113,13 @@ describe('AuthService', () => {
 
     expect(authResourceSpy.me).toHaveBeenCalledTimes(1);
     expect(freshAuthService.usuario()?.nombre).toBe('Ana Sofía');
-    expect(JSON.parse(localStorage.getItem('mascotas_cba_user') || '{}').nombre).toBe('Ana Sofía');
+    expect(JSON.parse(sessionStorage.getItem('mascotas_cba_user') || '{}').nombre).toBe('Ana Sofía');
 
     authResourceSpy.me.and.returnValue(throwError(() => ({ status: 401 })));
     freshAuthService.restoreSession().subscribe();
 
     expect(freshAuthService.isAuthenticated()).toBeFalse();
-    expect(localStorage.getItem('mascotas_cba_token')).toBeNull();
+    expect(sessionStorage.getItem('mascotas_cba_token')).toBeNull();
   });
 
   it('should not mark user authenticated if token is missing', () => {

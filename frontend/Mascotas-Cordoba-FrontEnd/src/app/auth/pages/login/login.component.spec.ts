@@ -10,6 +10,17 @@ describe('LoginComponent', () => {
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
+  const usuarioRefugio = {
+    idCiudadano: 3,
+    apellido: 'Sánchez',
+    nombre: 'Roberto',
+    cuil: '20-25999000-5',
+    correo: 'roberto@patitas.org',
+    perfil: 'REFUGIO' as const,
+    idRefugio: 1,
+    nombreRefugio: 'Patitas Felices'
+  };
+
   beforeEach(async () => {
     authServiceSpy = jasmine.createSpyObj('AuthService', ['login', 'logout']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -28,53 +39,34 @@ describe('LoginComponent', () => {
   });
 
   it('should navigate to /publicaciones when user has REFUGIO profile', () => {
-    authServiceSpy.login.and.returnValue(of({
-      codigoRespuesta: 1,
-      token: 'tok-refugio',
-      usuario: {
-        idCiudadano: 3,
-        apellido: 'Sánchez',
-        nombre: 'Roberto',
-        cuil: '20-25999000-5',
-        correo: 'roberto@patitas.org',
-        perfil: 'REFUGIO',
-        idRefugio: 1,
-        nombreRefugio: 'Patitas Felices'
-      }
-    }));
+    authServiceSpy.login.and.returnValue(of({ codigoRespuesta: 1, token: 'tok-refugio', usuario: usuarioRefugio }));
 
     component.onSubmit();
 
-    expect(authServiceSpy.login).toHaveBeenCalledWith('20-25999000-5', 'pass123', false);
+    expect(authServiceSpy.login).toHaveBeenCalledWith('20-25999000-5', 'pass123');
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/publicaciones']);
     expect(authServiceSpy.logout).not.toHaveBeenCalled();
-    expect(component.error).toBeNull();
+    expect(component.error()).toBeNull();
   });
 
-  it('should pass recordarme=true to AuthService.login when checkbox is checked', () => {
-    authServiceSpy.login.and.returnValue(of({
-      codigoRespuesta: 1,
-      token: 'tok-refugio',
-      usuario: {
-        idCiudadano: 3,
-        apellido: 'Sánchez',
-        nombre: 'Roberto',
-        cuil: '20-25999000-5',
-        correo: 'roberto@patitas.org',
-        perfil: 'REFUGIO',
-        idRefugio: 1
-      }
-    }));
+  it('should not render the removed "Recordarme" option', () => {
+    expect(fixture.nativeElement.querySelector('#recordarme')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Recordarme');
+  });
 
-    const checkbox: HTMLInputElement | null = fixture.nativeElement.querySelector('#recordarme');
-    expect(checkbox).not.toBeNull();
-    checkbox!.click();
+  it('should show inline errors only after submit and not call the backend', () => {
+    component.form.setValue({ cuil: '', clave: '   ' });
     fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.field-error').length).toBe(0);
 
     component.onSubmit();
+    fixture.detectChanges();
 
-    expect(component.recordarme).toBeTrue();
-    expect(authServiceSpy.login).toHaveBeenCalledWith('20-25999000-5', 'pass123', true);
+    const errores = fixture.nativeElement.querySelectorAll('.field-error');
+    expect(errores.length).toBe(2);
+    expect(fixture.nativeElement.textContent).toContain('Ingresá tu CUIL.');
+    expect(fixture.nativeElement.textContent).toContain('Ingresá tu contraseña.');
+    expect(authServiceSpy.login).not.toHaveBeenCalled();
   });
 
   it('should reject non-REFUGIO profiles cleanly and revoke session', () => {
@@ -84,22 +76,14 @@ describe('LoginComponent', () => {
       authServiceSpy.login.and.returnValue(of({
         codigoRespuesta: 1,
         token: 'tok-otro',
-        usuario: {
-          idCiudadano: 5,
-          apellido: 'Quito',
-          nombre: 'Esteban',
-          cuil: '20-30111222-8',
-          correo: 'esteban@vet.com',
-          perfil
-        }
+        usuario: { ...usuarioRefugio, perfil: perfil as 'CIUDADANO' }
       }));
 
       component.onSubmit();
 
       expect(authServiceSpy.logout).toHaveBeenCalledWith(false);
       expect(routerSpy.navigate).not.toHaveBeenCalled();
-      expect(component.error).toContain(perfil);
+      expect(component.error()).toContain(perfil);
     }
   });
 });
-

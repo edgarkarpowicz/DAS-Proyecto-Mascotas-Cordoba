@@ -123,25 +123,6 @@
   margin-bottom: 1.15rem;
 }
 
-.remember-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.84rem;
-  font-weight: 500;
-  color: var(--text-medium);
-  cursor: pointer;
-  user-select: none;
-}
-
-.remember-label input[type="checkbox"] {
-  width: 1rem;
-  height: 1rem;
-  accent-color: var(--primary);
-  cursor: pointer;
-  margin: 0;
-}
-
 /* Submit Button */
 .submit-btn {
   width: 100%;
@@ -179,4 +160,18 @@
   font-size: 0.75rem;
   color: var(--text-muted);
   line-height: 1.4;
+}
+
+/* Validación en línea al enviar */
+.input-container.input-error {
+  border-color: var(--accent-red);
+  background-color: #fef2f2;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #b91c1c;
 }

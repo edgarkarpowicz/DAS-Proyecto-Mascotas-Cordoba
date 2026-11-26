@@ -1,16 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LoaderComponent } from './core/layouts/loader/loader.component';
-import { ModalMessageComponent } from './core/layouts/modal-message/modal-message.component';
-import { ModalDescartarCambiosComponent } from './core/layouts/modal-descartar-cambios/modal-descartar-cambios.component';
 
 @Component({
     selector: 'app-root',
     imports: [
         RouterOutlet,
-        LoaderComponent,
-        ModalMessageComponent,
-        ModalDescartarCambiosComponent
+        LoaderComponent
     ],
     templateUrl: './app.component.html',
     styleUrl: './app.component.css'

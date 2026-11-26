@@ -1,22 +1,24 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 import { PublicacionesComponent } from './publicaciones.component';
 import { PublicacionesResource } from '../../api/publicaciones-resource';
+import { EstadoPublicacionService, accionesPermitidas } from '../../services/estado-publicacion.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { AppMessageService } from '../../../core/services/app-message-service';
-import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { NuevaPublicacionModalComponent } from '../../components/nueva-publicacion-modal/nueva-publicacion-modal.component';
+import { DetallePublicacionModalComponent } from '../../components/detalle-publicacion-modal/detalle-publicacion-modal.component';
+import { ImagenLightboxModalComponent } from '../../../shared/components/imagen-lightbox-modal/imagen-lightbox-modal.component';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
-import { IAdministrarPublicacionResponse } from '../../api/models/i-administrar-publicacion-response';
 
 describe('PublicacionesComponent', () => {
   let component: PublicacionesComponent;
   let fixture: ComponentFixture<PublicacionesComponent>;
   let pubResourceSpy: jasmine.SpyObj<PublicacionesResource>;
-  let messageSpy: jasmine.SpyObj<AppMessageService>;
-  let confirmSpy: jasmine.SpyObj<ConfirmDialogService>;
+  let estadoSpy: jasmine.SpyObj<EstadoPublicacionService>;
+  let dialogSpy: jasmine.SpyObj<MatDialog>;
 
-  const samplePub: IPublicacionAdopcion = {
+  const activa: IPublicacionAdopcion = {
     nroPublicacion: 1,
     nroRegMunicipal: 100004,
     idRefugio: 1,
@@ -30,129 +32,121 @@ describe('PublicacionesComponent', () => {
     especie: 'Perro',
     raza: 'Mestizo'
   };
+  const finalizada: IPublicacionAdopcion = {
+    ...activa,
+    nroPublicacion: 2,
+    nroRegMunicipal: 100005,
+    nombreMascota: 'Mora',
+    estadoPublicacion: 'Finalizada'
+  };
+
+  function dialogRefCon(resultado: unknown, componentInstance: unknown = {}) {
+    return { afterClosed: () => of(resultado), componentInstance } as never;
+  }
 
   beforeEach(async () => {
-    pubResourceSpy = jasmine.createSpyObj('PublicacionesResource', [
-      'getMascotasDisponibles',
-      'getEspecies',
-      'getPublicacionesPorRefugio',
-      'crearPublicacion',
-      'actualizarEstado'
-    ]);
-    pubResourceSpy.getMascotasDisponibles.and.returnValue(of([]));
-    pubResourceSpy.getEspecies.and.returnValue(of([]));
-    pubResourceSpy.getPublicacionesPorRefugio.and.returnValue(of([samplePub]));
+    pubResourceSpy = jasmine.createSpyObj('PublicacionesResource', ['getPublicacionesPorRefugio']);
+    pubResourceSpy.getPublicacionesPorRefugio.and.returnValue(of([activa, finalizada]));
 
-    messageSpy = jasmine.createSpyObj('AppMessageService', ['showMessage']);
-    confirmSpy = jasmine.createSpyObj('ConfirmDialogService', ['confirm']);
+    estadoSpy = jasmine.createSpyObj('EstadoPublicacionService', ['accionesDisponibles', 'cambiarEstado']);
+    estadoSpy.accionesDisponibles.and.callFake(accionesPermitidas);
+
+    dialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
+    dialogSpy.open.and.returnValue(dialogRefCon(undefined));
 
     await TestBed.configureTestingModule({
       imports: [PublicacionesComponent],
       providers: [
         provideRouter([]),
         { provide: PublicacionesResource, useValue: pubResourceSpy },
-        { provide: AuthService, useValue: { idRefugio: () => 1, usuario: () => null, logout: () => {} } },
-        { provide: AppMessageService, useValue: messageSpy },
-        { provide: ConfirmDialogService, useValue: confirmSpy }
+        { provide: EstadoPublicacionService, useValue: estadoSpy },
+        { provide: MatDialog, useValue: dialogSpy },
+        { provide: AuthService, useValue: { idRefugio: () => 1, usuario: () => null, logout: () => {} } }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PublicacionesComponent);
     component = fixture.componentInstance;
-    fixture.componentRef.setInput('publicaciones', [samplePub]);
+    fixture.componentRef.setInput('publicaciones', [activa, finalizada]);
     fixture.componentRef.setInput('estados', [{ codEstado: 'Activa', descripcion: 'Activa' }]);
     fixture.detectChanges();
   });
 
-  it('should update publicaciones model signal on toggleEstado', () => {
-    pubResourceSpy.actualizarEstado.and.returnValue(of({ codigoRespuesta: 0, nroPublicacion: 1 }));
-
-    component.toggleEstado(samplePub);
-
-    expect(component.publicaciones()[0].estadoPublicacion).toBe('Pausada');
-    expect(messageSpy.showMessage).toHaveBeenCalled();
+  it('should render the publications resolved on navigation', () => {
+    const cards = fixture.nativeElement.querySelectorAll('.pet-card');
+    expect(cards.length).toBe(2);
+    expect(fixture.nativeElement.textContent).toContain('Rocco');
   });
 
-  it('should block double submit when saving a publication without photo', () => {
-    const response$ = new Subject<IAdministrarPublicacionResponse>();
-    pubResourceSpy.crearPublicacion.and.returnValue(response$.asObservable());
-    component.abrirNuevaModal();
-
-    const req = {
-      idRefugio: 1,
-      nombreMascota: 'Firulais',
-      caracteristicasMascota: 'Juguetón'
-    };
-
-    component.guardarNuevaPublicacion(req);
-    component.guardarNuevaPublicacion(req);
-
-    expect(component.isSaving()).toBeTrue();
-    expect(pubResourceSpy.crearPublicacion).toHaveBeenCalledTimes(1);
-
-    response$.next({ codigoRespuesta: 1, nroPublicacion: 2, mensajeRespuesta: 'Creada' });
-    response$.complete();
-
-    expect(component.isSaving()).toBeFalse();
-    expect(component.showNuevaModal()).toBeFalse();
+  it('should not offer reactivation for a finalized publication', () => {
+    const cards: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.pet-card'));
+    const cardFinalizada = cards.find(c => c.textContent?.includes('Mora'))!;
+    expect(cardFinalizada.querySelectorAll('.card-actions-footer button').length).toBe(0);
+    expect(fixture.nativeElement.querySelector('[title="Reactivar publicación"]')).toBeNull();
   });
 
-  it('should confirm discard when closing modal with unsaved changes', () => {
-    component.abrirNuevaModal();
+  it('should filter by name and state with reactive form controls', () => {
+    component.busqueda.setValue('mor');
     fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.pet-card').length).toBe(1);
 
-    expect(component.modalComponent).toBeTruthy();
-    component.modalComponent!.nombreMascota = 'Luna';
-
-    confirmSpy.confirm.and.returnValue(of(false));
-    component.cerrarNuevaModal();
-    expect(confirmSpy.confirm).toHaveBeenCalled();
-    expect(component.showNuevaModal()).toBeTrue();
-
-    confirmSpy.confirm.and.returnValue(of(true));
-    component.cerrarNuevaModal();
-    expect(component.showNuevaModal()).toBeFalse();
-  });
-
-  it('should open detail modal when clicking a card and render full pet details', () => {
-    const card: HTMLElement = fixture.nativeElement.querySelector('.pet-card');
-    expect(card).toBeTruthy();
-
-    card.click();
+    component.busqueda.setValue('');
+    component.estadoFiltro.setValue('Activa');
     fixture.detectChanges();
-
-    const dialog: HTMLElement = fixture.nativeElement.querySelector('[role="dialog"]');
-    expect(dialog).toBeTruthy();
-    expect(dialog.textContent).toContain('Rocco');
-    expect(dialog.textContent).toContain('Mestizo');
-    expect(dialog.textContent).toContain('Patio cerrado');
-    expect(dialog.textContent).toContain('Muy cariñoso');
+    expect(fixture.nativeElement.querySelectorAll('.pet-card').length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('Rocco');
   });
 
-  it('should not open detail modal when clicking footer action buttons', () => {
-    pubResourceSpy.actualizarEstado.and.returnValue(of({ codigoRespuesta: 0, nroPublicacion: 1 }));
+  it('should pause from the card without opening the detail dialog', () => {
+    estadoSpy.cambiarEstado.and.returnValue(of({ ...activa, estadoPublicacion: 'Pausada' }));
     const pauseBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.btn-pause');
-    expect(pauseBtn).toBeTruthy();
 
     pauseBtn.click();
     fixture.detectChanges();
 
-    expect(pubResourceSpy.actualizarEstado).toHaveBeenCalledTimes(1);
-    expect(component.selectedPublicacion()).toBeNull();
-    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+    expect(estadoSpy.cambiarEstado).toHaveBeenCalledWith(activa, 'Pausada');
+    expect(component.publicaciones()[0].estadoPublicacion).toBe('Pausada');
+    expect(dialogSpy.open).not.toHaveBeenCalled();
   });
 
-  it('should open full image lightbox from card bottom-right button without opening detail modal', () => {
-    const expandBtn: HTMLButtonElement | null = fixture.nativeElement.querySelector('.card-expand-btn .expand-image-btn');
-    expect(expandBtn).toBeTruthy();
+  it('should open the detail dialog by reference and apply the publication it returns', () => {
+    dialogSpy.open.and.returnValue(dialogRefCon({ ...activa, estadoPublicacion: 'Pausada' }));
 
-    expandBtn!.click();
-    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.pet-card').click();
 
-    expect(component.selectedPublicacion()).toBeNull();
-    expect(component.lightboxPublicacion()).toEqual(samplePub);
-    expect(fixture.nativeElement.querySelector('.lightbox-image')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('.detail-card')).toBeNull();
+    expect(dialogSpy.open).toHaveBeenCalledWith(DetallePublicacionModalComponent, jasmine.objectContaining({
+      data: { publicacion: activa }
+    }));
+    expect(component.publicaciones()[0].estadoPublicacion).toBe('Pausada');
+  });
+
+  it('should open the lightbox from the card without opening the detail dialog', () => {
+    fixture.nativeElement.querySelector('.card-expand-btn .expand-image-btn').click();
+
+    expect(dialogSpy.open).toHaveBeenCalledTimes(1);
+    expect(dialogSpy.open.calls.mostRecent().args[0]).toBe(ImagenLightboxModalComponent);
+  });
+
+  it('should reload the list only when the new publication dialog reports it was saved', () => {
+    dialogSpy.open.and.returnValue(dialogRefCon(false));
+    component.abrirNuevaModal();
+    expect(dialogSpy.open.calls.mostRecent().args[0]).toBe(NuevaPublicacionModalComponent);
+    expect(pubResourceSpy.getPublicacionesPorRefugio).not.toHaveBeenCalled();
+
+    dialogSpy.open.and.returnValue(dialogRefCon(true));
+    component.abrirNuevaModal();
+    expect(pubResourceSpy.getPublicacionesPorRefugio).toHaveBeenCalledWith(1);
+  });
+
+  it('should report unsaved changes while the new publication dialog has data', () => {
+    expect(component.hasChanges()).toBeFalse();
+
+    dialogSpy.open.and.returnValue({
+      afterClosed: () => of(),
+      componentInstance: { hasChanges: () => true }
+    } as never);
+    component.abrirNuevaModal();
+
+    expect(component.hasChanges()).toBeTrue();
   });
 });
-

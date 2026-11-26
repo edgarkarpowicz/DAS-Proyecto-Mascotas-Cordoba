@@ -1,6 +1,7 @@
-import { Component, HostListener, input, output, signal } from '@angular/core';
-
+import { Component, computed, inject, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
+import { EstadoPublicacion, EstadoPublicacionService } from '../../services/estado-publicacion.service';
 import { ExpandImageButtonComponent } from '../../../shared/components/expand-image-button/expand-image-button.component';
 import { ImagenLightboxModalComponent } from '../../../shared/components/imagen-lightbox-modal/imagen-lightbox-modal.component';
 import {
@@ -14,59 +15,69 @@ import {
   getSexoLabel
 } from '../../../shared/utils/mascota-formatters';
 
+export interface IDetallePublicacionData {
+  publicacion: IPublicacionAdopcion;
+}
+
+/**
+ * Detalle de una publicación. Se abre por referencia y, si el usuario cambia
+ * el estado desde acá, el cambio se graba en este mismo componente. Al cerrar
+ * devuelve la publicación actualizada para que la grilla la refleje.
+ */
 @Component({
-    selector: 'app-detalle-publicacion-modal',
-    imports: [ExpandImageButtonComponent, ImagenLightboxModalComponent],
-    templateUrl: './detalle-publicacion-modal.component.html',
-    styleUrls: ['./detalle-publicacion-modal.component.css']
+  selector: 'app-detalle-publicacion-modal',
+  imports: [ExpandImageButtonComponent],
+  templateUrl: './detalle-publicacion-modal.component.html',
+  styleUrls: ['./detalle-publicacion-modal.component.css']
 })
 export class DetallePublicacionModalComponent {
 
-  publicacion = input.required<IPublicacionAdopcion>();
+  private readonly _dialogRef = inject(MatDialogRef<DetallePublicacionModalComponent, IPublicacionAdopcion>);
+  private readonly _dialog = inject(MatDialog);
+  private readonly _estadoService = inject(EstadoPublicacionService);
+  private readonly _data = inject<IDetallePublicacionData>(MAT_DIALOG_DATA);
 
-  close = output<void>();
-  toggleEstado = output<IPublicacionAdopcion>();
-  finalizar = output<IPublicacionAdopcion>();
+  readonly publicacion = signal<IPublicacionAdopcion>(this._data.publicacion);
+  readonly acciones = computed(() => this._estadoService.accionesDisponibles(this.publicacion().estadoPublicacion));
+  readonly procesando = signal(false);
 
-  showImageLightbox = signal<boolean>(false);
-
-  @HostListener('document:keydown.escape')
-  onEscapeKey(): void {
-    if (this.showImageLightbox()) {
-      return;
-    }
-    this.cerrar();
+  constructor() {
+    // Esc o clic en el fondo también devuelven la publicación vigente.
+    this._dialogRef.backdropClick().subscribe(() => this.cerrar());
+    this._dialogRef.keydownEvents().subscribe(event => {
+      if (event.key === 'Escape') {
+        this.cerrar();
+      }
+    });
   }
 
   cerrar(): void {
-    this.showImageLightbox.set(false);
-    this.close.emit();
+    this._dialogRef.close(this.publicacion());
+  }
+
+  cambiarEstado(nuevoEstado: EstadoPublicacion): void {
+    if (this.procesando()) {
+      return;
+    }
+    this.procesando.set(true);
+    this._estadoService.cambiarEstado(this.publicacion(), nuevoEstado).subscribe({
+      next: actualizada => this.publicacion.set(actualizada),
+      complete: () => this.procesando.set(false)
+    });
   }
 
   abrirImagenAmpliada(): void {
-    this.showImageLightbox.set(true);
-  }
-
-  cerrarImagenAmpliada(): void {
-    this.showImageLightbox.set(false);
-  }
-
-  onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.cerrar();
-    }
+    const pub = this.publicacion();
+    ImagenLightboxModalComponent.abrir(this._dialog, {
+      imageUrl: this.getFotoUrl(pub),
+      fallbackUrl: getDefaultFotoMascota(pub.especie),
+      altText: pub.nombreMascota,
+      caption: formatFotoCaption(pub.nombreMascota, pub.especie)
+    });
   }
 
   getFotoUrl(pub: IPublicacionAdopcion): string {
     return getFotoMascotaUrl(pub.foto, pub.especie);
-  }
-
-  getDefaultFotoUrl(pub: IPublicacionAdopcion): string {
-    return getDefaultFotoMascota(pub.especie);
-  }
-
-  getLightboxCaption(pub: IPublicacionAdopcion): string {
-    return formatFotoCaption(pub.nombreMascota, pub.especie);
   }
 
   onImageError(event: Event, pub: IPublicacionAdopcion): void {
@@ -77,16 +88,8 @@ export class DetallePublicacionModalComponent {
     return getEdadTexto(pub.edadAproximada, pub.añoNacimiento, pub.fechaNacimiento);
   }
 
-  getFechaNacimiento(pub: IPublicacionAdopcion): string | null {
-    return formatFechaNacimiento(pub.fechaNacimiento);
-  }
-
   getNacimientoLabel(pub: IPublicacionAdopcion): string | null {
-    return this.getFechaNacimiento(pub) ?? (pub.añoNacimiento ? String(pub.añoNacimiento) : null);
-  }
-
-  getAnoNacimiento(pub: IPublicacionAdopcion): number | undefined {
-    return pub.añoNacimiento;
+    return formatFechaNacimiento(pub.fechaNacimiento) ?? (pub.añoNacimiento ? String(pub.añoNacimiento) : null);
   }
 
   getSexo(pub: IPublicacionAdopcion): 'Hembra' | 'Macho' {
@@ -95,14 +98,6 @@ export class DetallePublicacionModalComponent {
 
   getFecha(pub: IPublicacionAdopcion): string {
     return formatFechaPublicacion(pub.fechaPublicacion);
-  }
-
-  onToggleEstado(): void {
-    this.toggleEstado.emit(this.publicacion());
-  }
-
-  onFinalizar(): void {
-    this.finalizar.emit(this.publicacion());
   }
 
 }

@@ -1,5 +1,4 @@
-<div class="detail-backdrop" (click)="onBackdropClick($event)">
-  @if (publicacion(); as pub) {
+@if (publicacion(); as pub) {
   <div class="detail-card" role="dialog" aria-modal="true" aria-labelledby="detalle-pet-title">
     <!-- Hero Image & Status -->
     <div class="detail-hero">
@@ -91,24 +90,17 @@
     <!-- Footer Actions -->
     <div class="detail-footer">
       <div class="detail-state-actions">
-        @if (pub.estadoPublicacion === 'Activa') {
-        <button type="button" class="btn-outline-warn" (click)="onToggleEstado()">
-          Pausar publicación
+        @for (accion of acciones(); track accion.nuevoEstado) {
+        <button type="button"
+          [class.btn-outline-warn]="accion.nuevoEstado === 'Pausada'"
+          [class.btn-outline-primary]="accion.nuevoEstado === 'Activa'"
+          [class.btn-outline-danger]="accion.nuevoEstado === 'Finalizada'"
+          [disabled]="procesando()"
+          (click)="cambiarEstado(accion.nuevoEstado)">
+          {{ accion.etiqueta }} publicación
         </button>
-        <button type="button" class="btn-outline-danger" (click)="onFinalizar()">
-          Finalizar publicación
-        </button>
-        } @else if (pub.estadoPublicacion === 'Pausada') {
-        <button type="button" class="btn-outline-primary" (click)="onToggleEstado()">
-          Reanudar publicación
-        </button>
-        <button type="button" class="btn-outline-danger" (click)="onFinalizar()">
-          Finalizar publicación
-        </button>
-        } @else {
-        <button type="button" class="btn-outline-primary" (click)="onToggleEstado()">
-          Reactivar publicación
-        </button>
+        } @empty {
+        <span class="detail-final-note">Publicación finalizada: no admite cambios de estado.</span>
         }
       </div>
 
@@ -116,14 +108,3 @@
     </div>
   </div>
   }
-</div>
-
-@if (showImageLightbox() && publicacion(); as pubLightbox) {
-  <app-imagen-lightbox-modal
-    [imageUrl]="getFotoUrl(pubLightbox)"
-    [fallbackUrl]="getDefaultFotoUrl(pubLightbox)"
-    [altText]="pubLightbox.nombreMascota"
-    [caption]="getLightboxCaption(pubLightbox)"
-    (close)="cerrarImagenAmpliada()"
-  ></app-imagen-lightbox-modal>
-}

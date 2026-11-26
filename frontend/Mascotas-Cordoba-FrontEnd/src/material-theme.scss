@@ -20,9 +20,30 @@ html {
   --mat-sys-on-primary-container: #0a4626;
 }
 
-// Diálogos con las mismas esquinas que las tarjetas del sitio.
-.mat-mdc-dialog-container {
-  --mat-dialog-container-shape: 20px;
+// Los diálogos se abren con MatDialog, pero cada componente dibuja su propia
+// tarjeta (.modal-card, .detail-card...). El contenedor de Material queda
+// transparente para no duplicar fondo, bordes ni sombra.
+.dialogo-app .mat-mdc-dialog-surface {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.dialogo-lightbox .mat-mdc-dialog-surface {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.fondo-dialogo {
+  background-color: rgba(17, 24, 39, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.fondo-lightbox {
+  background-color: rgba(17, 24, 39, 0.88);
+  backdrop-filter: blur(4px);
 }
 
 // Snackbar de confirmación de acciones.

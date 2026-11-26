@@ -1,21 +1,3 @@
-.lightbox-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(17, 24, 39, 0.88);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  z-index: 1200;
-  animation: lightboxFadeIn 0.16s ease-out;
-}
-
-@keyframes lightboxFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 .lightbox-close-btn {
   position: fixed;
   top: 1.1rem;

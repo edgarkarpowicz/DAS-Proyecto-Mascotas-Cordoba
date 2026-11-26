@@ -25,11 +25,11 @@ export class AuthService {
     return this._session.hasPerfil(...perfiles);
   }
 
-  login(cuil: string, clave: string, recordarme = false): Observable<ILoginResponse> {
+  login(cuil: string, clave: string): Observable<ILoginResponse> {
     return this._authResource.login({ cuil: cuil.trim(), clave: clave.trim() }).pipe(
       tap(response => {
         if (response && response.codigoRespuesta === 1 && response.usuario && response.token) {
-          this._session.setSession(response.usuario, response.token, recordarme);
+          this._session.setSession(response.usuario, response.token);
         }
       })
     );

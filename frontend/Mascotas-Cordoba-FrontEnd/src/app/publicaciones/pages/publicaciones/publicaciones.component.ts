@@ -1,16 +1,18 @@
-import { Component, ViewChild, computed, inject, input, model, signal } from '@angular/core';
-
-import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { Component, Injector, computed, inject, input, linkedSignal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { NuevaPublicacionModalComponent } from '../../components/nueva-publicacion-modal/nueva-publicacion-modal.component';
-import { DetallePublicacionModalComponent } from '../../components/detalle-publicacion-modal/detalle-publicacion-modal.component';
+import {
+  DetallePublicacionModalComponent,
+  IDetallePublicacionData
+} from '../../components/detalle-publicacion-modal/detalle-publicacion-modal.component';
 import { ExpandImageButtonComponent } from '../../../shared/components/expand-image-button/expand-image-button.component';
 import { ImagenLightboxModalComponent } from '../../../shared/components/imagen-lightbox-modal/imagen-lightbox-modal.component';
 import { PublicacionesResource } from '../../api/publicaciones-resource';
+import { EstadoPublicacion, EstadoPublicacionService } from '../../services/estado-publicacion.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { AppMessageService } from '../../../core/services/app-message-service';
-import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { AutofocusDirective } from '../../../shared/directives/autofocus';
 import { FiltrarPorPipe } from '../../../shared/pipes/filtrar-por-pipe';
 import {
@@ -22,78 +24,124 @@ import {
 } from '../../../shared/utils/mascota-formatters';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { IEstadoPublicacion } from '../../api/models/i-estado-publicacion';
-import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
 import { HasChangesComponent } from '../../../core/guards/controlar-cambios-guard';
 
 @Component({
-    selector: 'app-publicaciones',
-    imports: [
-    FormsModule,
+  selector: 'app-publicaciones',
+  imports: [
+    ReactiveFormsModule,
     NavbarComponent,
-    NuevaPublicacionModalComponent,
-    DetallePublicacionModalComponent,
     ExpandImageButtonComponent,
-    ImagenLightboxModalComponent,
     AutofocusDirective,
     FiltrarPorPipe
-],
-    templateUrl: './publicaciones.component.html',
-    styleUrls: ['./publicaciones.component.css']
+  ],
+  templateUrl: './publicaciones.component.html',
+  styleUrls: ['./publicaciones.component.css']
 })
 export class PublicacionesComponent implements HasChangesComponent {
 
+  private readonly _dialog = inject(MatDialog);
+  private readonly _injector = inject(Injector);
   private readonly _pubResource = inject(PublicacionesResource);
   private readonly _authService = inject(AuthService);
-  private readonly _messageService = inject(AppMessageService);
-  private readonly _confirmService = inject(ConfirmDialogService);
+  private readonly _estadoService = inject(EstadoPublicacionService);
 
-  @ViewChild(NuevaPublicacionModalComponent) modalComponent?: NuevaPublicacionModalComponent;
+  private _nuevaRef: MatDialogRef<NuevaPublicacionModalComponent, boolean> | null = null;
 
-  // Resolved inputs from router (withComponentInputBinding)
-  publicaciones = model<IPublicacionAdopcion[]>([]);
-  estados = input<IEstadoPublicacion[]>([]);
+  // Datos de la pantalla resueltos al navegar (withComponentInputBinding)
+  readonly publicacionesResueltas = input<IPublicacionAdopcion[]>([], { alias: 'publicaciones' });
+  readonly estados = input<IEstadoPublicacion[]>([]);
 
-  // Local state signals
-  searchQuery = signal<string>('');
-  selectedEstado = signal<string>('Todos');
-  showNuevaModal = signal<boolean>(false);
-  selectedPublicacionNro = signal<number | null>(null);
-  lightboxPublicacion = signal<IPublicacionAdopcion | null>(null);
-  isSaving = signal<boolean>(false);
+  // Copia local editable que se reinicia si el resolver vuelve a ejecutarse
+  readonly publicaciones = linkedSignal(() => this.publicacionesResueltas() ?? []);
 
-  // Selected publication synced with latest publications state
-  selectedPublicacion = computed(() => {
-    const nro = this.selectedPublicacionNro();
-    if (nro === null) {
-      return null;
-    }
-    return this.publicaciones().find(p => p.nroPublicacion === nro) ?? null;
-  });
+  // Filtros
+  readonly busqueda = new FormControl('', { nonNullable: true });
+  readonly estadoFiltro = new FormControl('Todos', { nonNullable: true });
+  readonly searchQuery = toSignal(this.busqueda.valueChanges, { initialValue: '' });
+  private readonly _estadoSeleccionado = toSignal(this.estadoFiltro.valueChanges, { initialValue: 'Todos' });
 
-  // Dynamic states catalog from backend resolver
-  estadosCatalogo = computed(() => this.estados() || []);
-
-  // Publications pre-filtered by selected status
-  publicacionesPorEstado = computed(() => {
-    const list = this.publicaciones() || [];
-    const estado = this.selectedEstado();
-    if (estado === 'Todos') {
-      return list;
-    }
-    return list.filter(item => item.estadoPublicacion === estado);
+  readonly publicacionesPorEstado = computed(() => {
+    const estado = this._estadoSeleccionado();
+    const lista = this.publicaciones();
+    return estado === 'Todos' ? lista : lista.filter(p => p.estadoPublicacion === estado);
   });
 
   hasChanges(): boolean {
-    return this.showNuevaModal() && (this.modalComponent?.hasChanges() ?? false);
+    return this._nuevaRef?.componentInstance?.hasChanges() ?? false;
   }
 
-  onSearchChange(val: string): void {
-    this.searchQuery.set(val);
+  // ------------------------------------------------------------- diálogos
+
+  abrirNuevaModal(): void {
+    this._nuevaRef = this._dialog.open<NuevaPublicacionModalComponent, void, boolean>(NuevaPublicacionModalComponent, {
+      injector: this._injector,
+      width: '600px',
+      maxWidth: 'calc(100vw - 1rem)',
+      panelClass: 'dialogo-app',
+      backdropClass: 'fondo-dialogo',
+      disableClose: true,
+      autoFocus: false
+    });
+    this._nuevaRef.afterClosed().subscribe(creada => {
+      this._nuevaRef = null;
+      if (creada) {
+        this.recargarPublicaciones();
+      }
+    });
   }
 
-  onEstadoChange(val: string): void {
-    this.selectedEstado.set(val);
+  abrirDetalleModal(pub: IPublicacionAdopcion): void {
+    this._dialog.open<DetallePublicacionModalComponent, IDetallePublicacionData, IPublicacionAdopcion>(
+      DetallePublicacionModalComponent,
+      {
+        injector: this._injector,
+        data: { publicacion: pub },
+        width: '680px',
+        maxWidth: 'calc(100vw - 1rem)',
+        panelClass: 'dialogo-app',
+        backdropClass: 'fondo-dialogo',
+        disableClose: true,
+        autoFocus: 'dialog'
+      }
+    ).afterClosed().subscribe(actualizada => {
+      if (actualizada) {
+        this.reemplazar(actualizada);
+      }
+    });
   }
+
+  abrirImagenAmpliada(pub: IPublicacionAdopcion): void {
+    ImagenLightboxModalComponent.abrir(this._dialog, {
+      imageUrl: this.getFotoMascota(pub),
+      fallbackUrl: getDefaultFotoMascota(pub.especie),
+      altText: pub.nombreMascota,
+      caption: formatFotoCaption(pub.nombreMascota, pub.especie)
+    });
+  }
+
+  // ------------------------------------------------------- estado (grilla)
+
+  acciones(pub: IPublicacionAdopcion) {
+    return this._estadoService.accionesDisponibles(pub.estadoPublicacion);
+  }
+
+  cambiarEstado(pub: IPublicacionAdopcion, nuevoEstado: EstadoPublicacion): void {
+    this._estadoService.cambiarEstado(pub, nuevoEstado).subscribe(actualizada => this.reemplazar(actualizada));
+  }
+
+  private reemplazar(actualizada: IPublicacionAdopcion): void {
+    this.publicaciones.update(lista =>
+      lista.map(p => p.nroPublicacion === actualizada.nroPublicacion ? actualizada : p)
+    );
+  }
+
+  private recargarPublicaciones(): void {
+    this._pubResource.getPublicacionesPorRefugio(this._authService.idRefugio())
+      .subscribe(actualizadas => this.publicaciones.set(actualizadas));
+  }
+
+  // ------------------------------------------------------------ formato
 
   getEdadTexto(pub: IPublicacionAdopcion): string {
     return getEdadTexto(pub.edadAproximada, pub.añoNacimiento, pub.fechaNacimiento);
@@ -103,151 +151,8 @@ export class PublicacionesComponent implements HasChangesComponent {
     return getFotoMascotaUrl(pub.foto, pub.especie);
   }
 
-  getDefaultFoto(pub: IPublicacionAdopcion): string {
-    return getDefaultFotoMascota(pub.especie);
-  }
-
-  abrirDetalleModal(pub: IPublicacionAdopcion): void {
-    this.selectedPublicacionNro.set(pub.nroPublicacion);
-  }
-
-  cerrarDetalleModal(): void {
-    this.selectedPublicacionNro.set(null);
-  }
-
-  abrirImagenAmpliada(pub: IPublicacionAdopcion): void {
-    this.lightboxPublicacion.set(pub);
-  }
-
-  cerrarImagenAmpliada(): void {
-    this.lightboxPublicacion.set(null);
-  }
-
-  getLightboxCaption(pub: IPublicacionAdopcion): string {
-    return formatFotoCaption(pub.nombreMascota, pub.especie);
-  }
-
   onImageError(event: Event, pub: IPublicacionAdopcion): void {
     applyFallbackFoto(event, pub.especie);
   }
 
-  toggleEstado(pub: IPublicacionAdopcion): void {
-    const targetEstado = pub.estadoPublicacion === 'Activa' ? 'Pausada' : 'Activa';
-    const idRefugio = this._authService.idRefugio();
-
-    this._pubResource.actualizarEstado(pub.nroPublicacion, {
-      idRefugio: idRefugio,
-      nuevoEstado: targetEstado
-    }).subscribe({
-      next: () => {
-        this.publicaciones.update(list =>
-          list.map(p => p.nroPublicacion === pub.nroPublicacion ? { ...p, estadoPublicacion: targetEstado } : p)
-        );
-        this._messageService.showMessage({
-          title: 'Estado Actualizado',
-          text: `La publicación de "${pub.nombreMascota}" cambió su estado a "${targetEstado}".`,
-          type: 'success'
-        });
-      },
-      error: (err) => {
-        this._messageService.showMessage({
-          title: 'Error al cambiar estado',
-          text: err?.error?.mensajeRespuesta || err?.error?.mensaje || 'No se pudo cambiar el estado de la publicación.',
-          type: 'error'
-        });
-      }
-    });
-  }
-
-  finalizarPublicacion(pub: IPublicacionAdopcion): void {
-    this._confirmService.confirm(
-      'Finalizar Publicación',
-      `¿Está seguro de marcar como Finalizada la publicación de "${pub.nombreMascota}"?`
-    ).subscribe((confirmed: boolean) => {
-      if (!confirmed) return;
-
-      const idRefugio = this._authService.idRefugio();
-      this._pubResource.actualizarEstado(pub.nroPublicacion, {
-        idRefugio: idRefugio,
-        nuevoEstado: 'Finalizada'
-      }).subscribe({
-        next: () => {
-          this.publicaciones.update(list =>
-            list.map(p => p.nroPublicacion === pub.nroPublicacion ? { ...p, estadoPublicacion: 'Finalizada' } : p)
-          );
-          this._messageService.showMessage({
-            title: 'Publicación Finalizada',
-            text: `La publicación de "${pub.nombreMascota}" ha sido finalizada correctamente.`,
-            type: 'info'
-          });
-        },
-        error: (err) => {
-          this._messageService.showMessage({
-            title: 'Error al finalizar',
-            text: err?.error?.mensajeRespuesta || err?.error?.mensaje || 'No se pudo marcar como finalizada la publicación.',
-            type: 'error'
-          });
-        }
-      });
-    });
-  }
-
-  abrirNuevaModal(): void {
-    this.showNuevaModal.set(true);
-  }
-
-  cerrarNuevaModal(): void {
-    if (this.isSaving()) {
-      return;
-    }
-
-    if (this.modalComponent?.hasChanges()) {
-      this._confirmService.confirm(
-        'Descartar cambios',
-        '¿Está seguro de descartar sus cambios? Se perderán los datos ingresados en la publicación.'
-      ).subscribe((confirmed: boolean) => {
-        if (confirmed) {
-          this.showNuevaModal.set(false);
-        }
-      });
-      return;
-    }
-
-    this.showNuevaModal.set(false);
-  }
-
-  guardarNuevaPublicacion(request: INuevaPublicacionRequest): void {
-    if (this.isSaving()) {
-      return;
-    }
-
-    this.isSaving.set(true);
-    this._pubResource.crearPublicacion(request)
-      .pipe(finalize(() => this.isSaving.set(false)))
-      .subscribe({
-        next: (res) => {
-          this.showNuevaModal.set(false);
-          this._messageService.showMessage({
-            title: 'Publicación Registrada',
-            text: res?.mensajeRespuesta || res?.mensaje || 'Se registró exitosamente la nueva publicación de adopción.',
-            type: 'success'
-          });
-
-          // Recargar el listado actualizado de publicaciones desde el backend
-          const idRefugio = this._authService.idRefugio();
-          this._pubResource.getPublicacionesPorRefugio(idRefugio).subscribe({
-            next: (actualizadas) => this.publicaciones.set(actualizadas)
-          });
-        },
-        error: (err) => {
-          this._messageService.showMessage({
-            title: 'Error al registrar publicación',
-            text: err?.error?.mensajeRespuesta || err?.error?.mensaje || 'Ocurrió un error al intentar crear la publicación. Verifique los datos.',
-            type: 'error'
-          });
-        }
-      });
-  }
-
 }
-

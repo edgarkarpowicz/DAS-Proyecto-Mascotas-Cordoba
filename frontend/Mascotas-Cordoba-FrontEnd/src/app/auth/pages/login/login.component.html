@@ -13,17 +13,17 @@
     <p class="brand-subtitle">Programa Municipal de Bienestar Animal</p>
 
     <!-- Error message if any -->
-    @if (error) {
-      <div class="error-banner">{{ error }}</div>
+    @if (error(); as mensaje) {
+      <div class="error-banner" role="alert">{{ mensaje }}</div>
     }
 
     <!-- Form -->
-    <form (ngSubmit)="onSubmit()" class="login-form">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
       
       <!-- CUIL Field -->
       <div class="form-group">
         <label for="cuil">CUIL</label>
-        <div class="input-container active-focus">
+        <div class="input-container active-focus" [class.input-error]="mostrarError('cuil')">
           <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
@@ -31,53 +31,42 @@
             appAutofocus
             id="cuil"
             type="text"
-            [(ngModel)]="cuil"
-            name="cuil"
+            formControlName="cuil"
             placeholder="Ingrese su CUIL"
-            required
             autocomplete="username"
           />
         </div>
+        @if (mostrarError('cuil')) {
+          <span class="field-error">Ingresá tu CUIL.</span>
+        }
       </div>
 
       <!-- Password Field -->
       <div class="form-group">
         <label for="clave">Contraseña</label>
-        <div class="input-container">
+        <div class="input-container" [class.input-error]="mostrarError('clave')">
           <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <input
             id="clave"
             type="password"
-            [(ngModel)]="clave"
-            name="clave"
+            formControlName="clave"
             placeholder="Ingrese su contraseña"
-            required
             autocomplete="current-password"
           />
         </div>
-      </div>
-
-      <!-- Remember Me Checkbox -->
-      <div class="remember-group">
-        <label class="remember-label" for="recordarme">
-          <input
-            id="recordarme"
-            type="checkbox"
-            [(ngModel)]="recordarme"
-            name="recordarme"
-          />
-          <span>Recordarme</span>
-        </label>
+        @if (mostrarError('clave')) {
+          <span class="field-error">Ingresá tu contraseña.</span>
+        }
       </div>
 
       <!-- Submit Button -->
-      <button type="submit" class="submit-btn" [disabled]="loading">
+      <button type="submit" class="submit-btn" [disabled]="loading()">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
         </svg>
-        <span>{{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}</span>
+        <span>{{ loading() ? 'Iniciando sesión...' : 'Iniciar sesión' }}</span>
       </button>
 
     </form>

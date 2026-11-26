@@ -1,18 +1,3 @@
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(17, 24, 39, 0.5);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  animation: fadeIn 0.2s ease-out;
-}
-
 .modal-card {
   background: #ffffff;
   border-radius: var(--radius-lg);
@@ -26,11 +11,6 @@
   overflow: hidden;
   animation: slideUp 0.25s ease-out;
   margin: auto;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 @keyframes slideUp {
@@ -362,14 +342,88 @@
 }
 
 /* ==========================================================================
+   Validación en línea y selector de año
+   ========================================================================== */
+.field-error {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #b91c1c;
+}
+
+.form-group input.input-error,
+.form-group select.input-error,
+.form-group textarea.input-error,
+.dropzone.input-error {
+  border-color: var(--accent-red);
+  background-color: #fef2f2;
+}
+
+.form-error-banner {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.anio-wrapper {
+  position: relative;
+}
+
+.anio-wrapper input {
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+.anio-wrapper input[readonly]:not(:disabled):not(.input-error) {
+  background-color: #ffffff;
+  color: var(--text-dark);
+}
+
+.anio-wrapper input:disabled {
+  cursor: not-allowed;
+}
+
+.anio-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.anio-toggle:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+
+.anio-toggle:disabled {
+  color: var(--text-light);
+  cursor: not-allowed;
+}
+
+.anio-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ==========================================================================
    Responsive: Mobile / Phone Styles
    ========================================================================== */
 @media (max-width: 640px) {
-  .modal-backdrop {
-    padding: 0.5rem;
-    align-items: flex-start;
-  }
-
   .modal-card {
     max-height: calc(100dvh - 1rem);
     border-radius: var(--radius-md);

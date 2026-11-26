@@ -1,0 +1,25 @@
+<div class="modal-card" role="alertdialog" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+
+  <div class="modal-header">
+    <h3 id="confirm-title" class="modal-title">{{ data.title }}</h3>
+    <button type="button" class="close-btn" (click)="cancel()" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <p id="confirm-text" class="modal-text">{{ data.message }}</p>
+  </div>
+
+  <div class="modal-actions">
+    <button type="button" class="btn-cancel" (click)="cancel()">
+      {{ data.cancelText || 'Cancelar' }}
+    </button>
+    <button type="button" class="btn-confirm" (click)="confirm()" cdkFocusInitial>
+      {{ data.confirmText || 'Aceptar' }}
+    </button>
+  </div>
+
+</div>

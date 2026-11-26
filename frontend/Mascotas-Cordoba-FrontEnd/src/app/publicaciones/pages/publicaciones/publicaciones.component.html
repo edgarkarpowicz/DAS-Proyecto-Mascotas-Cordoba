@@ -35,8 +35,7 @@
               appAutofocus
               id="buscarMascota"
               type="text"
-              [ngModel]="searchQuery()"
-              (ngModelChange)="onSearchChange($event)"
+              [formControl]="busqueda"
               placeholder="Nombre de la mascota..."
             />
           </div>
@@ -48,11 +47,10 @@
           <div class="select-wrapper">
             <select
               id="estadoFiltro"
-              [ngModel]="selectedEstado()"
-              (ngModelChange)="onEstadoChange($event)"
+              [formControl]="estadoFiltro"
             >
               <option value="Todos">Todos</option>
-              @for (est of estadosCatalogo(); track est.codEstado) {
+              @for (est of estados(); track est.codEstado) {
                 <option [value]="est.codEstado">{{ est.codEstado }}</option>
               }
             </select>
@@ -165,60 +163,35 @@
               (keydown.space)="$event.stopPropagation()"
             >
               
-              <!-- Pause / Resume Toggle Button -->
-              @if (pub.estadoPublicacion === 'Activa') {
+              @for (accion of acciones(pub); track accion.nuevoEstado) {
                 <button
                   type="button"
-                  class="action-btn btn-pause"
-                  (click)="$event.stopPropagation(); toggleEstado(pub)"
-                  title="Pausar publicación"
+                  class="action-btn"
+                  [class.btn-pause]="accion.nuevoEstado === 'Pausada'"
+                  [class.btn-resume]="accion.nuevoEstado === 'Activa'"
+                  [class.btn-delete]="accion.nuevoEstado === 'Finalizada'"
+                  (click)="$event.stopPropagation(); cambiarEstado(pub, accion.nuevoEstado)"
+                  [title]="accion.etiqueta + ' publicación'"
+                  [attr.aria-label]="accion.etiqueta + ' publicación de ' + pub.nombreMascota"
                 >
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <rect x="7" y="5" width="3" height="14" rx="1.5" />
-                    <rect x="14" y="5" width="3" height="14" rx="1.5" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="action-btn btn-delete"
-                  (click)="$event.stopPropagation(); finalizarPublicacion(pub)"
-                  title="Finalizar publicación"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              } @else if (pub.estadoPublicacion === 'Pausada') {
-                <button
-                  type="button"
-                  class="action-btn btn-resume"
-                  (click)="$event.stopPropagation(); toggleEstado(pub)"
-                  title="Reanudar publicación"
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="action-btn btn-delete"
-                  (click)="$event.stopPropagation(); finalizarPublicacion(pub)"
-                  title="Finalizar publicación"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              } @else {
-                <button
-                  type="button"
-                  class="action-btn btn-resume"
-                  (click)="$event.stopPropagation(); toggleEstado(pub)"
-                  title="Reactivar publicación"
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  @switch (accion.nuevoEstado) {
+                    @case ('Pausada') {
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="7" y="5" width="3" height="14" rx="1.5" />
+                        <rect x="14" y="5" width="3" height="14" rx="1.5" />
+                      </svg>
+                    }
+                    @case ('Activa') {
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    }
+                    @default {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    }
+                  }
                 </button>
               }
 
@@ -242,34 +215,3 @@
   }
 
 </main>
-
-<!-- Modal Nueva Publicación -->
-@if (showNuevaModal()) {
-  <app-nueva-publicacion-modal
-    [isSaving]="isSaving()"
-    (close)="cerrarNuevaModal()"
-    (save)="guardarNuevaPublicacion($event)"
-  ></app-nueva-publicacion-modal>
-}
-
-<!-- Modal Detalle Completo de Publicación -->
-@if (selectedPublicacion(); as pubDetalle) {
-  <app-detalle-publicacion-modal
-    [publicacion]="pubDetalle"
-    (close)="cerrarDetalleModal()"
-    (toggleEstado)="toggleEstado($event)"
-    (finalizar)="finalizarPublicacion($event)"
-  ></app-detalle-publicacion-modal>
-}
-
-<!-- Lightbox Imagen Completa -->
-@if (lightboxPublicacion(); as pubLightbox) {
-  <app-imagen-lightbox-modal
-    [imageUrl]="getFotoMascota(pubLightbox)"
-    [fallbackUrl]="getDefaultFoto(pubLightbox)"
-    [altText]="pubLightbox.nombreMascota"
-    [caption]="getLightboxCaption(pubLightbox)"
-    (close)="cerrarImagenAmpliada()"
-  ></app-imagen-lightbox-modal>
-}
-

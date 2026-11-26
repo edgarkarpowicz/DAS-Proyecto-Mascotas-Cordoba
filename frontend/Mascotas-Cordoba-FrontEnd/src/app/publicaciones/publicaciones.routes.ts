@@ -4,11 +4,12 @@ import { controlarCambiosGuard } from '../core/guards/controlar-cambios-guard';
 import { publicacionesResolver } from './resolvers/publicaciones-resolver';
 import { estadosResolver } from './resolvers/estados-resolver';
 import { PublicacionesResource } from './api/publicaciones-resource';
+import { EstadoPublicacionService } from './services/estado-publicacion.service';
 
 export const PUBLICACIONES_ROUTES: Routes = [
   {
     path: '',
-    providers: [PublicacionesResource],
+    providers: [PublicacionesResource, EstadoPublicacionService],
     canActivate: [authGuard],
     data: { perfilesPermitidos: ['REFUGIO'] },
     children: [

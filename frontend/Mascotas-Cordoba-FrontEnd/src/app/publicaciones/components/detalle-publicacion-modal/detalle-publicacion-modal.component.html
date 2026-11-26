@@ -35,9 +35,8 @@
         <div>
           <h2 id="detalle-pet-title" class="detail-pet-name">{{ pub.nombreMascota }}</h2>
           <p class="detail-subtitle">
-            NRM: <strong>{{ pub.nroRegMunicipal ? pub.nroRegMunicipal : 'Sin NRM previo' }}</strong>
-            <span class="detail-dot">·</span>
-            Publicada: {{ getFecha(pub) }}
+            <span>NRM {{ pub.nroRegMunicipal }}</span>
+            <span>Publicada el {{ getFecha(pub) }}</span>
           </p>
         </div>
         <span class="detail-species-badge">{{ pub.especie || 'Mascota' }}</span>

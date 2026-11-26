@@ -6,7 +6,7 @@
   height: 42px;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(17, 24, 39, 0.72);
+  background: rgba(13, 42, 30, 0.72);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -17,7 +17,7 @@
 }
 
 .lightbox-close-btn:hover {
-  background: rgba(17, 24, 39, 0.95);
+  background: rgba(13, 42, 30, 0.95);
   transform: scale(1.05);
 }
 
@@ -56,15 +56,15 @@
   object-fit: contain;
   border-radius: var(--radius-md);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
-  background: #111827;
+  background: var(--verde-noche);
 }
 
 .lightbox-caption {
   padding: 0.35rem 0.9rem;
   border-radius: 9999px;
-  background: rgba(17, 24, 39, 0.72);
+  background: rgba(13, 42, 30, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #f9fafb;
+  color: var(--papel);
   font-size: 0.85rem;
   font-weight: 600;
   text-align: center;

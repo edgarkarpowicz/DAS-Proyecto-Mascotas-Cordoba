@@ -40,7 +40,7 @@
 }
 
 .is-error .icon-circle {
-  background-color: #fee2e2;
+  background-color: var(--ladrillo-tenue);
   color: #dc2626;
 }
 
@@ -55,16 +55,18 @@
 }
 
 .modal-title {
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 800;
   font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--text-dark);
+  color: var(--verde-noche);
 }
 
 .status-chip {
   display: inline-block;
   font-size: 0.6875rem;
   font-weight: 600;
-  background-color: #f3f4f6;
+  background-color: #eef3ef;
   color: var(--text-muted);
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-sm);
@@ -82,7 +84,7 @@
 
 .close-btn:hover {
   color: var(--text-dark);
-  background-color: #f3f4f6;
+  background-color: #eef3ef;
 }
 
 .close-btn svg {
@@ -104,7 +106,7 @@
   display: flex;
   justify-content: flex-end;
   padding: 1rem 1.5rem 1.25rem;
-  background-color: #f9fafb;
+  background-color: var(--papel);
   border-top: 1px solid var(--border-color);
 }
 

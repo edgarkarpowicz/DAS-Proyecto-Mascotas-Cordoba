@@ -22,7 +22,7 @@
   position: relative;
   height: 250px;
   flex-shrink: 0;
-  background-color: #f3f4f6;
+  background-color: #eef3ef;
 }
 
 .detail-hero-img {
@@ -35,7 +35,7 @@
 .detail-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(17, 24, 39, 0.55) 0%, rgba(17, 24, 39, 0.08) 55%, rgba(17, 24, 39, 0.25) 100%);
+  background: linear-gradient(to top, rgba(13, 42, 30, 0.55) 0%, rgba(13, 42, 30, 0.08) 55%, rgba(13, 42, 30, 0.25) 100%);
   pointer-events: none;
 }
 
@@ -47,7 +47,7 @@
   height: 36px;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(17, 24, 39, 0.55);
+  background: rgba(13, 42, 30, 0.55);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -57,7 +57,7 @@
 }
 
 .detail-close-btn:hover {
-  background: rgba(17, 24, 39, 0.8);
+  background: rgba(13, 42, 30, 0.8);
 }
 
 .detail-close-btn svg {
@@ -90,18 +90,18 @@
 }
 
 .detail-status-badge.badge-activa {
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  color: var(--verde-monte);
+  border: 1px solid var(--hoja-borde);
 }
 
 .detail-status-badge.badge-pausada {
-  color: #b45309;
-  border: 1px solid #fde68a;
+  color: #8a5a12;
+  border: 1px solid var(--girasol-tenue);
 }
 
 .detail-status-badge.badge-finalizada {
-  color: #4b5563;
-  border: 1px solid #d1d5db;
+  color: var(--piedra);
+  border: 1px solid var(--border-color);
 }
 
 .detail-meta-pill {
@@ -110,7 +110,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: #ffffff;
-  background: rgba(17, 24, 39, 0.6);
+  background: rgba(13, 42, 30, 0.6);
   backdrop-filter: blur(4px);
 }
 
@@ -130,20 +130,21 @@
 }
 
 .detail-pet-name {
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 800;
   font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-dark);
+  color: var(--verde-noche);
   line-height: 1.2;
 }
 
 .detail-subtitle {
   margin-top: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
   font-size: 0.85rem;
   color: var(--text-muted);
-}
-
-.detail-dot {
-  margin: 0 0.35rem;
 }
 
 .detail-species-badge {
@@ -163,7 +164,7 @@
 }
 
 .spec-item {
-  background: #f9fafb;
+  background: var(--papel);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 0.75rem 0.9rem;
@@ -175,8 +176,6 @@
 .spec-label {
   font-size: 0.72rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--text-muted);
 }
 
@@ -193,11 +192,11 @@
 }
 
 .gender-icon.female {
-  color: #ec4899;
+  color: var(--piedra);
 }
 
 .gender-icon.male {
-  color: #3b82f6;
+  color: var(--piedra);
 }
 
 .detail-section {
@@ -208,21 +207,19 @@
 }
 
 .detail-section-highlight {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
+  background: var(--hoja);
+  border-color: var(--hoja-borde);
 }
 
 .section-heading {
   font-size: 0.8rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--text-muted);
   margin-bottom: 0.45rem;
 }
 
 .detail-section-highlight .section-heading {
-  color: #166534;
+  color: var(--verde-monte);
 }
 
 .section-text {
@@ -240,7 +237,7 @@
   gap: 0.75rem;
   padding: 1rem 1.75rem 1.25rem;
   border-top: 1px solid var(--border-color);
-  background: #f9fafb;
+  background: var(--papel);
   flex-shrink: 0;
 }
 
@@ -273,7 +270,7 @@
 .btn-outline-warn {
   background: #ffffff;
   border: 1.5px solid var(--accent-yellow);
-  color: #b45309;
+  color: #8a5a12;
 }
 
 .btn-outline-warn:hover {

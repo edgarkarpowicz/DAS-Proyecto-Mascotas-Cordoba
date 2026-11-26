@@ -1,78 +1,72 @@
 <div class="login-wrapper">
-  <div class="login-card">
-    
-    <!-- Circular Heart Icon -->
-    <div class="logo-circle">
-      <svg class="heart-icon" viewBox="0 0 24 24" fill="currentColor">
+
+  <section class="marca" aria-label="Mascotas Córdoba">
+    <div class="marca-sello">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
+      <span>Mascotas Córdoba</span>
     </div>
 
-    <!-- Title & Subtitle -->
-    <h1 class="brand-title">Mascotas Córdoba</h1>
-    <p class="brand-subtitle">Programa Municipal de Bienestar Animal</p>
+    <p class="marca-frase display">Cada publicación acerca a una mascota a su familia.</p>
 
-    <!-- Error message if any -->
-    @if (error(); as mensaje) {
-      <div class="error-banner" role="alert">{{ mensaje }}</div>
-    }
+    <p class="marca-programa">Programa Municipal de Bienestar Animal</p>
 
-    <!-- Form -->
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
-      
-      <!-- CUIL Field -->
-      <div class="form-group">
-        <label for="cuil">CUIL</label>
-        <div class="input-container active-focus" [class.input-error]="mostrarError('cuil')">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <input
-            appAutofocus
-            id="cuil"
-            type="text"
-            formControlName="cuil"
-            placeholder="Ingrese su CUIL"
-            autocomplete="username"
-          />
+    <svg class="marca-corazon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.6" aria-hidden="true">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+  </section>
+
+  <section class="acceso" aria-labelledby="titulo-ingreso">
+    <div class="acceso-contenido">
+      <h1 id="titulo-ingreso" class="acceso-titulo display">Ingresá al refugio</h1>
+      <p class="acceso-bajada">Usá el CUIL y la contraseña de tu cuenta de refugio.</p>
+
+      @if (error(); as mensaje) {
+        <div class="error-banner" role="alert">{{ mensaje }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
+
+        <div class="form-group">
+          <label for="cuil">CUIL</label>
+          <div class="input-container" [class.input-error]="mostrarError('cuil')">
+            <input
+              appAutofocus
+              id="cuil"
+              type="text"
+              inputmode="numeric"
+              formControlName="cuil"
+              placeholder="20-12345678-9"
+              autocomplete="username"
+            />
+          </div>
+          @if (mostrarError('cuil')) {
+            <span class="field-error">Ingresá tu CUIL.</span>
+          }
         </div>
-        @if (mostrarError('cuil')) {
-          <span class="field-error">Ingresá tu CUIL.</span>
-        }
-      </div>
 
-      <!-- Password Field -->
-      <div class="form-group">
-        <label for="clave">Contraseña</label>
-        <div class="input-container" [class.input-error]="mostrarError('clave')">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <input
-            id="clave"
-            type="password"
-            formControlName="clave"
-            placeholder="Ingrese su contraseña"
-            autocomplete="current-password"
-          />
+        <div class="form-group">
+          <label for="clave">Contraseña</label>
+          <div class="input-container" [class.input-error]="mostrarError('clave')">
+            <input
+              id="clave"
+              type="password"
+              formControlName="clave"
+              autocomplete="current-password"
+            />
+          </div>
+          @if (mostrarError('clave')) {
+            <span class="field-error">Ingresá tu contraseña.</span>
+          }
         </div>
-        @if (mostrarError('clave')) {
-          <span class="field-error">Ingresá tu contraseña.</span>
-        }
-      </div>
 
-      <!-- Submit Button -->
-      <button type="submit" class="submit-btn" [disabled]="loading()">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-        </svg>
-        <span>{{ loading() ? 'Iniciando sesión...' : 'Iniciar sesión' }}</span>
-      </button>
+        <button type="submit" class="submit-btn" [disabled]="loading()">
+          {{ loading() ? 'Ingresando...' : 'Ingresar' }}
+        </button>
 
-    </form>
+      </form>
+    </div>
+  </section>
 
-    <!-- Footer Note -->
-    <p class="footer-note">Acceso seguro al Programa Municipal de Bienestar Animal</p>
-
-  </div>
 </div>

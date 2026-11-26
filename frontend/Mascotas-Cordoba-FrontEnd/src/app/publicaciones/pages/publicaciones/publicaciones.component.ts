@@ -1,4 +1,5 @@
 import { Component, Injector, computed, inject, input, linkedSignal } from '@angular/core';
+import { LowerCasePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -19,16 +20,25 @@ import {
   applyFallbackFoto,
   formatFotoCaption,
   getDefaultFotoMascota,
+  formatFechaPublicacion,
   getEdadTexto,
-  getFotoMascotaUrl
+  getFotoMascotaUrl,
+  getSexoLabel
 } from '../../../shared/utils/mascota-formatters';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { IEstadoPublicacion } from '../../api/models/i-estado-publicacion';
 import { HasChangesComponent } from '../../../core/guards/controlar-cambios-guard';
 
+const ETIQUETA_PESTANIA: Record<string, string> = {
+  Activa: 'Activas',
+  Pausada: 'Pausadas',
+  Finalizada: 'Finalizadas'
+};
+
 @Component({
   selector: 'app-publicaciones',
   imports: [
+    LowerCasePipe,
     ReactiveFormsModule,
     NavbarComponent,
     ExpandImageButtonComponent,
@@ -44,6 +54,7 @@ export class PublicacionesComponent implements HasChangesComponent {
   private readonly _injector = inject(Injector);
   private readonly _pubResource = inject(PublicacionesResource);
   private readonly _authService = inject(AuthService);
+  readonly usuario = this._authService.usuario;
   private readonly _estadoService = inject(EstadoPublicacionService);
 
   private _nuevaRef: MatDialogRef<NuevaPublicacionModalComponent, boolean> | null = null;
@@ -61,11 +72,36 @@ export class PublicacionesComponent implements HasChangesComponent {
   readonly searchQuery = toSignal(this.busqueda.valueChanges, { initialValue: '' });
   private readonly _estadoSeleccionado = toSignal(this.estadoFiltro.valueChanges, { initialValue: 'Todos' });
 
+  readonly estadoSeleccionado = this._estadoSeleccionado;
+
   readonly publicacionesPorEstado = computed(() => {
     const estado = this._estadoSeleccionado();
     const lista = this.publicaciones();
     return estado === 'Todos' ? lista : lista.filter(p => p.estadoPublicacion === estado);
   });
+
+  /** Pestañas de filtro con la cantidad de publicaciones en cada estado. */
+  readonly pestanias = computed(() => {
+    const lista = this.publicaciones();
+    const estados = (this.estados() ?? []).map(e => e.codEstado);
+    return [
+      { valor: 'Todos', etiqueta: 'Todas', cantidad: lista.length },
+      ...estados.map(codigo => ({
+        valor: codigo,
+        etiqueta: ETIQUETA_PESTANIA[codigo] ?? codigo,
+        cantidad: lista.filter(p => p.estadoPublicacion === codigo).length
+      }))
+    ];
+  });
+
+  filtrarPorEstado(estado: string): void {
+    this.estadoFiltro.setValue(estado);
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda.setValue('');
+    this.estadoFiltro.setValue('Todos');
+  }
 
   hasChanges(): boolean {
     return this._nuevaRef?.componentInstance?.hasChanges() ?? false;
@@ -145,6 +181,14 @@ export class PublicacionesComponent implements HasChangesComponent {
 
   getEdadTexto(pub: IPublicacionAdopcion): string {
     return getEdadTexto(pub.edadAproximada, pub.añoNacimiento, pub.fechaNacimiento);
+  }
+
+  getSexo(pub: IPublicacionAdopcion): 'Hembra' | 'Macho' {
+    return getSexoLabel(pub.sexo);
+  }
+
+  getFechaPublicacion(pub: IPublicacionAdopcion): string {
+    return formatFechaPublicacion(pub.fechaPublicacion);
   }
 
   getFotoMascota(pub: IPublicacionAdopcion): string {

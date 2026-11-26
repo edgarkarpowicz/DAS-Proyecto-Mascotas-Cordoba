@@ -1,5 +1,5 @@
 // Tema de Angular Material alineado con la paleta de Mascotas Córdoba
-// (verde institucional y tipografía Inter definidos en styles.css).
+// (verde del programa y tipografía Archivo definidos en styles.css).
 @use '@angular/material' as mat;
 
 html {
@@ -9,15 +9,18 @@ html {
       primary: mat.$green-palette,
       tertiary: mat.$orange-palette,
     ),
-    typography: Inter,
+    typography: (
+      plain-family: (Archivo, sans-serif),
+      brand-family: (Archivo, sans-serif),
+    ),
     density: 0,
   ));
 
   // El color primario institucional reemplaza al tono por defecto de la paleta.
-  --mat-sys-primary: #147a46;
+  --mat-sys-primary: #136b43;
   --mat-sys-on-primary: #ffffff;
-  --mat-sys-primary-container: #e8f5ec;
-  --mat-sys-on-primary-container: #0a4626;
+  --mat-sys-primary-container: #e3ede6;
+  --mat-sys-on-primary-container: #0d2a1e;
 }
 
 // Los diálogos se abren con MatDialog, pero cada componente dibuja su propia
@@ -37,18 +40,19 @@ html {
 }
 
 .fondo-dialogo {
-  background-color: rgba(17, 24, 39, 0.5);
+  background-color: rgba(13, 42, 30, 0.55);
   backdrop-filter: blur(2px);
 }
 
 .fondo-lightbox {
-  background-color: rgba(17, 24, 39, 0.88);
+  background-color: rgba(13, 42, 30, 0.9);
   backdrop-filter: blur(4px);
 }
 
 // Snackbar de confirmación de acciones.
 .snackbar-exito {
-  --mat-snack-bar-container-color: #0a4626;
+  --mat-snack-bar-container-color: #0d2a1e;
   --mat-snack-bar-supporting-text-color: #ffffff;
-  --mat-snack-bar-button-color: #bbf7d0;
+  --mat-snack-bar-button-color: #7fd3a5;
+  --mat-snack-bar-supporting-text-font: Archivo, sans-serif;
 }

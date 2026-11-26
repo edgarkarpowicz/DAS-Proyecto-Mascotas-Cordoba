@@ -7,7 +7,7 @@
   height: 36px;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(17, 24, 39, 0.58);
+  background: rgba(13, 42, 30, 0.58);
   backdrop-filter: blur(4px);
   color: #ffffff;
   display: flex;
@@ -19,7 +19,7 @@
 }
 
 .expand-image-btn:hover {
-  background: rgba(17, 24, 39, 0.85);
+  background: rgba(13, 42, 30, 0.85);
   transform: scale(1.06);
 }
 

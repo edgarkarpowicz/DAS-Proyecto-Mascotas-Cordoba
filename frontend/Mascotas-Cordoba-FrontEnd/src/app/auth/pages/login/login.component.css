@@ -1,71 +1,102 @@
 .login-wrapper {
   min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  background-color: var(--papel);
+}
+
+/* ==========================================================================
+   Marca
+   ========================================================================== */
+.marca {
+  position: relative;
+  overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--bg-login);
-  padding: 1.5rem;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 440px;
-  background: var(--card-bg);
-  border-radius: var(--radius-xl);
-  padding: 2.75rem 2.25rem 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
-  text-align: center;
-  border: 1px solid rgba(229, 231, 235, 0.6);
-}
-
-/* Circular Heart Logo */
-.logo-circle {
-  width: 56px;
-  height: 56px;
-  background-color: var(--primary);
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.25rem;
-  box-shadow: 0 4px 12px rgba(20, 122, 70, 0.25);
-}
-
-.heart-icon {
-  width: 26px;
-  height: 26px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 3rem clamp(1.5rem, 5vw, 4.5rem);
+  background-color: var(--verde-noche);
   color: #ffffff;
 }
 
-/* Titles */
-.brand-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 0.35rem;
-  letter-spacing: -0.02em;
+.marca-sello {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 800;
+  font-size: 1.1rem;
 }
 
-.brand-subtitle {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+.marca-sello svg {
+  width: 24px;
+  height: 24px;
+  color: #7fd3a5;
+}
+
+.marca-frase {
+  position: relative;
+  z-index: 1;
+  max-width: 13ch;
+  font-size: clamp(2.4rem, 4.6vw, 4.25rem);
+  font-weight: 900;
+}
+
+.marca-programa {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Contorno grande del corazón de la marca, recortado por el borde */
+.marca-corazon {
+  position: absolute;
+  right: -18%;
+  bottom: -22%;
+  width: 78%;
+  color: rgba(127, 211, 165, 0.22);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Formulario
+   ========================================================================== */
+.acceso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.acceso-contenido {
+  width: 100%;
+  max-width: 380px;
+}
+
+.acceso-titulo {
+  font-size: 2rem;
+  color: var(--verde-noche);
+}
+
+.acceso-bajada {
+  margin-top: 0.5rem;
   margin-bottom: 2rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
 .error-banner {
-  background-color: var(--accent-red-light);
-  color: var(--accent-red);
-  padding: 0.6rem;
-  border-radius: var(--radius-md);
-  font-size: 0.8125rem;
   margin-bottom: 1.25rem;
-  text-align: center;
-  border: 1px solid #fca5a5;
-}
-
-/* Form Styles */
-.login-form {
-  text-align: left;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--ladrillo-tenue);
+  border-left: 4px solid var(--ladrillo);
+  color: #7d2a1c;
+  font-size: 0.875rem;
 }
 
 .form-group {
@@ -74,10 +105,10 @@
 
 .form-group label {
   display: block;
-  font-size: 0.8125rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-medium);
-  margin-bottom: 0.4rem;
 }
 
 .input-container {
@@ -85,93 +116,88 @@
   align-items: center;
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 0.625rem 0.875rem;
   background-color: #ffffff;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .input-container:focus-within {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
-}
-
-.input-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--text-light);
-  margin-right: 0.75rem;
-  flex-shrink: 0;
+  border-color: var(--verde-monte);
+  box-shadow: 0 0 0 3px rgba(19, 107, 67, 0.15);
 }
 
 .input-container input {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
   border: none;
   outline: none;
-  width: 100%;
-  font-size: 0.875rem;
-  color: var(--text-dark);
   background: transparent;
+  font-size: 1rem;
+  color: var(--text-dark);
 }
 
-.input-container input::placeholder {
-  color: var(--text-light);
-  font-size: 0.875rem;
-}
-
-/* Remember Me */
-.remember-group {
-  margin-top: -0.25rem;
-  margin-bottom: 1.15rem;
-}
-
-/* Submit Button */
-.submit-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: var(--primary);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.75rem 1.25rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.submit-btn:hover {
-  background-color: var(--primary-hover);
-}
-
-.submit-btn:active {
-  transform: scale(0.99);
-}
-
-.btn-icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* Footer Note */
-.footer-note {
-  margin-top: 1.75rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-/* Validación en línea al enviar */
 .input-container.input-error {
-  border-color: var(--accent-red);
-  background-color: #fef2f2;
+  border-color: var(--ladrillo);
+  background-color: #fdf6f4;
 }
 
 .field-error {
   display: block;
-  margin-top: 0.3rem;
-  font-size: 0.78rem;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: #b91c1c;
+  color: var(--ladrillo);
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background-color: var(--verde-monte);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: var(--verde-monte-hover);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* ==========================================================================
+   Celular: la marca queda como encabezado compacto
+   ========================================================================== */
+@media (max-width: 860px) {
+  .login-wrapper {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .marca {
+    padding: 1.75rem 1.25rem 2rem;
+    gap: 1.25rem;
+  }
+
+  .marca-frase {
+    font-size: 2rem;
+    max-width: 16ch;
+  }
+
+  .marca-corazon {
+    width: 55%;
+    right: -12%;
+    bottom: -35%;
+  }
+
+  .acceso {
+    align-items: flex-start;
+    padding: 2rem 1.25rem 3rem;
+  }
 }

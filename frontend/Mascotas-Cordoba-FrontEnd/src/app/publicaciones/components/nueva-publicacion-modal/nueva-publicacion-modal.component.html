@@ -2,7 +2,7 @@
 
   <div class="modal-header">
     <div>
-      <h2 id="nueva-publicacion-title" class="modal-title">Nueva Publicación de Adopción</h2>
+      <h2 id="nueva-publicacion-title" class="modal-title">Nueva publicación de adopción</h2>
       <p class="modal-subtitle">Registrá una mascota del refugio disponible para adopción.</p>
     </div>
     <button type="button" class="close-btn" (click)="cancelar()" aria-label="Cerrar">
@@ -21,9 +21,9 @@
     <!-- Mascota ya registrada en el refugio (opcional) -->
     @if (mascotasDisponibles().length > 0) {
       <div class="form-group">
-        <label for="mascotaRegistrada">Mascota Registrada en el Refugio</label>
+        <label for="mascotaRegistrada">Mascota ya registrada en el refugio</label>
         <select id="mascotaRegistrada" formControlName="nroRegMunicipal" class="select-mascota">
-          <option [ngValue]="0">-- Registrar nueva mascota en el refugio --</option>
+          <option [ngValue]="0">Es una mascota nueva</option>
           @for (m of mascotasDisponibles(); track m.nroRegMunicipal) {
             <option [ngValue]="m.nroRegMunicipal">
               {{ m.nombre }} (NRM: {{ m.nroRegMunicipal }} - {{ m.especie }} {{ m.raza }})
@@ -43,7 +43,7 @@
 
     <div class="form-row">
       <div class="form-group flex-1">
-        <label for="nombreMascota">Nombre de la Mascota *</label>
+        <label for="nombreMascota">Nombre *</label>
         <input
           id="nombreMascota"
           [appAutofocus]="!mascotaSeleccionada()"
@@ -60,11 +60,11 @@
         }
       </div>
       <div class="form-group flex-1">
-        <label for="nrm">NRM (Registro Municipal)</label>
+        <label for="nrm">Registro municipal (NRM)</label>
         <input
           id="nrm"
           type="text"
-          [value]="mascotaSeleccionada() ? ('NRM: ' + mascotaSeleccionada()!.nroRegMunicipal) : 'Sin NRM previo (nuevo registro)'"
+          [value]="mascotaSeleccionada() ? ('NRM: ' + mascotaSeleccionada()!.nroRegMunicipal) : 'Se asigna al publicar'"
           readonly
           class="readonly-input input-locked"
         />
@@ -73,7 +73,7 @@
 
     <div class="form-row">
       <div class="form-group flex-1">
-        <label for="especie">Especie / Tipo *</label>
+        <label for="especie">Especie *</label>
         <select
           id="especie"
           formControlName="especie"
@@ -101,7 +101,7 @@
         </select>
       </div>
       <div class="form-group flex-1">
-        <label for="anioNacimiento">Año de Nacimiento *</label>
+        <label for="anioNacimiento">Año de nacimiento *</label>
         <div class="anio-wrapper">
           <input
             id="anioNacimiento"
@@ -157,7 +157,7 @@
     </div>
 
     <div class="form-group">
-      <label for="condicionAdopcion">Condiciones de Adopción *</label>
+      <label for="condicionAdopcion">Condiciones de adopción *</label>
       <textarea
         id="condicionAdopcion"
         rows="3"
@@ -174,7 +174,7 @@
 
     <!-- Foto de la mascota -->
     <div class="form-group">
-      <label>Foto de la Mascota</label>
+      <label>Foto</label>
 
       <input
         #fileInput
@@ -223,12 +223,12 @@
     </div>
 
     <div class="form-group">
-      <label for="descripcion">Descripción y Características *</label>
+      <label for="descripcion">Cómo es *</label>
       <textarea
         id="descripcion"
         rows="3"
         formControlName="descripcion"
-        placeholder="Describa la personalidad, hábitos y temperamento..."
+        placeholder="Personalidad, hábitos, cómo se lleva con otros animales"
         [class.input-error]="mostrarError('descripcion')"
       ></textarea>
       @if (mostrarError('descripcion')) {
@@ -241,7 +241,7 @@
     <div class="modal-footer">
       <button type="button" class="cancel-btn" [disabled]="guardando()" (click)="cancelar()">Cancelar</button>
       <button type="submit" class="save-btn" [disabled]="guardando()">
-        {{ guardando() ? 'Publicando...' : 'Publicar Mascota' }}
+        {{ guardando() ? 'Publicando…' : 'Publicar' }}
       </button>
     </div>
 

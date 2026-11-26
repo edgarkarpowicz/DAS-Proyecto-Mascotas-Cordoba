@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
@@ -38,6 +38,7 @@ const ANTIGUEDAD_MAXIMA_ANIOS = 30;
   imports: [ReactiveFormsModule, MatDatepickerModule, AutofocusDirective],
   providers: [provideNativeDateAdapter(FORMATO_ANIO), { provide: MAT_DATE_LOCALE, useValue: 'es-AR' }],
   templateUrl: './nueva-publicacion-modal.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./nueva-publicacion-modal.component.css']
 })
 export class NuevaPublicacionModalComponent {

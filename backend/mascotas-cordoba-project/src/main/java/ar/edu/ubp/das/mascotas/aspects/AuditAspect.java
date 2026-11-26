@@ -15,6 +15,8 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,12 +26,21 @@ import java.util.Arrays;
 /**
  * Aspecto de trazabilidad (RF15 / RNF08): registra identidad del usuario,
  * canal (REST/SOAP), operación y resultado tanto en logs como en dbo.auditoria_operaciones.
+ *
+ * Un pedido REST pasa por el recurso y luego por el servicio: solo se persiste la
+ * llamada externa (el recurso para REST, el servicio para SOAP) para no duplicar
+ * registros. Con la mayor precedencia, el aspecto envuelve a la transacción del
+ * servicio y registra después del commit o del rollback, así un error queda auditado.
  */
 @Aspect
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AuditAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditAspect.class);
+
+    /** Cantidad de métodos auditados en curso en el hilo actual. */
+    private static final ThreadLocal<Integer> PROFUNDIDAD = ThreadLocal.withInitial(() -> 0);
 
     @Autowired(required = false)
     private AuditoriaRepository auditoriaRepository;
@@ -40,6 +51,7 @@ public class AuditAspect {
 
     @Before("resourceMethods()")
     public void logBefore(JoinPoint joinPoint) {
+        PROFUNDIDAD.set(PROFUNDIDAD.get() + 1);
         SesionUsuarioBE sesion = UserContextHolder.get();
         String identidad = sesion != null
                 ? sesion.getCuil() + " [" + sesion.getPerfil() + "]"
@@ -53,6 +65,9 @@ public class AuditAspect {
 
     @AfterReturning(pointcut = "resourceMethods()", returning = "result")
     public void logAfter(JoinPoint joinPoint, Object result) {
+        if (!salirYEsLlamadaExterna()) {
+            return;
+        }
         SesionUsuarioBE sesion = resolveSesion(result);
         String canal = resolveCanal(joinPoint);
         String operacion = resolveOperacion(joinPoint);
@@ -70,6 +85,9 @@ public class AuditAspect {
 
     @AfterThrowing(pointcut = "resourceMethods()", throwing = "ex")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable ex) {
+        if (!salirYEsLlamadaExterna()) {
+            return;
+        }
         SesionUsuarioBE sesion = UserContextHolder.get();
         String canal = resolveCanal(joinPoint);
         String operacion = resolveOperacion(joinPoint);
@@ -83,6 +101,19 @@ public class AuditAspect {
                 identidad, canal, operacion, resultado, detalle);
 
         persistirAuditoria(sesion, canal, operacion, resultado, detalle);
+    }
+
+    /**
+     * Descuenta el método que termina y devuelve true si era la llamada externa.
+     */
+    private boolean salirYEsLlamadaExterna() {
+        int restante = PROFUNDIDAD.get() - 1;
+        if (restante <= 0) {
+            PROFUNDIDAD.remove();
+            return true;
+        }
+        PROFUNDIDAD.set(restante);
+        return false;
     }
 
     private void persistirAuditoria(

@@ -1,5 +1,5 @@
 import { Component, ViewChild, computed, inject, input, model, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
@@ -27,10 +27,8 @@ import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-r
 import { HasChangesComponent } from '../../guards/controlar-cambios-guard';
 
 @Component({
-  selector: 'app-publicaciones',
-  standalone: true,
-  imports: [
-    CommonModule,
+    selector: 'app-publicaciones',
+    imports: [
     FormsModule,
     NavbarComponent,
     NuevaPublicacionModalComponent,
@@ -39,9 +37,9 @@ import { HasChangesComponent } from '../../guards/controlar-cambios-guard';
     ImagenLightboxModalComponent,
     AutofocusDirective,
     FiltrarPorPipe
-  ],
-  templateUrl: './publicaciones.component.html',
-  styleUrls: ['./publicaciones.component.css']
+],
+    templateUrl: './publicaciones.component.html',
+    styleUrls: ['./publicaciones.component.css']
 })
 export class PublicacionesComponent implements HasChangesComponent {
 

@@ -1,5 +1,5 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, input, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { PublicacionesResource } from '../../api/resources/publicaciones-resource';
 import { AuthService } from '../../../core/services/auth.service';
@@ -11,11 +11,10 @@ import { IEspecie } from '../../api/models/i-especie';
 import { INuevaPublicacionRequest } from '../../api/models/i-nueva-publicacion-request';
 
 @Component({
-  selector: 'app-nueva-publicacion-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule, AutofocusDirective],
-  templateUrl: './nueva-publicacion-modal.component.html',
-  styleUrls: ['./nueva-publicacion-modal.component.css']
+    selector: 'app-nueva-publicacion-modal',
+    imports: [FormsModule, AutofocusDirective],
+    templateUrl: './nueva-publicacion-modal.component.html',
+    styleUrls: ['./nueva-publicacion-modal.component.css']
 })
 export class NuevaPublicacionModalComponent implements OnInit {
 

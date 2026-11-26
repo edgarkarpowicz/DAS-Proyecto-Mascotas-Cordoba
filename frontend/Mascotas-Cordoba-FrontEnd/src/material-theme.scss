@@ -1,0 +1,33 @@
+// Tema de Angular Material alineado con la paleta de Mascotas Córdoba
+// (verde institucional y tipografía Inter definidos en styles.css).
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: (
+      primary: mat.$green-palette,
+      tertiary: mat.$orange-palette,
+    ),
+    typography: Inter,
+    density: 0,
+  ));
+
+  // El color primario institucional reemplaza al tono por defecto de la paleta.
+  --mat-sys-primary: #147a46;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e8f5ec;
+  --mat-sys-on-primary-container: #0a4626;
+}
+
+// Diálogos con las mismas esquinas que las tarjetas del sitio.
+.mat-mdc-dialog-container {
+  --mat-dialog-container-shape: 20px;
+}
+
+// Snackbar de confirmación de acciones.
+.snackbar-exito {
+  --mat-snack-bar-container-color: #0a4626;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #bbf7d0;
+}

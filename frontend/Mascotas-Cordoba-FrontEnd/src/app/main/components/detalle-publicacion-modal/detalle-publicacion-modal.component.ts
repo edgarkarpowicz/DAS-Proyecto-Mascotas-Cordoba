@@ -1,5 +1,5 @@
 import { Component, HostListener, input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { ExpandImageButtonComponent } from '../../../shared/components/expand-image-button/expand-image-button.component';
 import { ImagenLightboxModalComponent } from '../../../shared/components/imagen-lightbox-modal/imagen-lightbox-modal.component';
@@ -15,11 +15,10 @@ import {
 } from '../../../shared/utils/mascota-formatters';
 
 @Component({
-  selector: 'app-detalle-publicacion-modal',
-  standalone: true,
-  imports: [CommonModule, ExpandImageButtonComponent, ImagenLightboxModalComponent],
-  templateUrl: './detalle-publicacion-modal.component.html',
-  styleUrls: ['./detalle-publicacion-modal.component.css']
+    selector: 'app-detalle-publicacion-modal',
+    imports: [ExpandImageButtonComponent, ImagenLightboxModalComponent],
+    templateUrl: './detalle-publicacion-modal.component.html',
+    styleUrls: ['./detalle-publicacion-modal.component.css']
 })
 export class DetallePublicacionModalComponent {
 

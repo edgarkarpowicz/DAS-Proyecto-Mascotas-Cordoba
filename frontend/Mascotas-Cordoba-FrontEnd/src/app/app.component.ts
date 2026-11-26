@@ -5,16 +5,15 @@ import { ModalMessageComponent } from './core/layouts/modal-message/modal-messag
 import { ModalDescartarCambiosComponent } from './core/layouts/modal-descartar-cambios/modal-descartar-cambios.component';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [
-    RouterOutlet,
-    LoaderComponent,
-    ModalMessageComponent,
-    ModalDescartarCambiosComponent
-  ],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+    selector: 'app-root',
+    imports: [
+        RouterOutlet,
+        LoaderComponent,
+        ModalMessageComponent,
+        ModalDescartarCambiosComponent
+    ],
+    templateUrl: './app.component.html',
+    styleUrl: './app.component.css'
 })
 export class AppComponent {
   title = 'Mascotas-Cordoba-FrontEnd';

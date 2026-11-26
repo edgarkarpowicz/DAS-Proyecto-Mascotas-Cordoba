@@ -1,13 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { AppMessageService } from '../../services/app-message-service';
 
 @Component({
-  selector: 'app-modal-message',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './modal-message.component.html',
-  styleUrls: ['./modal-message.component.css']
+    selector: 'app-modal-message',
+    imports: [],
+    templateUrl: './modal-message.component.html',
+    styleUrls: ['./modal-message.component.css']
 })
 export class ModalMessageComponent {
 

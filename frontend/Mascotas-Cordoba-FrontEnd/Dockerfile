@@ -1,7 +1,7 @@
 # ==============================================================================
 # Etapa 1: Compilación de la aplicación Angular (Producción)
 # ==============================================================================
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copiar manifiestos de paquetes

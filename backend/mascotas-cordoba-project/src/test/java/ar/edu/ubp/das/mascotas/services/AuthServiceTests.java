@@ -6,16 +6,21 @@ import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
 import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
 import ar.edu.ubp.das.mascotas.security.JwtTokenService;
+import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import ar.edu.ubp.das.mascotas.services.auth.AuthService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,69 +35,75 @@ class AuthServiceTests {
     @InjectMocks
     private AuthService authService;
 
+    @AfterEach
+    void tearDown() {
+        UserContextHolder.clear();
+    }
+
     @Test
-    void testLoginExitosoEmiteJwt() {
+    void testLoginExitosoEmiteJwtYEstableceContexto() {
         LoginRequestBE req = new LoginRequestBE();
-        req.setCuil("20-25999000-5");
+        req.setCuil(" 20-25999000-5 ");
         req.setClave("pass123");
 
         UsuarioRefugioBE usuario = new UsuarioRefugioBE();
         usuario.setIdCiudadano(3);
         usuario.setNombre("Roberto");
         usuario.setApellido("Sánchez");
+        usuario.setCuil("20-25999000-5");
         usuario.setPerfil("REFUGIO");
         usuario.setIdRefugio(1);
         usuario.setNombreRefugio("Refugio Patitas Felices");
 
-        when(authRepository.autenticarUsuario("20-25999000-5", "pass123"))
-                .thenReturn(Optional.of(usuario));
+        SesionUsuarioBE sesion = new SesionUsuarioBE();
+        sesion.setToken("hdr.pay.sig");
+        sesion.setCuil("20-25999000-5");
+        sesion.setPerfil("REFUGIO");
+
+        when(authRepository.autenticarUsuario("20-25999000-5", "pass123")).thenReturn(Optional.of(usuario));
         when(jwtTokenService.generarToken(usuario)).thenReturn("hdr.pay.sig");
+        when(jwtTokenService.construirSesion("hdr.pay.sig", usuario)).thenReturn(sesion);
 
         LoginResponseBE response = authService.login(req);
 
-        assertNotNull(response);
         assertEquals(1, response.getCodigoRespuesta());
         assertEquals("Usuario autenticado exitosamente", response.getMensajeRespuesta());
         assertEquals("hdr.pay.sig", response.getToken());
-        assertNotNull(response.getUsuario());
         assertEquals(1, response.getUsuario().getIdRefugio());
-        verify(jwtTokenService, times(1)).generarToken(usuario);
+        assertEquals("20-25999000-5", UserContextHolder.get().getCuil());
     }
 
     @Test
-    void testLoginDatosFaltantes() {
+    void testLoginDatosFaltantesEsBadRequest() {
         LoginRequestBE req = new LoginRequestBE();
         req.setCuil("");
         req.setClave("");
 
-        LoginResponseBE response = authService.login(req);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(req));
 
-        assertNotNull(response);
-        assertEquals(-1, response.getCodigoRespuesta());
-        assertTrue(response.getMensajeRespuesta().contains("obligatorios"));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("obligatorios"));
         verifyNoInteractions(authRepository, jwtTokenService);
     }
 
     @Test
-    void testLoginCredencialesInvalidas() {
+    void testLoginCredencialesInvalidasEsUnauthorized() {
         LoginRequestBE req = new LoginRequestBE();
         req.setCuil("20-99999999-9");
         req.setClave("claveErronea");
 
-        when(authRepository.autenticarUsuario("20-99999999-9", "claveErronea"))
-                .thenReturn(Optional.empty());
+        when(authRepository.autenticarUsuario("20-99999999-9", "claveErronea")).thenReturn(Optional.empty());
 
-        LoginResponseBE response = authService.login(req);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(req));
 
-        assertNotNull(response);
-        assertEquals(-1, response.getCodigoRespuesta());
-        assertTrue(response.getMensajeRespuesta().contains("inválidas"));
-        assertNull(response.getUsuario());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("Credenciales inválidas"));
         verify(jwtTokenService, never()).generarToken(any());
+        assertNull(UserContextHolder.get());
     }
 
     @Test
-    void testLogoutExitoso() {
+    void testLogoutExitosoRevocaElToken() {
         SesionUsuarioBE sesion = new SesionUsuarioBE();
         sesion.setToken("tok-soap-123");
         sesion.setIdCiudadano(5);
@@ -100,20 +111,28 @@ class AuthServiceTests {
 
         when(jwtTokenService.validarToken("tok-soap-123")).thenReturn(Optional.of(sesion));
 
-        LoginResponseBE response = authService.logout("tok-soap-123");
+        LoginResponseBE response = authService.logout(" tok-soap-123 ");
 
         assertEquals(1, response.getCodigoRespuesta());
         verify(jwtTokenService, times(1)).revocarToken("tok-soap-123");
     }
 
     @Test
-    void testLogoutTokenInvalido() {
+    void testLogoutTokenInvalidoEsUnauthorized() {
         when(jwtTokenService.validarToken("tok-invalido")).thenReturn(Optional.empty());
 
-        LoginResponseBE response = authService.logout("tok-invalido");
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.logout("tok-invalido"));
 
-        assertEquals(-1, response.getCodigoRespuesta());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
         verify(jwtTokenService, never()).revocarToken(any());
+    }
+
+    @Test
+    void testLogoutSinTokenEsBadRequest() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.logout("  "));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verifyNoInteractions(jwtTokenService);
     }
 
 }

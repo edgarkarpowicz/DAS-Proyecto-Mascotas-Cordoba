@@ -29,12 +29,14 @@ import java.util.Arrays;
  *
  * Un pedido REST pasa por el recurso y luego por el servicio: solo se persiste la
  * llamada externa (el recurso para REST, el servicio para SOAP) para no duplicar
- * registros. Con la mayor precedencia, el aspecto envuelve a la transacción del
+ * registros. Con precedencia mayor que la de @Transactional, el aspecto envuelve a la transacción del
  * servicio y registra después del commit o del rollback, así un error queda auditado.
  */
 @Aspect
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+// HIGHEST_PRECEDENCE + 2: debe quedar después de ExposeInvocationInterceptor
+// (HIGHEST_PRECEDENCE + 1), que necesitan los advices con JoinPoint.
+@Order(Ordered.HIGHEST_PRECEDENCE + 2)
 public class AuditAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditAspect.class);

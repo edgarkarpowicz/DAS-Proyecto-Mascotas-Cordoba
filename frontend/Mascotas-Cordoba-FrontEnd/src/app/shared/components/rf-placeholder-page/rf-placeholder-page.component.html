@@ -1,0 +1,29 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-placeholder">
+  <div class="banda-contenido">
+    <span class="rf-tag">{{ rfCodigo() }}</span>
+    <h1 id="titulo-placeholder" class="banda-titulo display">{{ titulo() }}</h1>
+    <p class="banda-bajada">{{ descripcion() }}</p>
+  </div>
+</section>
+
+<main class="placeholder-container">
+  <article class="placeholder-card">
+    <div class="card-header">
+      <span class="estado-pill">Módulo estructurado &middot; Pendiente de implementación</span>
+      <a routerLink="/" class="volver-link">&larr; Volver al portal</a>
+    </div>
+
+    <dl class="detalle-lista">
+      <div>
+        <dt>Acceso esperado</dt>
+        <dd>{{ perfilRequerido() }}</dd>
+      </div>
+      <div>
+        <dt>Contrato REST asociado</dt>
+        <dd><code>{{ endpointEsperado() }}</code></dd>
+      </div>
+    </dl>
+  </article>
+</main>

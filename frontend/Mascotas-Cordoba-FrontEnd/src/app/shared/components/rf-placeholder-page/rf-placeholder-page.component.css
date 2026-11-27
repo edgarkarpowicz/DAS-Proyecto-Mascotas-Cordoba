@@ -1,0 +1,105 @@
+.banda {
+  background-color: var(--verde-noche);
+  color: #ffffff;
+  padding: 2.25rem 1.5rem 2.5rem;
+}
+
+.banda-contenido {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.rf-tag {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: rgba(127, 211, 165, 0.16);
+  color: #7fd3a5;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 0.65rem;
+}
+
+.banda-titulo {
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  margin-bottom: 0.5rem;
+}
+
+.banda-bajada {
+  max-width: 60ch;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.placeholder-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.placeholder-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.25rem;
+}
+
+.estado-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  background: var(--girasol-tenue);
+  color: #6b470c;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.volver-link {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--verde-monte);
+}
+
+.volver-link:hover {
+  text-decoration: underline;
+}
+
+.detalle-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.detalle-lista dt {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.detalle-lista dd {
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.detalle-lista code {
+  background: var(--papel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.45rem;
+  font-size: 0.85rem;
+}

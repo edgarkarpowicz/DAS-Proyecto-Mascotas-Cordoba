@@ -128,7 +128,7 @@ public class PortalService implements IPortalService {
                             "MIS_MASCOTAS",
                             "Mis mascotas",
                             "Visualizá tus mascotas registradas y su estado general en el programa.",
-                            "/mis-mascotas",
+                            "/mascotas/mias",
                             false,
                             true,
                             "RF20"
@@ -137,7 +137,7 @@ public class PortalService implements IPortalService {
                             "CARNET_SANITARIO",
                             "Carnet sanitario digital",
                             "Generá y compartí el carnet oficial vigente con código de validación.",
-                            "/carnet",
+                            "/sanidad/carnet",
                             false,
                             true,
                             "RF10 / RF11"
@@ -148,7 +148,7 @@ public class PortalService implements IPortalService {
                             "REGISTRO_MASCOTAS",
                             "Registro único de mascotas",
                             "Consultá y enviá altas de mascotas sin NRM desde tu clínica.",
-                            "/veterinaria/mascotas",
+                            "/mascotas/registro",
                             false,
                             true,
                             "RF06"
@@ -157,7 +157,7 @@ public class PortalService implements IPortalService {
                             "INFO_SANITARIA",
                             "Información sanitaria",
                             "Consolidá vacunaciones, castraciones y prácticas del programa.",
-                            "/veterinaria/atenciones",
+                            "/sanidad/atenciones",
                             false,
                             true,
                             "RF09"

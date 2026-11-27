@@ -3,7 +3,7 @@ package ar.edu.ubp.das.mascotas.services;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginRequestBE;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioBE;
 import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
 import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
@@ -46,7 +46,7 @@ class AuthServiceTests {
         req.setCuil(" 20-25999000-5 ");
         req.setClave("pass123");
 
-        UsuarioRefugioBE usuario = new UsuarioRefugioBE();
+        UsuarioBE usuario = new UsuarioBE();
         usuario.setIdCiudadano(3);
         usuario.setNombre("Roberto");
         usuario.setApellido("Sánchez");

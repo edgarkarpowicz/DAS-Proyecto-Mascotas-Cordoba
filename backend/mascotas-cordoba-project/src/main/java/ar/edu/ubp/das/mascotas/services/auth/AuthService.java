@@ -3,7 +3,7 @@ package ar.edu.ubp.das.mascotas.services.auth;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginRequestBE;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioBE;
 import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
 import ar.edu.ubp.das.mascotas.security.JwtTokenService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
@@ -40,7 +40,7 @@ public class AuthService implements IAuthService {
                     "El CUIL y la clave son obligatorios para iniciar sesión");
         }
 
-        UsuarioRefugioBE usuario = authRepository.autenticarUsuario(
+        UsuarioBE usuario = authRepository.autenticarUsuario(
                 request.getCuil().trim(),
                 request.getClave().trim()
         ).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
@@ -63,7 +63,7 @@ public class AuthService implements IAuthService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                         "Token de sesión inválido, revocado o expirado"));
         jwtTokenService.revocarToken(limpio);
-        return LoginResponseBE.exitoso(null, sesion.toUsuarioRefugioBE());
+        return LoginResponseBE.exitoso(null, sesion.toUsuarioBE());
     }
 
     private static boolean esVacio(String valor) {

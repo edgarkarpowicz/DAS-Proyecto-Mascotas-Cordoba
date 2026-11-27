@@ -139,5 +139,57 @@ class AuthTokenFilterTests {
 
         assertNull(UserContextHolder.get());
     }
+
+    @Test
+    void testPublicoSinTokenContinuaComoAnonimoSin401() throws ServletException, IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/publico/portal");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        authTokenFilter.doFilter(request, response, filterChain);
+
+        verify(filterChain, times(1)).doFilter(request, response);
+        verifyNoInteractions(jwtTokenService, resolver);
+        assertNull(UserContextHolder.get());
+    }
+
+    @Test
+    void testPublicoConTokenValidoCargaYLimpiaSesion() throws ServletException, IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/publico/portal");
+        request.addHeader("Authorization", "Bearer tok-ciudadano");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        SesionUsuarioBE sesion = new SesionUsuarioBE();
+        sesion.setIdCiudadano(1);
+        sesion.setPerfil("CIUDADANO");
+        when(jwtTokenService.validarToken("tok-ciudadano")).thenReturn(Optional.of(sesion));
+
+        AtomicReference<SesionUsuarioBE> capturada = new AtomicReference<>();
+        doAnswer(inv -> {
+            capturada.set(UserContextHolder.get());
+            return null;
+        }).when(filterChain).doFilter(request, response);
+
+        authTokenFilter.doFilter(request, response, filterChain);
+
+        assertNotNull(capturada.get());
+        assertEquals("CIUDADANO", capturada.get().getPerfil());
+        verifyNoInteractions(resolver);
+        assertNull(UserContextHolder.get());
+    }
+
+    @Test
+    void testPublicoConTokenInvalidoContinuaComoAnonimoSinLanzar401() throws ServletException, IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/publico/portal");
+        request.addHeader("Authorization", "Bearer tok-expirado");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        when(jwtTokenService.validarToken("tok-expirado")).thenReturn(Optional.empty());
+
+        authTokenFilter.doFilter(request, response, filterChain);
+
+        verify(filterChain, times(1)).doFilter(request, response);
+        verifyNoInteractions(resolver);
+        assertNull(UserContextHolder.get());
+    }
 }
 

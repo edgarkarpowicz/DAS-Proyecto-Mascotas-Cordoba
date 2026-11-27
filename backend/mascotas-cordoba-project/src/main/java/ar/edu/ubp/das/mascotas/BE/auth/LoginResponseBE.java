@@ -5,19 +5,19 @@ public class LoginResponseBE {
     private int codigoRespuesta;
     private String mensajeRespuesta;
     private String token;
-    private UsuarioRefugioBE usuario;
+    private UsuarioBE usuario;
 
     public LoginResponseBE() {
     }
 
-    public LoginResponseBE(int codigoRespuesta, String mensajeRespuesta, String token, UsuarioRefugioBE usuario) {
+    public LoginResponseBE(int codigoRespuesta, String mensajeRespuesta, String token, UsuarioBE usuario) {
         this.codigoRespuesta = codigoRespuesta;
         this.mensajeRespuesta = mensajeRespuesta;
         this.token = token;
         this.usuario = usuario;
     }
 
-    public static LoginResponseBE exitoso(String token, UsuarioRefugioBE usuario) {
+    public static LoginResponseBE exitoso(String token, UsuarioBE usuario) {
         return new LoginResponseBE(1, "Usuario autenticado exitosamente", token, usuario);
     }
 
@@ -49,11 +49,11 @@ public class LoginResponseBE {
         this.token = token;
     }
 
-    public UsuarioRefugioBE getUsuario() {
+    public UsuarioBE getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(UsuarioRefugioBE usuario) {
+    public void setUsuario(UsuarioBE usuario) {
         this.usuario = usuario;
     }
 

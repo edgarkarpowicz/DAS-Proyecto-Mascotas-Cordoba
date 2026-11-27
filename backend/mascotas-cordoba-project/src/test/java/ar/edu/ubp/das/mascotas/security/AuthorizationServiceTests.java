@@ -19,6 +19,16 @@ class AuthorizationServiceTests {
     }
 
     @Test
+    void testGetOptionalAuthenticatedRetornaVacioSiNoHaySesion() {
+        UserContextHolder.clear();
+        assertTrue(authorizationService.getOptionalAuthenticated().isEmpty());
+
+        UserContextHolder.set(buildSesion("CIUDADANO", null));
+        assertTrue(authorizationService.getOptionalAuthenticated().isPresent());
+        assertEquals("CIUDADANO", authorizationService.getOptionalAuthenticated().get().getPerfil());
+    }
+
+    @Test
     void testRequireAuthenticatedSinSesionLanza401() {
         UserContextHolder.clear();
 

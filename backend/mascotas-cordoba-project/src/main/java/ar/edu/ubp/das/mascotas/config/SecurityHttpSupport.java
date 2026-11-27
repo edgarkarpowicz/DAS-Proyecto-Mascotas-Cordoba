@@ -33,6 +33,10 @@ final class SecurityHttpSupport {
         return requestPath.startsWith("/services") || requestPath.startsWith("/uploads");
     }
 
+    static boolean isPublicApiEndpoint(String requestPath) {
+        return "/publico".equals(requestPath) || requestPath.startsWith("/publico/");
+    }
+
     static Optional<String> extractBearerToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         if (header == null || header.isBlank()) {

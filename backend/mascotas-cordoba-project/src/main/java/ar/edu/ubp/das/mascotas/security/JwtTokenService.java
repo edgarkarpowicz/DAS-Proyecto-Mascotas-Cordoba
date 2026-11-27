@@ -1,7 +1,7 @@
 package ar.edu.ubp.das.mascotas.security;
 
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioBE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -59,7 +59,7 @@ public class JwtTokenService {
         this.clock = clock;
     }
 
-    public String generarToken(UsuarioRefugioBE usuario) {
+    public String generarToken(UsuarioBE usuario) {
         if (usuario == null || usuario.getIdCiudadano() == null) {
             throw new IllegalArgumentException("Los datos del usuario autenticado son obligatorios para generar JWT");
         }
@@ -90,20 +90,8 @@ public class JwtTokenService {
         return signingInput + "." + signatureB64;
     }
 
-    public SesionUsuarioBE construirSesion(String token, UsuarioRefugioBE usuario) {
-        SesionUsuarioBE sesion = new SesionUsuarioBE();
-        sesion.setToken(token);
-        sesion.setIdCiudadano(usuario.getIdCiudadano());
-        sesion.setApellido(usuario.getApellido());
-        sesion.setNombre(usuario.getNombre());
-        sesion.setCuil(usuario.getCuil());
-        sesion.setCorreo(usuario.getCorreo());
-        sesion.setPerfil(usuario.getPerfil() != null ? usuario.getPerfil().trim().toUpperCase() : null);
-        sesion.setIdRefugio(usuario.getIdRefugio());
-        sesion.setNombreRefugio(usuario.getNombreRefugio());
-        sesion.setIdVeterinaria(usuario.getIdVeterinaria());
-        sesion.setNombreVeterinaria(usuario.getNombreVeterinaria());
-        return sesion;
+    public SesionUsuarioBE construirSesion(String token, UsuarioBE usuario) {
+        return SesionUsuarioBE.fromUsuario(token, usuario);
     }
 
     public Optional<SesionUsuarioBE> validarToken(String token) {

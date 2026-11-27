@@ -1,6 +1,12 @@
 package ar.edu.ubp.das.mascotas.BE.auth;
 
-public class UsuarioRefugioBE {
+import java.util.Optional;
+
+/**
+ * Representación unificada de cualquier usuario autenticado de la plataforma
+ * (CIUDADANO, REFUGIO, VETERINARIA o MUNICIPALIDAD) para RF15 y sus módulos.
+ */
+public class UsuarioBE {
 
     private Integer idCiudadano;
     private String apellido;
@@ -15,7 +21,7 @@ public class UsuarioRefugioBE {
     private Integer idVeterinaria;
     private String nombreVeterinaria;
 
-    public UsuarioRefugioBE() {
+    public UsuarioBE() {
     }
 
     public Integer getIdCiudadano() {
@@ -114,16 +120,42 @@ public class UsuarioRefugioBE {
         this.nombreVeterinaria = nombreVeterinaria;
     }
 
+    public Optional<PerfilUsuario> resolvePerfil() {
+        return PerfilUsuario.fromString(perfil);
+    }
+
+    public boolean esPerfil(PerfilUsuario esperado) {
+        return esperado != null && esperado.name().equalsIgnoreCase(perfil);
+    }
+
+    protected void copyFieldsFrom(UsuarioBE source) {
+        if (source == null) {
+            return;
+        }
+        setIdCiudadano(source.getIdCiudadano());
+        setApellido(source.getApellido());
+        setNombre(source.getNombre());
+        setCuil(source.getCuil());
+        setCorreo(source.getCorreo());
+        setPerfil(source.getPerfil() != null ? source.getPerfil().trim().toUpperCase() : null);
+        setIdRefugio(source.getIdRefugio());
+        setNombreRefugio(source.getNombreRefugio());
+        setRazonSocialRefugio(source.getRazonSocialRefugio());
+        setHabilitacionMunicipal(source.getHabilitacionMunicipal());
+        setIdVeterinaria(source.getIdVeterinaria());
+        setNombreVeterinaria(source.getNombreVeterinaria());
+    }
+
     @Override
     public String toString() {
-        return "UsuarioRefugioBE{" +
+        return "UsuarioBE{" +
                 "idCiudadano=" + idCiudadano +
                 ", nombre='" + nombre + '\'' +
                 ", apellido='" + apellido + '\'' +
                 ", cuil='" + cuil + '\'' +
                 ", perfil='" + perfil + '\'' +
                 ", idRefugio=" + idRefugio +
-                ", nombreRefugio='" + nombreRefugio + '\'' +
+                ", idVeterinaria=" + idVeterinaria +
                 '}';
     }
 }

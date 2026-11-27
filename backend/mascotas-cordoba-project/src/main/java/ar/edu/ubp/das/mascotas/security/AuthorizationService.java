@@ -7,12 +7,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Reglas centralizadas de identificación, control por perfil y aislamiento por contexto de sesión (RF15).
  */
 @Service
 public class AuthorizationService {
+
+    public Optional<SesionUsuarioBE> getOptionalAuthenticated() {
+        SesionUsuarioBE sesion = UserContextHolder.get();
+        if (sesion == null || sesion.getIdCiudadano() == null || sesion.getPerfil() == null) {
+            return Optional.empty();
+        }
+        return Optional.of(sesion);
+    }
 
     public SesionUsuarioBE requireAuthenticated() {
         SesionUsuarioBE sesion = UserContextHolder.get();

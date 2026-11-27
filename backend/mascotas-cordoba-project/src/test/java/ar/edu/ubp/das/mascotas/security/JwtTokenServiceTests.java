@@ -1,7 +1,7 @@
 package ar.edu.ubp.das.mascotas.security;
 
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioBE;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -18,8 +18,8 @@ class JwtTokenServiceTests {
 
     private static final String TEST_SECRET = "test-jwt-secret-key-mascotas-cba";
 
-    private UsuarioRefugioBE buildRefugioUser() {
-        UsuarioRefugioBE usuario = new UsuarioRefugioBE();
+    private UsuarioBE buildRefugioUser() {
+        UsuarioBE usuario = new UsuarioBE();
         usuario.setIdCiudadano(3);
         usuario.setNombre("Roberto");
         usuario.setApellido("Sánchez");
@@ -34,7 +34,7 @@ class JwtTokenServiceTests {
     @Test
     void testGenerarYValidarJwtRestauraIdentidadYContexto() {
         JwtTokenService service = new JwtTokenService(TEST_SECRET, 60);
-        UsuarioRefugioBE usuario = buildRefugioUser();
+        UsuarioBE usuario = buildRefugioUser();
 
         String jwt = service.generarToken(usuario);
         assertEquals(3, jwt.split("\\.").length);

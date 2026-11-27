@@ -52,6 +52,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if (SecurityHttpSupport.isPublicApiEndpoint(requestPath)) {
+                SecurityHttpSupport.extractBearerToken(request)
+                        .flatMap(jwtTokenService::validarToken)
+                        .ifPresent(UserContextHolder::set);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             Optional<String> tokenOpt = SecurityHttpSupport.extractBearerToken(request);
             if (tokenOpt.isEmpty()) {
                 throw new ResponseStatusException(

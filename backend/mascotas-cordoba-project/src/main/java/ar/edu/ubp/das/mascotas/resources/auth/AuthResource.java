@@ -3,7 +3,7 @@ package ar.edu.ubp.das.mascotas.resources.auth;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginRequestBE;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioBE;
 import ar.edu.ubp.das.mascotas.security.AuthorizationService;
 import ar.edu.ubp.das.mascotas.services.auth.IAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +41,9 @@ public class AuthResource {
      * RF15 - Retorna la identidad y perfil del usuario autenticado por el token Bearer actual.
      */
     @GetMapping("/me")
-    public ResponseEntity<UsuarioRefugioBE> getUsuarioActual() {
+    public ResponseEntity<UsuarioBE> getUsuarioActual() {
         SesionUsuarioBE sesion = authorizationService.requireAuthenticated();
-        return ResponseEntity.ok(sesion.toUsuarioRefugioBE());
+        return ResponseEntity.ok(sesion.toUsuarioBE());
     }
 
     /**

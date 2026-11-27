@@ -3,7 +3,7 @@ package ar.edu.ubp.das.mascotas.aspects;
 import ar.edu.ubp.das.mascotas.BE.adopciones.AdministrarPublicacionResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioBE;
 import ar.edu.ubp.das.mascotas.repositories.auditoria.AuditoriaRepository;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import org.aspectj.lang.JoinPoint;
@@ -141,14 +141,7 @@ public class AuditAspect {
         }
         Object body = unwrapBody(result);
         if (body instanceof LoginResponseBE loginResp && loginResp.getUsuario() != null) {
-            UsuarioRefugioBE u = loginResp.getUsuario();
-            SesionUsuarioBE transientSesion = new SesionUsuarioBE();
-            transientSesion.setIdCiudadano(u.getIdCiudadano());
-            transientSesion.setCuil(u.getCuil());
-            transientSesion.setPerfil(u.getPerfil());
-            transientSesion.setIdRefugio(u.getIdRefugio());
-            transientSesion.setIdVeterinaria(u.getIdVeterinaria());
-            return transientSesion;
+            return SesionUsuarioBE.fromUsuario(null, loginResp.getUsuario());
         }
         return null;
     }

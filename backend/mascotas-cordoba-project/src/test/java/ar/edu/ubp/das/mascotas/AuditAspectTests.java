@@ -3,7 +3,7 @@ package ar.edu.ubp.das.mascotas;
 import ar.edu.ubp.das.mascotas.BE.adopciones.AdministrarPublicacionResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioBE;
 import ar.edu.ubp.das.mascotas.aspects.AuditAspect;
 import ar.edu.ubp.das.mascotas.repositories.auditoria.AuditoriaRepository;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
@@ -61,7 +61,7 @@ class AuditAspectTests {
     @Test
     void testRegistraIdentidadDesdeLoginResponse() {
         UserContextHolder.clear();
-        UsuarioRefugioBE usuario = new UsuarioRefugioBE();
+        UsuarioBE usuario = new UsuarioBE();
         usuario.setIdCiudadano(6);
         usuario.setCuil("27-22333444-1");
         usuario.setPerfil("MUNICIPALIDAD");

@@ -3,7 +3,7 @@ package ar.edu.ubp.das.mascotas;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginRequestBE;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
-import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
+import ar.edu.ubp.das.mascotas.BE.auth.UsuarioBE;
 import ar.edu.ubp.das.mascotas.resources.auth.AuthResource;
 import ar.edu.ubp.das.mascotas.security.AuthorizationService;
 import ar.edu.ubp.das.mascotas.services.auth.IAuthService;
@@ -39,7 +39,7 @@ class AuthResourceTests {
 
     @Test
     void testLoginDelegaEnElServicio() {
-        UsuarioRefugioBE usuario = new UsuarioRefugioBE();
+        UsuarioBE usuario = new UsuarioBE();
         usuario.setNombre("Roberto");
         usuario.setPerfil("REFUGIO");
         usuario.setIdRefugio(1);
@@ -76,7 +76,7 @@ class AuthResourceTests {
         sesion.setPerfil("MUNICIPALIDAD");
         when(authorizationService.requireAuthenticated()).thenReturn(sesion);
 
-        ResponseEntity<UsuarioRefugioBE> response = authResource.getUsuarioActual();
+        ResponseEntity<UsuarioBE> response = authResource.getUsuarioActual();
 
         assertNotNull(response.getBody());
         assertEquals("MUNICIPALIDAD", response.getBody().getPerfil());

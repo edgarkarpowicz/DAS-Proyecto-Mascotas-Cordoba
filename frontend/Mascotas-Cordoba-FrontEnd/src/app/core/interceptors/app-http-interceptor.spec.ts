@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, HttpContext, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { appHttpInterceptor } from './app-http-interceptor';
 import { LoaderService } from '../services/loader-service';
 import { AuthSessionService } from '../services/auth-session.service';
-import { IUsuarioRefugio } from '../api/models/i-usuario-refugio';
+import { SKIP_GLOBAL_LOADER } from '../http/http-context-tokens';
+import { IUsuario } from '../api/models/i-usuario';
 import { environment } from '../../../environments/environment';
 
 describe('appHttpInterceptor', () => {
@@ -15,7 +16,7 @@ describe('appHttpInterceptor', () => {
   let authSession: AuthSessionService;
   let router: Router;
 
-  const mockUser: IUsuarioRefugio = {
+  const mockUser: IUsuario = {
     idCiudadano: 3,
     apellido: 'Sánchez',
     nombre: 'Roberto',
@@ -65,6 +66,16 @@ describe('appHttpInterceptor', () => {
     expect(loaderService.loading()).toBeFalse();
   });
 
+  it('should skip global loader when SKIP_GLOBAL_LOADER token is true', () => {
+    const context = new HttpContext().set(SKIP_GLOBAL_LOADER, true);
+    http.get('/publico/asistente', { context }).subscribe();
+
+    expect(loaderService.loading()).toBeFalse();
+    const req = httpMock.expectOne('/publico/asistente');
+    req.flush({ ok: true });
+    expect(loaderService.loading()).toBeFalse();
+  });
+
   it('should not attach Authorization header on /auth/login even if session exists', () => {
     authSession.setSession(mockUser, 'stale-tok');
     http.post('/auth/login', {}).subscribe();
@@ -92,6 +103,23 @@ describe('appHttpInterceptor', () => {
     expect(authSession.isAuthenticated()).toBeFalse();
     expect(authSession.token()).toBeNull();
     expect(navSpy).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('should clear session without redirecting on 401 from /publico/ endpoints', () => {
+    authSession.setSession(mockUser, 'stale-tok');
+    const navSpy = spyOn(router, 'navigate');
+
+    http.get('/publico/portal').subscribe({
+      error: () => {
+        // esperado
+      }
+    });
+
+    const req = httpMock.expectOne('/publico/portal');
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(authSession.isAuthenticated()).toBeFalse();
+    expect(navSpy).not.toHaveBeenCalled();
   });
 
   it('should clear session without redirecting on 401 from /auth/me during startup check', () => {
@@ -126,4 +154,3 @@ describe('appHttpInterceptor', () => {
     expect(loaderService.loading()).toBeFalse();
   });
 });
-

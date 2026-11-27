@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { getHomeRouteForPerfil } from '../config/perfil-routes';
 import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = (route) => {
@@ -12,7 +13,7 @@ export const authGuard: CanActivateFn = (route) => {
 
   const perfilesPermitidos = route?.data?.['perfilesPermitidos'] as string[] | undefined;
   if (perfilesPermitidos && perfilesPermitidos.length > 0 && !authService.hasPerfil(...perfilesPermitidos)) {
-    return router.createUrlTree(['/login']);
+    return router.createUrlTree([getHomeRouteForPerfil(authService.perfil())]);
   }
 
   return true;

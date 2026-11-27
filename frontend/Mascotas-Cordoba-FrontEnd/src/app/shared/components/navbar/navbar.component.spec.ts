@@ -3,14 +3,14 @@ import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { NavbarComponent } from './navbar.component';
 import { AuthService } from '../../../core/services/auth.service';
-import { IUsuarioRefugio } from '../../../core/api/models/i-usuario-refugio';
+import { IUsuario } from '../../../core/api/models/i-usuario';
 
 describe('NavbarComponent', () => {
   let fixture: ComponentFixture<NavbarComponent>;
   let component: NavbarComponent;
   let logoutSpy: jasmine.Spy;
 
-  const mockUser = signal<IUsuarioRefugio | null>({
+  const mockUser = signal<IUsuario | null>({
     idCiudadano: 3,
     apellido: 'Sánchez',
     nombre: 'Roberto',
@@ -22,6 +22,16 @@ describe('NavbarComponent', () => {
   });
 
   beforeEach(async () => {
+    mockUser.set({
+      idCiudadano: 3,
+      apellido: 'Sánchez',
+      nombre: 'Roberto',
+      cuil: '20-25999000-5',
+      correo: 'roberto@patitas.org',
+      perfil: 'REFUGIO',
+      idRefugio: 1,
+      nombreRefugio: 'Refugio Patitas Felices'
+    });
     logoutSpy = jasmine.createSpy('logout');
 
     await TestBed.configureTestingModule({
@@ -56,5 +66,29 @@ describe('NavbarComponent', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     fixture.detectChanges();
     expect(component.showDropdown).toBeFalse();
+  });
+
+  it('should filter navigation links by profile and show login link when anonymous', () => {
+    const linksRefugio = Array.from(fixture.nativeElement.querySelectorAll('.nav-link'))
+      .map((el: unknown) => (el as HTMLElement).textContent?.trim());
+    expect(linksRefugio).toEqual(['Portal', 'Mis publicaciones']);
+
+    mockUser.set({
+      idCiudadano: 1,
+      apellido: 'Pérez',
+      nombre: 'Juan',
+      cuil: '20-28555666-3',
+      correo: 'juan@gmail.com',
+      perfil: 'CIUDADANO'
+    });
+    fixture.detectChanges();
+    const linksCiudadano = Array.from(fixture.nativeElement.querySelectorAll('.nav-link'))
+      .map((el: unknown) => (el as HTMLElement).textContent?.trim());
+    expect(linksCiudadano).toEqual(['Portal']);
+
+    mockUser.set(null);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.user-btn')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.login-link-btn')?.textContent?.trim()).toBe('Iniciar sesión');
   });
 });

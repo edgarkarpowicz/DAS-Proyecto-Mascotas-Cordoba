@@ -1,45 +1,64 @@
 <header class="navbar">
   <div class="navbar-container">
 
-    <a routerLink="/publicaciones" class="brand-link" aria-label="Mascotas Córdoba, ir a mis publicaciones">
-      <svg class="brand-heart" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-      </svg>
-      <span class="brand-text">Mascotas Córdoba</span>
-    </a>
-
-    <div class="user-menu-container">
-      <button
-        type="button"
-        class="user-btn"
-        (click)="toggleDropdown()"
-        [attr.aria-expanded]="showDropdown"
-        aria-haspopup="menu"
-      >
-        <span class="user-avatar" aria-hidden="true">{{ iniciales() }}</span>
-        <span class="user-texts">
-          <span class="user-name">{{ currentUser()?.nombre }} {{ currentUser()?.apellido }}</span>
-          @if (currentUser()?.nombreRefugio) {
-            <span class="user-refugio">{{ currentUser()?.nombreRefugio }}</span>
-          }
-        </span>
-        <svg class="chevron-icon" [class.open]="showDropdown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+    <div class="navbar-left">
+      <a routerLink="/" class="brand-link" aria-label="Mascotas Córdoba, ir al portal principal">
+        <svg class="brand-heart" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
         </svg>
-      </button>
+        <span class="brand-text">Mascotas Córdoba</span>
+      </a>
 
-      @if (showDropdown) {
-        <div class="dropdown-menu" role="menu">
-          <p class="dropdown-cuil">CUIL {{ currentUser()?.cuil }}</p>
-          <button type="button" class="dropdown-item" role="menuitem" (click)="logout()">
-            <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>Cerrar sesión</span>
-          </button>
-        </div>
-      }
+      <nav class="navbar-links" aria-label="Navegación principal">
+        @for (item of navItems(); track item.route) {
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.exact }"
+            class="nav-link"
+          >
+            {{ item.label }}
+          </a>
+        }
+      </nav>
     </div>
+
+    @if (currentUser(); as usuario) {
+      <div class="user-menu-container">
+        <button
+          type="button"
+          class="user-btn"
+          (click)="toggleDropdown()"
+          [attr.aria-expanded]="showDropdown"
+          aria-haspopup="menu"
+        >
+          <span class="user-avatar" aria-hidden="true">{{ iniciales() }}</span>
+          <span class="user-texts">
+            <span class="user-name">{{ usuario.nombre }} {{ usuario.apellido }}</span>
+            @if (subtituloUsuario(); as subtitulo) {
+              <span class="user-refugio">{{ subtitulo }}</span>
+            }
+          </span>
+          <svg class="chevron-icon" [class.open]="showDropdown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        @if (showDropdown) {
+          <div class="dropdown-menu" role="menu">
+            <p class="dropdown-cuil">{{ usuario.perfil }} &middot; CUIL {{ usuario.cuil }}</p>
+            <button type="button" class="dropdown-item" role="menuitem" (click)="logout()">
+              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
+      <a routerLink="/login" class="login-link-btn">Iniciar sesión</a>
+    }
 
   </div>
 </header>

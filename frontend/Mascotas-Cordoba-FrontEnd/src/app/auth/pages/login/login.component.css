@@ -77,6 +77,18 @@
   max-width: 380px;
 }
 
+.volver-portal-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--verde-monte);
+}
+
+.volver-portal-link:hover {
+  text-decoration: underline;
+}
+
 .acceso-titulo {
   font-size: 2rem;
   color: var(--verde-noche);

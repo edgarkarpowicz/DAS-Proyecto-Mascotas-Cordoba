@@ -1,0 +1,132 @@
+<app-navbar></app-navbar>
+
+<section class="hero" aria-labelledby="titulo-portal">
+  <div class="hero-contenido">
+
+    <div class="hero-texto">
+      <p class="hero-etiqueta">Municipalidad de Córdoba &middot; Mascotas Córdoba</p>
+      <h1 id="titulo-portal" class="hero-titulo display">{{ info().nombrePrograma }}</h1>
+      <p class="hero-bajada">{{ info().descripcionPrograma }}</p>
+
+      <div class="hero-acciones">
+        @if (!estaAutenticado()) {
+          <a routerLink="/login" class="btn-primario">Iniciar sesión</a>
+        } @else if (servicioPrincipalDisponible(); as principal) {
+          <a [routerLink]="principal.ruta" class="btn-primario">{{ principal.titulo }}</a>
+        } @else {
+          <span class="sesion-badge">
+            Sesión activa como {{ usuarioActual()?.perfil }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="resumen-grid" aria-label="Indicadores del programa">
+      <div class="resumen-card">
+        <span class="resumen-valor display">{{ info().resumen.publicacionesActivas }}</span>
+        <span class="resumen-label">Adopciones activas</span>
+      </div>
+      <div class="resumen-card">
+        <span class="resumen-valor display">{{ info().resumen.veterinariasHabilitadas }}</span>
+        <span class="resumen-label">Veterinarias adheridas</span>
+      </div>
+      <div class="resumen-card">
+        <span class="resumen-valor display">{{ info().resumen.refugiosAdheridos }}</span>
+        <span class="resumen-label">Refugios adheridos</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<main class="portal-container">
+
+  @if (sinDatosServidor()) {
+    <div class="aviso-conexion" role="status">
+      No se pudieron cargar los indicadores en vivo del servidor. Mostrando los accesos generales del programa.
+    </div>
+  }
+
+  @if (estaAutenticado()) {
+    <section class="bloque-servicios" aria-labelledby="titulo-perfil">
+      <div class="bloque-encabezado">
+        <div>
+          <h2 id="titulo-perfil" class="bloque-titulo display">Servicios habilitados para tu perfil</h2>
+          <p class="bloque-bajada">
+            @if (usuarioActual(); as u) {
+              Hola {{ u.nombre }} {{ u.apellido }} &middot; Perfil {{ u.perfil }}
+              @if (u.nombreRefugio) { ({{ u.nombreRefugio }}) }
+              @if (u.nombreVeterinaria) { ({{ u.nombreVeterinaria }}) }
+            }
+          </p>
+        </div>
+      </div>
+
+      @if (serviciosPerfil().length > 0) {
+        <div class="servicios-grid">
+          @for (servicio of serviciosPerfil(); track servicio.codigo) {
+            <article class="servicio-card" [class.disponible]="servicio.disponible">
+              <div class="servicio-meta">
+                <span class="rf-badge">{{ servicio.rfReferencia }}</span>
+                @if (servicio.disponible) {
+                  <span class="estado-badge activo">Disponible</span>
+                } @else {
+                  <span class="estado-badge proximo">Próximamente</span>
+                }
+              </div>
+
+              <h3 class="servicio-titulo">{{ servicio.titulo }}</h3>
+              <p class="servicio-desc">{{ servicio.descripcion }}</p>
+
+              <div class="servicio-footer">
+                @if (servicio.disponible) {
+                  <a [routerLink]="servicio.ruta" class="servicio-cta">Ir al módulo &rarr;</a>
+                } @else {
+                  <span class="servicio-pendiente">En desarrollo</span>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <p class="bloque-bajada">No hay módulos adicionales asignados a tu perfil en esta versión.</p>
+      }
+    </section>
+  }
+
+  <section class="bloque-servicios" aria-labelledby="titulo-publicos">
+    <div class="bloque-encabezado">
+      <div>
+        <h2 id="titulo-publicos" class="bloque-titulo display">Información y servicios públicos</h2>
+        <p class="bloque-bajada">Accesos abiertos a toda la comunidad sin requerir inicio de sesión.</p>
+      </div>
+    </div>
+
+    <div class="servicios-grid">
+      @for (servicio of info().serviciosPublicos; track servicio.codigo) {
+        <article class="servicio-card" [class.disponible]="servicio.disponible">
+          <div class="servicio-meta">
+            <span class="rf-badge">{{ servicio.rfReferencia }}</span>
+            @if (servicio.disponible) {
+              <span class="estado-badge activo">Disponible</span>
+            } @else {
+              <span class="estado-badge proximo">Próximamente</span>
+            }
+          </div>
+
+          <h3 class="servicio-titulo">{{ servicio.titulo }}</h3>
+          <p class="servicio-desc">{{ servicio.descripcion }}</p>
+
+          <div class="servicio-footer">
+            @if (servicio.disponible) {
+              <a [routerLink]="servicio.ruta" class="servicio-cta">Explorar &rarr;</a>
+            } @else {
+              <span class="servicio-pendiente">Disponible en próximas entregas</span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+</main>

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
 import { AuthResource } from '../api/auth-resource';
-import { PerfilUsuario } from '../api/models/i-usuario-refugio';
+import { PerfilUsuario } from '../api/models/i-usuario';
 import { ILoginResponse } from '../api/models/i-login-response';
 import { AuthSessionService } from './auth-session.service';
 
@@ -20,6 +20,7 @@ export class AuthService {
   readonly perfil = this._session.perfil;
   readonly isAuthenticated = this._session.isAuthenticated;
   readonly idRefugio = this._session.idRefugio;
+  readonly idVeterinaria = this._session.idVeterinaria;
 
   hasPerfil(...perfiles: Array<PerfilUsuario | string>): boolean {
     return this._session.hasPerfil(...perfiles);
@@ -56,23 +57,23 @@ export class AuthService {
     );
   }
 
-  logout(redirectToLogin = true): void {
+  logout(redirectTo: string | null = '/'): void {
     const tokenActual = this._session.token();
     if (!tokenActual) {
-      this.finalizarLogout(redirectToLogin);
+      this.finalizarLogout(redirectTo);
       return;
     }
 
     this._authResource.logout().pipe(
       catchError(() => of(null)),
-      finalize(() => this.finalizarLogout(redirectToLogin))
+      finalize(() => this.finalizarLogout(redirectTo))
     ).subscribe();
   }
 
-  private finalizarLogout(redirectToLogin: boolean): void {
+  private finalizarLogout(redirectTo: string | null): void {
     this._session.clearSession();
-    if (redirectToLogin) {
-      this._router.navigate(['/login']);
+    if (redirectTo) {
+      this._router.navigate([redirectTo]);
     }
   }
 

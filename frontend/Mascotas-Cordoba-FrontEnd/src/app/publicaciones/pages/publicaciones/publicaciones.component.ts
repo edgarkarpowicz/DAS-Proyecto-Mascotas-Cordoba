@@ -114,8 +114,6 @@ export class PublicacionesComponent implements HasChangesComponent {
       injector: this._injector,
       width: '600px',
       maxWidth: 'calc(100vw - 1rem)',
-      panelClass: 'dialogo-app',
-      backdropClass: 'fondo-dialogo',
       disableClose: true,
       autoFocus: false
     });
@@ -135,10 +133,7 @@ export class PublicacionesComponent implements HasChangesComponent {
         data: { publicacion: pub },
         width: '680px',
         maxWidth: 'calc(100vw - 1rem)',
-        panelClass: 'dialogo-app',
-        backdropClass: 'fondo-dialogo',
-        disableClose: true,
-        autoFocus: 'dialog'
+        disableClose: true
       }
     ).afterClosed().subscribe(actualizada => {
       if (actualizada) {
@@ -173,7 +168,11 @@ export class PublicacionesComponent implements HasChangesComponent {
   }
 
   private recargarPublicaciones(): void {
-    this._pubResource.getPublicacionesPorRefugio(this._authService.idRefugio())
+    const idRefugio = this._authService.idRefugio();
+    if (idRefugio == null) {
+      return;
+    }
+    this._pubResource.getPublicacionesPorRefugio(idRefugio)
       .subscribe(actualizadas => this.publicaciones.set(actualizadas));
   }
 

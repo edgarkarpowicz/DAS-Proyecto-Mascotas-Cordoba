@@ -27,11 +27,7 @@ export class AppMessageService {
   showMessage(message: IMessage): void {
     this._dialog.open(MessageDialogComponent, {
       data: message,
-      width: '440px',
-      maxWidth: 'calc(100vw - 2rem)',
-      panelClass: 'dialogo-app',
-      backdropClass: 'fondo-dialogo',
-      autoFocus: 'dialog'
+      width: '440px'
     });
   }
 

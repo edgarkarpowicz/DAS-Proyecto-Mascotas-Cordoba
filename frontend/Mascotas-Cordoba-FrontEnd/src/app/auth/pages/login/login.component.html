@@ -19,8 +19,9 @@
 
   <section class="acceso" aria-labelledby="titulo-ingreso">
     <div class="acceso-contenido">
-      <h1 id="titulo-ingreso" class="acceso-titulo display">Ingresá al refugio</h1>
-      <p class="acceso-bajada">Usá el CUIL y la contraseña de tu cuenta de refugio.</p>
+      <a routerLink="/" class="volver-portal-link">&larr; Volver al portal público</a>
+      <h1 id="titulo-ingreso" class="acceso-titulo display">Ingresar al portal</h1>
+      <p class="acceso-bajada">Usá tu CUIL y contraseña de ciudadano, refugio, veterinaria o municipio.</p>
 
       @if (error(); as mensaje) {
         <div class="error-banner" role="alert">{{ mensaje }}</div>

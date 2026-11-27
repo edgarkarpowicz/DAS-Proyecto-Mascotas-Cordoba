@@ -23,11 +23,7 @@ export class ConfirmDialogService {
   ): Observable<boolean> {
     const ref = this._dialog.open<ConfirmDialogComponent, IConfirmDialogData, boolean>(ConfirmDialogComponent, {
       data: { title, message, confirmText, cancelText: 'Cancelar' },
-      width: '420px',
-      maxWidth: 'calc(100vw - 2rem)',
-      panelClass: 'dialogo-app',
-      backdropClass: 'fondo-dialogo',
-      autoFocus: 'dialog'
+      width: '420px'
     });
     return ref.afterClosed().pipe(map(result => result === true));
   }

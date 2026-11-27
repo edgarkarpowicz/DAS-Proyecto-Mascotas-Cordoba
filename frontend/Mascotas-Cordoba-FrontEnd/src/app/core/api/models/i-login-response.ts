@@ -1,10 +1,9 @@
-import { IUsuarioRefugio } from './i-usuario-refugio';
+import { IUsuario } from './i-usuario';
 
 export interface ILoginResponse {
   codigoRespuesta: number;
   mensajeRespuesta?: string;
   mensaje?: string;
   token?: string;
-  usuario?: IUsuarioRefugio;
+  usuario?: IUsuario;
 }
-

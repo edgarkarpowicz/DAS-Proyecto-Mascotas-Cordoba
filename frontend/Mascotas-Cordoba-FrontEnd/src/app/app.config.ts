@@ -1,6 +1,7 @@
 import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer } from '@angular/core';
 import { provideRouter, Router, withComponentInputBinding, withNavigationErrorHandler } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { appHttpInterceptor } from './core/interceptors/app-http-interceptor';
@@ -16,7 +17,7 @@ export const appConfig: ApplicationConfig = {
         const router = inject(Router);
         if (!router.navigated) {
           queueMicrotask(() => {
-            router.navigate(['/login']);
+            router.navigate(['/']);
           });
         }
       })
@@ -28,7 +29,15 @@ export const appConfig: ApplicationConfig = {
       const authService = inject(AuthService);
       return firstValueFrom(authService.restoreSession());
     }),
+    {
+      provide: MAT_DIALOG_DEFAULT_OPTIONS,
+      useValue: {
+        panelClass: 'dialogo-app',
+        backdropClass: 'fondo-dialogo',
+        maxWidth: 'calc(100vw - 2rem)',
+        autoFocus: 'dialog'
+      }
+    },
     { provide: ErrorHandler, useClass: AppErrorHandler }
   ]
 };
-

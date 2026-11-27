@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '../core/guards/auth-guard';
+import { roleGuard } from '../core/guards/role-guard';
 import { controlarCambiosGuard } from '../core/guards/controlar-cambios-guard';
 import { publicacionesResolver } from './resolvers/publicaciones-resolver';
 import { estadosResolver } from './resolvers/estados-resolver';
@@ -10,8 +10,7 @@ export const PUBLICACIONES_ROUTES: Routes = [
   {
     path: '',
     providers: [PublicacionesResource, EstadoPublicacionService],
-    canActivate: [authGuard],
-    data: { perfilesPermitidos: ['REFUGIO'] },
+    canActivate: [roleGuard('REFUGIO')],
     children: [
       {
         path: '',

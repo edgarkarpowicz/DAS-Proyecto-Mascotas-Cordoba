@@ -25,6 +25,51 @@
   border-radius: var(--radius-sm);
 }
 
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-link {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.nav-link.active {
+  background: rgba(127, 211, 165, 0.16);
+  color: #9ce6bd;
+}
+
+.login-link-btn {
+  padding: 0.48rem 1rem;
+  border-radius: var(--radius-full);
+  background: var(--verde-monte);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: background-color 0.15s ease;
+}
+
+.login-link-btn:hover {
+  background: var(--verde-monte-hover);
+}
+
 .brand-heart {
   width: 22px;
   height: 22px;

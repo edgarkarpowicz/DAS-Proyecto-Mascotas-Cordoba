@@ -6,11 +6,13 @@ import { AuthService } from '../services/auth.service';
 describe('authGuard', () => {
   let isAuth = false;
   let allowedPerfil = true;
+  let currentPerfil = 'CIUDADANO';
   let router: Router;
 
   beforeEach(() => {
     isAuth = false;
     allowedPerfil = true;
+    currentPerfil = 'CIUDADANO';
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -18,7 +20,8 @@ describe('authGuard', () => {
           provide: AuthService,
           useValue: {
             isAuthenticated: () => isAuth,
-            hasPerfil: () => allowedPerfil
+            hasPerfil: () => allowedPerfil,
+            perfil: () => currentPerfil
           }
         }
       ]
@@ -36,14 +39,15 @@ describe('authGuard', () => {
     expect(result).toBeTrue();
   });
 
-  it('should redirect to /login when user lacks required profile', () => {
+  it('should redirect to profile home when user lacks required profile', () => {
     isAuth = true;
     allowedPerfil = false;
+    currentPerfil = 'CIUDADANO';
     const result = TestBed.runInInjectionContext(() =>
       authGuard({ data: { perfilesPermitidos: ['REFUGIO'] } } as unknown as ActivatedRouteSnapshot, {} as RouterStateSnapshot)
     );
     expect(result instanceof UrlTree).toBeTrue();
-    expect(router.serializeUrl(result as UrlTree)).toBe('/login');
+    expect(router.serializeUrl(result as UrlTree)).toBe('/');
   });
 
   it('should redirect to /login when user is not authenticated', () => {
@@ -55,4 +59,3 @@ describe('authGuard', () => {
     expect(router.serializeUrl(result as UrlTree)).toBe('/login');
   });
 });
-

@@ -75,7 +75,7 @@ export class EstadoPublicacionService {
           return EMPTY;
         }
         return this._resource.actualizarEstado(pub.nroPublicacion, {
-          idRefugio: this._auth.idRefugio(),
+          idRefugio: this._auth.idRefugio() ?? pub.idRefugio,
           nuevoEstado
         }).pipe(
           map(() => {

@@ -1,10 +1,16 @@
 import { Component, ElementRef, HostListener, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+
+export interface INavItem {
+  label: string;
+  route: string;
+  exact: boolean;
+}
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
@@ -14,6 +20,25 @@ export class NavbarComponent {
   private readonly authService = inject(AuthService);
   readonly currentUser = this.authService.usuario;
   showDropdown = false;
+
+  readonly navItems = computed<INavItem[]>(() => {
+    const items: INavItem[] = [
+      { label: 'Portal', route: '/', exact: true }
+    ];
+    const perfil = this.currentUser()?.perfil?.trim().toUpperCase();
+    if (perfil === 'REFUGIO') {
+      items.push({ label: 'Mis publicaciones', route: '/publicaciones', exact: false });
+    }
+    return items;
+  });
+
+  readonly subtituloUsuario = computed(() => {
+    const usuario = this.currentUser();
+    if (!usuario) {
+      return '';
+    }
+    return usuario.nombreRefugio || usuario.nombreVeterinaria || usuario.perfil;
+  });
 
   readonly iniciales = computed(() => {
     const usuario = this.currentUser();

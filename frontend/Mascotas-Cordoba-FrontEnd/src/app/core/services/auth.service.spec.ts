@@ -4,7 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { AuthSessionService } from './auth-session.service';
 import { AuthResource } from '../api/auth-resource';
-import { IUsuarioRefugio } from '../api/models/i-usuario-refugio';
+import { IUsuario } from '../api/models/i-usuario';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -12,7 +12,7 @@ describe('AuthService', () => {
   let authResourceSpy: jasmine.SpyObj<AuthResource>;
   let routerSpy: jasmine.SpyObj<Router>;
 
-  const mockUser: IUsuarioRefugio = {
+  const mockUser: IUsuario = {
     idCiudadano: 10,
     apellido: 'Morales',
     nombre: 'Ana',
@@ -106,7 +106,7 @@ describe('AuthService', () => {
       ]
     });
     const freshAuthService = TestBed.inject(AuthService);
-    const updatedUser: IUsuarioRefugio = { ...mockUser, nombre: 'Ana Sofía' };
+    const updatedUser: IUsuario = { ...mockUser, nombre: 'Ana Sofía' };
     authResourceSpy.me.and.returnValue(of(updatedUser));
 
     freshAuthService.restoreSession().subscribe();
@@ -134,7 +134,7 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBeFalse();
   });
 
-  it('should revoke session on backend, clear storage and navigate to /login on logout', () => {
+  it('should revoke session on backend, clear storage and navigate to / on logout', () => {
     authResourceSpy.login.and.returnValue(of({
       codigoRespuesta: 1,
       token: 'abc-token',
@@ -148,7 +148,7 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBeFalse();
     expect(service.usuario()).toBeNull();
     expect(sessionStorage.getItem('mascotas_cba_user')).toBeNull();
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/']);
   });
 
   it('should still clear local session when backend logout fails with 401', () => {
@@ -163,7 +163,7 @@ describe('AuthService', () => {
     service.logout();
 
     expect(service.isAuthenticated()).toBeFalse();
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/']);
   });
 });
 

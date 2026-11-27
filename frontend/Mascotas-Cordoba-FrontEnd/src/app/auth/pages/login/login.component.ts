@@ -1,13 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { getHomeRouteForPerfil } from '../../../core/config/perfil-routes';
 import { AuthService } from '../../../core/services/auth.service';
 import { AutofocusDirective } from '../../../shared/directives/autofocus';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, AutofocusDirective],
+  imports: [ReactiveFormsModule, RouterLink, AutofocusDirective],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -46,15 +47,9 @@ export class LoginComponent {
       .subscribe({
         next: (response) => {
           if (response && response.codigoRespuesta === 1 && response.usuario) {
-            const perfil = (response.usuario.perfil || '').toUpperCase();
-            if (perfil !== 'REFUGIO') {
-              this._authService.logout(false);
-              this.error.set(`Usuario autenticado con perfil ${perfil || 'desconocido'}. Este módulo es exclusivo para usuarios con perfil REFUGIO.`);
-              return;
-            }
-            this._router.navigate(['/publicaciones']);
+            this._router.navigate([getHomeRouteForPerfil(response.usuario.perfil)]);
           } else {
-            this.error.set(response?.mensajeRespuesta || response?.mensaje || 'Credenciales inválidas para el refugio');
+            this.error.set(response?.mensajeRespuesta || response?.mensaje || 'Credenciales inválidas');
           }
         },
         error: (err) => {

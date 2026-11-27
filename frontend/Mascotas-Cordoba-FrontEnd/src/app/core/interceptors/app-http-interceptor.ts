@@ -5,6 +5,7 @@ import { catchError, finalize, takeUntil, throwError } from 'rxjs';
 import { LoaderService } from '../services/loader-service';
 import { HttpCancelService } from '../services/http-cancel-service';
 import { AuthSessionService } from '../services/auth-session.service';
+import { SKIP_GLOBAL_LOADER } from '../http/http-context-tokens';
 import { environment } from '../../../environments/environment';
 
 export const appHttpInterceptor: HttpInterceptorFn = (req, next) => {
@@ -13,7 +14,10 @@ export const appHttpInterceptor: HttpInterceptorFn = (req, next) => {
   const session = inject(AuthSessionService);
   const router = inject(Router);
 
-  loader.start();
+  const skipLoader = req.context.get(SKIP_GLOBAL_LOADER);
+  if (!skipLoader) {
+    loader.start();
+  }
 
   // Inyectar API Key técnica y, si hay sesión activa fuera de /auth/login, el token Bearer
   const headersConfig: Record<string, string> = {
@@ -22,6 +26,7 @@ export const appHttpInterceptor: HttpInterceptorFn = (req, next) => {
 
   const isLoginRequest = req.url.endsWith('/auth/login');
   const isMeRequest = req.url.endsWith('/auth/me');
+  const isPublicRequest = req.url.includes('/publico/') || req.url.endsWith('/publico');
   const token = session.token();
   if (token && !isLoginRequest) {
     headersConfig['Authorization'] = `Bearer ${token}`;
@@ -36,12 +41,16 @@ export const appHttpInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse && error.status === 401 && !isLoginRequest) {
         session.clearSession();
-        if (!isMeRequest) {
+        if (!isMeRequest && !isPublicRequest) {
           router.navigate(['/login']);
         }
       }
       return throwError(() => error);
     }),
-    finalize(() => loader.complete())
+    finalize(() => {
+      if (!skipLoader) {
+        loader.complete();
+      }
+    })
   );
 };

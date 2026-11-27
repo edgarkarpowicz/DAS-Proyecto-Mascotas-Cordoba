@@ -1,6 +1,6 @@
 export type PerfilUsuario = 'CIUDADANO' | 'REFUGIO' | 'VETERINARIA' | 'MUNICIPALIDAD';
 
-export interface IUsuarioRefugio {
+export interface IUsuario {
   idCiudadano: number;
   apellido: string;
   nombre: string;

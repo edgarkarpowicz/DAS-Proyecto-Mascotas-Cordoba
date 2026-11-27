@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ILoginRequest } from './models/i-login-request';
 import { ILoginResponse } from './models/i-login-response';
-import { IUsuarioRefugio } from './models/i-usuario-refugio';
+import { IUsuario } from './models/i-usuario';
 
 @Injectable({
   providedIn: 'root'
@@ -18,8 +18,8 @@ export class AuthResource {
     return this._http.post<ILoginResponse>(`${this._baseUrl}/login`, request);
   }
 
-  me(): Observable<IUsuarioRefugio> {
-    return this._http.get<IUsuarioRefugio>(`${this._baseUrl}/me`);
+  me(): Observable<IUsuario> {
+    return this._http.get<IUsuario>(`${this._baseUrl}/me`);
   }
 
   logout(): Observable<{ codigoRespuesta: number; mensajeRespuesta: string }> {

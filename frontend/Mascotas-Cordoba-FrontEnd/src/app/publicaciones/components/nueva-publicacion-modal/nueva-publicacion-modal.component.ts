@@ -95,9 +95,11 @@ export class NuevaPublicacionModalComponent {
 
   constructor() {
     const idRefugio = this._authService.idRefugio();
-    this._pubResource.getMascotasDisponibles(idRefugio)
-      .pipe(takeUntilDestroyed())
-      .subscribe(mascotas => this.mascotasDisponibles.set(mascotas || []));
+    if (idRefugio != null) {
+      this._pubResource.getMascotasDisponibles(idRefugio)
+        .pipe(takeUntilDestroyed())
+        .subscribe(mascotas => this.mascotasDisponibles.set(mascotas || []));
+    }
 
     this._pubResource.getEspecies()
       .pipe(takeUntilDestroyed())
@@ -334,7 +336,7 @@ export class NuevaPublicacionModalComponent {
     const valores = this.form.getRawValue();
     const mascota = this.mascotaSeleccionada();
     return {
-      idRefugio: this._authService.idRefugio(),
+      idRefugio: this._authService.idRefugio() ?? 0,
       nroRegMunicipal: mascota?.nroRegMunicipal,
       nombreMascota: valores.nombreMascota.trim(),
       especie: valores.especie,

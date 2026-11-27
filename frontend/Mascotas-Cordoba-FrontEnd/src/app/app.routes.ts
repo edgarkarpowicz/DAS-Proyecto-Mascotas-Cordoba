@@ -9,6 +9,10 @@ export const routes: Routes = [
     path: 'publicaciones',
     loadChildren: () => import('./publicaciones/publicaciones.routes').then(m => m.PUBLICACIONES_ROUTES)
   },
-  { path: '', redirectTo: 'publicaciones', pathMatch: 'full' },
-  { path: '**', redirectTo: 'publicaciones' }
+  {
+    path: '',
+    pathMatch: 'full',
+    loadChildren: () => import('./portal/portal.routes').then(m => m.PORTAL_ROUTES)
+  },
+  { path: '**', redirectTo: '' }
 ];

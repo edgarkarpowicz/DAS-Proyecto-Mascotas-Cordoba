@@ -1,11 +1,11 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { IUsuarioRefugio, PerfilUsuario } from '../api/models/i-usuario-refugio';
+import { IUsuario, PerfilUsuario } from '../api/models/i-usuario';
 
 const STORAGE_USER_KEY = 'mascotas_cba_user';
 const STORAGE_TOKEN_KEY = 'mascotas_cba_token';
 
 interface StoredSessionState {
-  usuario: IUsuarioRefugio | null;
+  usuario: IUsuario | null;
   token: string | null;
 }
 
@@ -22,7 +22,7 @@ export class AuthSessionService {
 
   private readonly _initialState = this.loadInitialState();
 
-  private readonly _usuario = signal<IUsuarioRefugio | null>(this._initialState.usuario);
+  private readonly _usuario = signal<IUsuario | null>(this._initialState.usuario);
   private readonly _token = signal<string | null>(this._initialState.token);
 
   readonly usuario = computed(() => this._usuario());
@@ -37,7 +37,8 @@ export class AuthSessionService {
       !this.isTokenExpired(token)
     );
   });
-  readonly idRefugio = computed(() => this._usuario()?.idRefugio ?? 1);
+  readonly idRefugio = computed(() => this._usuario()?.idRefugio ?? null);
+  readonly idVeterinaria = computed(() => this._usuario()?.idVeterinaria ?? null);
 
   hasPerfil(...perfiles: Array<PerfilUsuario | string>): boolean {
     const currentPerfil = this.perfil();
@@ -47,7 +48,7 @@ export class AuthSessionService {
     return perfiles.some(p => p.toUpperCase() === currentPerfil);
   }
 
-  setSession(user: IUsuarioRefugio, token: string): void {
+  setSession(user: IUsuario, token: string): void {
     const cleanToken = token?.trim() ?? '';
     this._usuario.set(user);
     this._token.set(cleanToken || null);
@@ -64,7 +65,7 @@ export class AuthSessionService {
     }
   }
 
-  updateUsuario(user: IUsuarioRefugio): void {
+  updateUsuario(user: IUsuario): void {
     this._usuario.set(user);
     const storage = this.getStorage();
     if (!storage) {
@@ -114,10 +115,10 @@ export class AuthSessionService {
         return vacio;
       }
       const rawUser = storage.getItem(STORAGE_USER_KEY);
-      let usuario: IUsuarioRefugio | null = null;
+      let usuario: IUsuario | null = null;
       if (rawUser) {
         try {
-          usuario = JSON.parse(rawUser) as IUsuarioRefugio;
+          usuario = JSON.parse(rawUser) as IUsuario;
         } catch {
           usuario = null;
         }

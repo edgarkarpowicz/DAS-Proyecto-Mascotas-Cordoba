@@ -1,54 +1,52 @@
 # ==============================================================================
-# Docker Compose - Plataforma Mascotas Córdoba (DAS - UBP)
-# Opción A: Contenedores para Frontend (Angular) y Backend (Spring Boot),
-# conectándose al SQL Server de la máquina anfitriona vía host.docker.internal.
+# Docker Compose - Infraestructura Auxiliar (Mascotas Córdoba - DAS UBP)
+#
+# El Backend municipal (Spring Boot, :8080) y el Frontend (Angular, :4200) se
+# ejecutan localmente por consola en el host.
+# Este Compose provee SQL Server local opcional (1433) y reserva la red/puertos
+# para levantar en contenedores los sistemas externos de Veterinarias (RF06/RF09).
 # ==============================================================================
-
 services:
-  # ----------------------------------------------------------------------------
-  # Servicio 1: Backend Spring Boot (REST + SOAP CXF) sobre Apache Tomcat 11
-  # ----------------------------------------------------------------------------
-  backend:
-    build:
-      context: ./backend/mascotas-cordoba-project
-      dockerfile: Dockerfile
-    image: mascotas-cordoba-backend:latest
-    container_name: mascotas-backend
+  # SQL Server 2022 opcional con inicialización automática de das-mascotas-cordoba
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mascotas-db
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     environment:
-      # Conexión a la base de datos SQL Server local del anfitrión
-      - DB_HOST=${DB_HOST:-host.docker.internal}
-      - DB_PORT=${DB_PORT:-1433}
-      - DB_NAME=${DB_NAME:-das-mascotas-cordoba}
-      - DB_USER=${DB_USER:-master}
-      - DB_PASSWORD=${DB_PASSWORD:-123}
-      # API Keys y JWT configurados para seguridad REST y SOAP
-      - REST_API_KEY=UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6
-      - SOAP_API_KEY=UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT
-      - JWT_SECRET=${JWT_SECRET:-MascotasCordoba-DAS-UBP-2026-HMAC-SHA256-Secret-Key}
-      - JWT_EXPIRATION_MINUTES=${JWT_EXPIRATION_MINUTES:-480}
-      # Directorio de fotos dentro del contenedor Tomcat
-      - FILE_UPLOAD_DIR=/usr/local/tomcat/uploads/publicaciones
-    volumes:
-      # Persistencia de fotos de mascotas entre reinicios
-      - ./uploads:/usr/local/tomcat/uploads
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  # ----------------------------------------------------------------------------
-  # Servicio 2: Frontend Angular 17 sobre Servidor Web Nginx
-  # ----------------------------------------------------------------------------
-  frontend:
-    build:
-      context: ./frontend/Mascotas-Cordoba-FrontEnd
-      dockerfile: Dockerfile
-    image: mascotas-cordoba-frontend:latest
-    container_name: mascotas-frontend
-    restart: unless-stopped
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD en .env.local}
     ports:
-      - "4200:80"
-    depends_on:
-      - backend
+      - "127.0.0.1:1433:1433"
+    volumes:
+      - mascotas_sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "SQLCMDPASSWORD=\"$$MSSQL_SA_PASSWORD\" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q 'SELECT 1' -o /dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
 
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: "no"
+    entrypoint: ["/bin/bash", "/scripts/init-db-local.sh"]
+    environment:
+      SQLCMDPASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD en .env.local}
+    volumes:
+      - ./scripts/init-db-local.sh:/scripts/init-db-local.sh:ro
+      - ./db:/scripts/db:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # Próximos servicios externos simulados: Veterinarias adheridas (RF06 / RF09)
+  # Los endpoints semilla en db/municipalidad-creation-script.sql ya apuntan a:
+  #   - Vet 1 (San Antonio Vet - REST):               http://localhost:8081/api/veterinaria
+  #   - Vet 2 (Veterinaria Central Córdoba - SOAP):   http://localhost:8082/services/VeterinariaSoapService
+  #   - Vet 3 (Clínica Vet Alta Córdoba - REST):      http://localhost:8083/api/v1/integracion
+  # ----------------------------------------------------------------------------
+
+volumes:
+  mascotas_sqlserver_data:

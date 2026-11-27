@@ -3,7 +3,7 @@
 
 Proyecto desarrollado en el marco de la asignatura **Diseño Avanzado de Software (DAS)** — 10° Cuatrimestre, **Ingeniería en Informática (Plan 2014)**, **Universidad Blas Pascal (UBP)**.
 
-Para levantar frontend, backend y una base SQL Server local con datos de prueba, seguir [Arranque local completo con Docker](docs/ARRANQUE_LOCAL.md).
+Para levantar Backend, Frontend y base SQL Server localmente por consola, seguir la guía [Arranque local por consola](docs/ARRANQUE_LOCAL.md). Para ubicar rápidamente los módulos de cada RF obligatorio, consultar [Estructura del Proyecto](docs/ESTRUCTURA_PROYECTO.md).
 
 ---
 
@@ -103,6 +103,8 @@ DAS-Proyecto-Mascotas-Cordoba/
 ├── frontend/                          # Portal Cliente Web (Angular)
 ├── db/                                # Scripts SQL, esquemas DDL y datos de prueba para MS SQL Server
 ├── docs/                              # Documentación del proyecto
+│   ├── ARRANQUE_LOCAL.md              # Guía rápida de ejecución local por consola + Docker auxiliar
+│   ├── ESTRUCTURA_PROYECTO.md         # Mapa maestro por RF obligatorio (Backend, Frontend e integraciones)
 │   ├── proyecto/                      # Documentación oficial de la cátedra
 │   │   ├── 01-Especificacion-de-Requerimientos.pdf
 │   │   ├── 02-Modelo-logico-veterinaria.pdf
@@ -111,6 +113,7 @@ DAS-Proyecto-Mascotas-Cordoba/
 │       ├── obligatorios/              # RF obligatorios de la primera versión
 │       └── no_obligatorios/           # RF complementarios
 │
+├── docker-compose.yml                 # SQL Server opcional y futuros contenedores de Veterinarias externas
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -118,85 +121,30 @@ DAS-Proyecto-Mascotas-Cordoba/
 
 ---
 
-## 🐳 Ejecución con Docker (Recomendada / Contenedores)
+## 🚀 Puesta en Marcha Local (Consola — Modalidad Principal)
 
-El proyecto cuenta con configuración de **Docker** y **Docker Compose** siguiendo las pautas de la cátedra DAS (`Resueltos-Profesora/Spring-Boot/03-docker`). El archivo base permite levantar el **Backend Spring Boot** (sobre Apache Tomcat 11, compatible con Spring Boot 4) y el **Frontend Angular** (sobre Nginx), conectándose a un SQL Server de la máquina anfitriona. Para incluir también SQL Server y su inicialización automática, seguir [Arranque local completo](docs/ARRANQUE_LOCAL.md).
-
-### Prerrequisitos
-1. **Docker Desktop** instalado y en ejecución en el sistema.
-2. **Microsoft SQL Server** en ejecución en la máquina host con el script de base de datos ya inicializado (`db/municipalidad-creation-script.sql`).
-   > Asegurarse de que el protocolo **TCP/IP** esté habilitado en el *SQL Server Configuration Manager* sobre el puerto estándar `1433`.
-
-### Estructura de Servicios Docker
-* **`backend` (Puerto 8080):** Contenedor multi-stage basado en `maven:3.9-eclipse-temurin-17` y runtime en `tomcat:11.0-jdk17-temurin`.
-  * Se conecta a la base de datos host mediante `host.docker.internal:1433`.
-  * Monta un volumen persistente `./uploads:/usr/local/tomcat/uploads` para que las fotos subidas no se pierdan.
-* **`frontend` (Puerto 4200):** Contenedor multi-stage basado en `node:22-alpine` y servidor `nginx:alpine`.
-  * Configurado con soporte para rutas HTML5 SPA (redirección a `index.html`).
-
-### Comandos de Ejecución
-
-1. **Compilar y levantar todos los contenedores en segundo plano:**
-   ```powershell
-   docker compose up --build -d
-   ```
-
-2. **Verificar el estado y los logs de los contenedores:**
-   ```powershell
-   # Ver estado de los servicios:
-   docker compose ps
-
-   # Ver logs en vivo del backend:
-   docker compose logs -f backend
-
-   # Ver logs en vivo del frontend:
-   docker compose logs -f frontend
-   ```
-
-3. **Acceder a las aplicaciones:**
-   * **Portal Web (Frontend Angular):** [http://localhost:4200/](http://localhost:4200/)
-   * **Servicios SOAP (CXF WSDL):** [http://localhost:8080/services/auth?wsdl](http://localhost:8080/services/auth?wsdl) y [http://localhost:8080/services/publicaciones?wsdl](http://localhost:8080/services/publicaciones?wsdl)
-   * **API REST (Backend):** `http://localhost:8080` *(requiere cabecera `X-API-Key` y, salvo `POST /auth/login` y los endpoints públicos `/publico/**`, `Authorization: Bearer <token>`)*
-
-4. **Detener los contenedores:**
-   ```powershell
-   docker compose down
-   ```
-
-### Variables de Entorno Configurables (Opcional)
-En `docker-compose.yml`, los siguientes parámetros pueden personalizarse o definirse en un archivo `.env` en la raíz si tus credenciales locales de SQL Server difieren de los valores por defecto:
-```env
-DB_HOST=host.docker.internal
-DB_PORT=1433
-DB_NAME=das-mascotas-cordoba
-DB_USER=master
-DB_PASSWORD=123
-```
-
----
-
-## 🚀 Puesta en Marcha Manual (Entorno de Desarrollo Tradicional)
+El **Backend municipal (`:8080`)** y el **Frontend Angular (`:4200`)** se ejecutan por separado directamente desde consola en tu máquina anfitriona y se comunican entre sí vía HTTP (`localhost`).
 
 ### Prerrequisitos
 - **Java JDK 17** o superior instalado y configurado en el `PATH`.
-- **Microsoft SQL Server** (local o contenedor Docker) con base de datos configurada.
-- **Maven 3.8+** (o utilizar el wrapper `./mvnw` incluido).
-- **Node.js** (v20.19+ o v22+) y **Angular CLI 21** (para el portal cliente).
+- **Microsoft SQL Server** en ejecución en `localhost:1433` (instalación local o usando el servicio opcional en `docker-compose.yml`).
+- **Maven 3.8+** (o el wrapper `./mvnw` / `.\mvnw.cmd` incluido).
+- **Node.js** (`v20.19+` o `v22+`) y **npm** (para el portal Angular 21).
 
 ### 1. Base de Datos (Microsoft SQL Server)
-1. Abrir **SQL Server Management Studio (SSMS)** o **Azure Data Studio**.
+1. Abrir **SQL Server Management Studio (SSMS)** o **Azure Data Studio** (o levantar el servicio `sqlserver` con Docker si no tenés una instancia local).
 2. Abrir y ejecutar el script ubicado en:
    ```text
    db/municipalidad-creation-script.sql
    ```
    *Recrea desde cero la base de datos `das-mascotas-cordoba` con todas las tablas relacionales, catálogos, stored procedures y datos semilla.*
 
-### 2. Ejecución del Backend (Spring Boot + CXF SOAP + POA)
+### 2. Ejecución del Backend (Terminal 1 — Spring Boot + CXF SOAP + POA)
 1. Navegar al directorio del backend:
    ```powershell
    cd backend/mascotas-cordoba-project
    ```
-2. Verificar o ajustar credenciales en `src/main/resources/application.properties` (por defecto usuario `master`, base `das-mascotas-cordoba`, puerto `1433`).
+2. Verificar o ajustar credenciales en `src/main/resources/application.properties` (por defecto usuario `master`, clave `123`, base `das-mascotas-cordoba`, puerto `1433`, o sobrescribir con variables de entorno `DB_USER` / `DB_PASSWORD`).
 3. Compilar y ejecutar la aplicación con Maven Wrapper:
    ```powershell
    # En Windows PowerShell:
@@ -204,14 +152,14 @@ DB_PASSWORD=123
    # o:
    ./mvnw spring-boot:run
    ```
-   *El backend quedará escuchando en `http://localhost:8080` (REST) y `http://localhost:8080/services` (SOAP).*
+   *El backend quedará escuchando en `http://localhost:8080` (REST) y `http://localhost:8080/services` (SOAP WSDL).*
 
-### 3. Ejecución del FrontEnd (Angular 21 + Angular Material)
+### 3. Ejecución del FrontEnd (Terminal 2 — Angular 21 + Angular Material)
 1. Abrir otra terminal y navegar al directorio del frontend:
    ```powershell
    cd frontend/Mascotas-Cordoba-FrontEnd
    ```
-2. Instalar dependencias (solo la primera vez):
+2. Instalar dependencias (solo la primera vez o al actualizar `package.json`):
    ```powershell
    npm install
    ```
@@ -219,12 +167,20 @@ DB_PASSWORD=123
    ```powershell
    npm start
    ```
-4. Acceder en el navegador a: **`http://localhost:4200/`**
+4. Acceder en el navegador a: **`http://localhost:4200/`** (Portal público RF16; `/login` para autenticación; `/publicaciones` para refugios).
 
 ### 4. Credenciales de Prueba para Login
 - **Refugio Principal (Patitas Felices - ID 1):** CUIL: `20-25999000-5` | Clave: `pass123` *(Carga 2 publicaciones activas iniciales y redirige a `/publicaciones`)*.
 - **Refugio Secundario (Hogar Animal - ID 2):** CUIL: `27-38123456-9` | Clave: `pass123` *(Sin publicaciones iniciales; cuenta con mascota precargada en el refugio "Thor" - NRM 100006 para probar la publicación de un animal ya registrado)*.
 - **Ciudadano:** CUIL: `20-28555666-3` | Clave: `pass123` *(Inicia sesión y personaliza el portal público RF16; sin acceso al módulo exclusivo de `REFUGIO`)*.
+
+---
+
+## 🐳 Uso de Docker (SQL Server Opcional y Futuras Veterinarias Externas)
+
+No utilizamos contenedores Docker para correr el Backend ni el Frontend municipal durante el desarrollo. [`docker-compose.yml`](docker-compose.yml) queda reservado para:
+1. **SQL Server local opcional (`1433`)** con inicialización automática (`sqlserver` + `db-init`), útil si no querés instalar SQL Server en Windows (ver detalle en [Arranque local](docs/ARRANQUE_LOCAL.md)).
+2. **Sistemas externos de Veterinarias adheridas** en próximas etapas (`http://localhost:8081` REST, `http://localhost:8082` SOAP y `http://localhost:8083` REST), permitiendo que el Backend municipal ejecutado por consola consuma sus servicios en contenedores aislados.
 
 ---
 

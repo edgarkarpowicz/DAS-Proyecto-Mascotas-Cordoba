@@ -1,67 +1,79 @@
-# Arranque local completo con Docker
+# Arranque Local (Backend y Frontend por Consola + Docker Auxiliar)
 
-Requiere Docker Desktop iniciado y los puertos 4200, 8080 y 1433 libres.
-Las dependencias de Java y Angular se instalan dentro de las imágenes; no hace falta instalar Maven, Java o Node en Windows para esta modalidad.
+El **Backend municipal** y el **Frontend Angular** se ejecutan por separado desde consola y se comunican en `localhost`.
+Docker se utiliza únicamente para levantar opcionalmente SQL Server en desarrollo y, en etapas posteriores, los **sistemas externos de Veterinarias** (`8081`, `8082`, `8083`).
 
-## Primera ejecución
+## Requisitos
+- **Java JDK 17+** (`PATH` configurado).
+- **Node.js 20.19+ o 22+** y **npm**.
+- **SQL Server** corriendo en `localhost:1433` (instalado localmente o iniciado con Docker Compose).
 
-Desde la raíz del repositorio, en PowerShell, crear una contraseña local solo si el archivo todavía no existe:
+---
+
+## 1. Base de Datos (`das-mascotas-cordoba`)
+
+### Opción A — SQL Server ya instalado en Windows
+Ejecutar `db/municipalidad-creation-script.sql` desde SSMS o Azure Data Studio. Recreará `das-mascotas-cordoba` con el esquema, stored procedures y datos iniciales.
+
+### Opción B — SQL Server en contenedor con Docker Compose (Opcional)
+Desde la raíz del repositorio en PowerShell:
 
 ```powershell
 if (-not (Test-Path .env.local)) {
     $dbLocalPassword = 'Mc!' + [Guid]::NewGuid().ToString('N') + '9'
-    $jwtLocalSecret = [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
-    [System.IO.File]::WriteAllText((Join-Path (Get-Location) '.env.local'), "DB_PASSWORD=$dbLocalPassword`nJWT_SECRET=$jwtLocalSecret`n")
+    [System.IO.File]::WriteAllText((Join-Path (Get-Location) '.env.local'), "DB_PASSWORD=$dbLocalPassword`n")
 }
-docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml up -d --build
+docker compose --env-file .env.local up -d
 ```
 
-La primera compilación descarga las imágenes y las dependencias, por lo que puede tardar varios minutos.
-El archivo `.env.local` está excluido de Git. Conservarlo: contiene la contraseña de la base creada y la clave de firma de los JWT.
-
-El arranque espera a que SQL Server responda, crea `das-mascotas-cordoba` con el esquema y los datos iniciales de `db/municipalidad-creation-script.sql` y luego inicia el backend y el frontend. Si la base ya existe, conserva sus datos; para recrearla desde cero con cambios de esquema, ejecutar `down -v` antes de volver a levantar los contenedores.
-El servicio `db-init` debe terminar con código 0; es una tarea de inicialización, no un servidor permanente.
-
-## Acceso
-
-- Aplicación: http://localhost:4200
-- API REST: http://localhost:8080
-- Contrato SOAP de autenticación: http://localhost:8080/services/auth?wsdl
-- SQL Server: `localhost,1433`, usuario `sa`, contraseña en `.env.local`.
-
-Usuario de prueba del Refugio Patitas Felices:
-
-- CUIL: `20-25999000-5`
-- Contraseña: `pass123`
-
-## Uso posterior
-
-Volver a iniciar sin recompilar:
+- `db-init` inicializa `das-mascotas-cordoba` desde `db/municipalidad-creation-script.sql` si aún no existe y termina con código `0`.
+- Los datos quedan en el volumen `mascotas_sqlserver_data`. Para recrear la base desde cero ante cambios en el script SQL:
 
 ```powershell
-docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml up -d
+docker compose --env-file .env.local down -v
+docker compose --env-file .env.local up -d
 ```
 
-Consultar el estado y los registros:
+---
+
+## 2. Ejecutar Backend en Consola (Terminal 1)
 
 ```powershell
-docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml ps -a
-docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml logs --tail 100 backend db-init
+cd backend/mascotas-cordoba-project
 ```
 
-Detener:
+Si usás el contenedor SQL Server (`Opción B`, usuario `sa` y contraseña de `.env.local`), definí las variables antes de iniciar:
 
 ```powershell
-docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml down
+$env:DB_HOST = "localhost"
+$env:DB_USER = "sa"
+$env:DB_PASSWORD = "<tu DB_PASSWORD de .env.local>"
+.\mvnw.cmd spring-boot:run
 ```
 
-Los datos permanecen en el volumen `mascotas_sqlserver_data` del proyecto Compose. Las fotos permanecen en `uploads/`. No agregar `-v` al comando de detención si se quiere conservar la base.
+*(Si usás SQL Server local con los valores por defecto de `application.properties` — `master` / `123` — ejecutá directamente `.\mvnw.cmd spring-boot:run`.)*
 
-Este entorno levanta la base municipal utilizada por el backend actual. El script de la base de veterinarias queda disponible en `db/`, pero no es una dependencia de los servicios implementados actualmente.
+- REST disponible en: `http://localhost:8080`
+- SOAP WSDL disponible en: `http://localhost:8080/services/auth?wsdl` y `http://localhost:8080/services/publicaciones?wsdl`
 
-## Actualizaciones del repositorio
+---
 
-Antes de aplicar cambios al esquema de una base con datos propios, hacer un respaldo de SQL Server.
-El script `db/municipalidad-creation-script.sql` elimina la base antes de crearla; no ejecutarlo sobre una base que se quiera conservar.
-Para actualizar código y contenedores, repetir el comando de arranque con `--build`.
-Al pasar de los tokens antiguos a JWT, volver a iniciar sesión en el navegador.
+## 3. Ejecutar Frontend en Consola (Terminal 2)
+
+```powershell
+cd frontend/Mascotas-Cordoba-FrontEnd
+npm install
+npm start
+```
+
+- Aplicación web disponible en: `http://localhost:4200/`
+
+---
+
+## 4. Credenciales de Prueba y Roles
+- **Refugio Patitas Felices (`REFUGIO`):** CUIL `20-25999000-5` / clave `pass123`
+- **Hogar Animal Córdoba (`REFUGIO`):** CUIL `27-38123456-9` / clave `pass123`
+- **Ciudadano (`CIUDADANO`):** CUIL `20-28555666-3` / clave `pass123`
+
+## Próximos Contenedores: Veterinarias Adheridas
+Cuando se implementen las integraciones **RF06** y **RF09**, los servicios simulados de las veterinarias adheridas se levantarán en contenedores mediante `docker-compose.yml` en los puertos configurados en `db/municipalidad-creation-script.sql` (`8081` REST, `8082` SOAP, `8083` REST) para que el backend ejecutado en consola los consuma por lotes.

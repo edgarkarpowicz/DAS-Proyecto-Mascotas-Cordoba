@@ -72,29 +72,34 @@ Los archivos compilados se generarán en la carpeta `dist/mascotas-cordoba-front
 
 Utiliza los usuarios precargados en la base de datos municipal:
 
-| Usuario | CUIL | Contraseña | Refugio Asociado |
+| Usuario | CUIL | Contraseña | Perfil / Organización |
 | :--- | :--- | :--- | :--- |
-| **Roberto Sánchez** | `20-25999000-5` | `pass123` | **Refugio Patitas Felices** (Carga 2 publicaciones iniciales) |
-| **Ana Carolina Morales** | `27-38123456-9` | `pass123` | **Hogar Animal Córdoba** (Sin publicaciones iniciales; incluye mascota precargada NRM 100006 "Thor") |
-| **Juan Carlos Pérez** | `20-28555666-3` | `pass123` | *Sin refugio* (Prueba de validación de perfil / acceso denegado) |
+| **Roberto Sánchez** | `20-25999000-5` | `pass123` | `REFUGIO` — **Refugio Patitas Felices** (Carga 2 publicaciones iniciales) |
+| **Ana Carolina Morales** | `27-38123456-9` | `pass123` | `REFUGIO` — **Hogar Animal Córdoba** (Sin publicaciones iniciales; incluye mascota precargada NRM 100006 "Thor") |
+| **Juan Carlos Pérez** | `20-28555666-3` | `pass123` | `CIUDADANO` (Inicia sesión, personaliza el portal RF16 y queda bloqueado por `roleGuard` en `/publicaciones`) |
 
 ---
 
 ## 🏛️ Arquitectura del FrontEnd
 
-La aplicación se organiza por módulos funcionales cargados con `loadChildren` desde `src/app/app.routes.ts`:
+La aplicación se organiza por módulos funcionales cargados con `loadChildren` desde `src/app/app.routes.ts` (ver detalle completo por RF en [`docs/ESTRUCTURA_PROYECTO.md`](../../docs/ESTRUCTURA_PROYECTO.md)):
 
-- **Módulo de Autenticación (`src/app/auth/`):**
-  - `AUTH_ROUTES` (`auth.routes.ts`) y `LoginComponent` con Reactive Forms y validación en línea al enviar.
-- **Módulo de Publicaciones (`src/app/publicaciones/`):**
-  - `PUBLICACIONES_ROUTES` (`publicaciones.routes.ts`) con proveedores locales (`PublicacionesResource`, `EstadoPublicacionService`) y resolvers de navegación (`publicacionesResolver`, `estadosResolver`).
-  - `PublicacionesComponent`: grilla filtrable por pestañas de estado y nombre, con `EstadoPublicacionService` (impide reactivar publicaciones `Finalizada`).
-  - Modales por referencia con `MatDialog`:
-    - `NuevaPublicacionModalComponent`: carga sus propios catálogos (`getMascotasDisponibles`, `getEspecies`), usa Reactive Forms, `textarea` para condiciones de adopción, calendario de años de Angular Material (`añoNacimiento`), subida de foto con caché ante reintentos y grabación directa al publicar.
-    - `DetallePublicacionModalComponent`: cambia el estado desde el propio diálogo y devuelve la publicación actualizada al cerrar.
+- **Portal Público (`src/app/portal/`, ruta `/` - RF16):**
+  - `PORTAL_ROUTES` (`portal.routes.ts`), `PortalResource` (`GET /publico/portal`), `portalResolver` y `PortalComponent` (indicadores en vivo, directorio público y servicios personalizados por perfil).
+- **Módulo de Autenticación (`src/app/auth/`, ruta `/login` - RF15):**
+  - `AUTH_ROUTES` (`auth.routes.ts`) y `LoginComponent` con soporte multiperfil y redirección declarativa (`HOME_BY_PERFIL`).
+- **Módulo de Publicaciones (`src/app/publicaciones/`, ruta `/publicaciones` - RF13):**
+  - `PUBLICACIONES_ROUTES` (`publicaciones.routes.ts`) protegido con `roleGuard('REFUGIO')`, proveedores locales (`PublicacionesResource`, `EstadoPublicacionService`) y resolvers de navegación (`publicacionesResolver`, `estadosResolver`).
+  - `PublicacionesComponent` y modales por referencia con `MatDialog` (`NuevaPublicacionModalComponent`, `DetallePublicacionModalComponent`).
+- **Módulos Estructurados para Próximos RF Obligatorios:**
+  - `src/app/mascotas/` (`/mascotas/mias` RF20, `/mascotas/registro` RF06)
+  - `src/app/sanidad/` (`/sanidad/atenciones` RF09, `/sanidad/carnet` RF10/11, `/sanidad/validar-carnet` RF11 público)
+  - `src/app/veterinarias/` (`/veterinarias` RF17)
+  - `src/app/refugios/` (`/refugios` RF18)
+  - `src/app/asistente/` (`/asistente` RF21, con `SKIP_GLOBAL_LOADER`)
 - **Núcleo (`src/app/core/`):**
-  - `AuthService` y `AuthSessionService` (sesión JWT persistida únicamente en `sessionStorage`, restaurada al inicio con `provideAppInitializer`).
-  - `appHttpInterceptor`: inyecta `X-API-Key` y `Authorization: Bearer <token>`, controla `LoaderService`, cancela peticiones al navegar (`HttpCancelService`) y limpia la sesión ante `401`.
-  - `AppErrorHandler`, `AppMessageService` (`MatSnackBar` para éxitos y `MessageDialogComponent` para errores), `ConfirmDialogService` (`ConfirmDialogComponent`), `authGuard` y `controlarCambiosGuard`.
+  - `AuthService` y `AuthSessionService` (sesión JWT persistida únicamente en `sessionStorage`, `IUsuario` unificado y restaurado con `provideAppInitializer`).
+  - `appHttpInterceptor`: inyecta `X-API-Key` y `Authorization: Bearer <token>`, soporta `SKIP_GLOBAL_LOADER`, cancela peticiones al navegar (`HttpCancelService`) y evita redirecciones a `/login` en `/publico/**`.
+  - `AppErrorHandler`, `AppMessageService`, `ConfirmDialogService`, `MAT_DIALOG_DEFAULT_OPTIONS` en `app.config.ts`, `authGuard`, `roleGuard` y `controlarCambiosGuard`.
 - **Compartido (`src/app/shared/`):**
-  - `NavbarComponent`, `ImagenLightboxModalComponent`, `ExpandImageButtonComponent`, `FiltrarPorPipe`, `AutofocusDirective` y utilidades en `mascota-formatters.ts`.
+  - `NavbarComponent`, `RfPlaceholderPageComponent`, `ImagenLightboxModalComponent`, `ExpandImageButtonComponent`, `FiltrarPorPipe`, `AutofocusDirective`, `pagination.ts` y `mascota-formatters.ts`.

@@ -6,7 +6,7 @@ exists=$("${sqlcmd[@]}" -h -1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.da
 
 if [[ "${exists//[[:space:]]/}" == "1" ]]; then
   echo "La base das-mascotas-cordoba ya existe; se conservan sus datos."
-  echo "Si necesitás aplicar cambios de esquema, recreala con: docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml down -v"
+  echo "Si necesitás aplicar cambios de esquema, recreala con: docker compose --env-file .env.local down -v"
   exit 0
 fi
 

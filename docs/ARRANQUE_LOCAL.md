@@ -19,7 +19,7 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.loc
 La primera compilación descarga las imágenes y las dependencias, por lo que puede tardar varios minutos.
 El archivo `.env.local` está excluido de Git. Conservarlo: contiene la contraseña de la base creada y la clave de firma de los JWT.
 
-El arranque espera a que SQL Server responda, crea `das-mascotas-cordoba` con el esquema y los datos iniciales del repositorio y luego inicia el backend y el frontend. Si la base ya existe, conserva sus datos y aplica las migraciones de `db/migrations/` (`001` para perfiles, autenticación y auditoría; `002` para procedimientos de publicaciones con lógica en servicio y modelo con `año_nacimiento`) sin recrearla.
+El arranque espera a que SQL Server responda, crea `das-mascotas-cordoba` con el esquema y los datos iniciales de `db/municipalidad-creation-script.sql` y luego inicia el backend y el frontend. Si la base ya existe, conserva sus datos; para recrearla desde cero con cambios de esquema, ejecutar `down -v` antes de volver a levantar los contenedores.
 El servicio `db-init` debe terminar con código 0; es una tarea de inicialización, no un servidor permanente.
 
 ## Acceso

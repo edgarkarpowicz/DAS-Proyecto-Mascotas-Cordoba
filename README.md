@@ -156,7 +156,7 @@ El proyecto cuenta con configuración de **Docker** y **Docker Compose** siguien
 3. **Acceder a las aplicaciones:**
    * **Portal Web (Frontend Angular):** [http://localhost:4200/](http://localhost:4200/)
    * **Servicios SOAP (CXF WSDL):** [http://localhost:8080/services/auth?wsdl](http://localhost:8080/services/auth?wsdl) y [http://localhost:8080/services/publicaciones?wsdl](http://localhost:8080/services/publicaciones?wsdl)
-   * **API REST (Backend):** `http://localhost:8080` *(requiere cabecera `X-API-Key` y, salvo `POST /auth/login`, `Authorization: Bearer <token>`)*
+   * **API REST (Backend):** `http://localhost:8080` *(requiere cabecera `X-API-Key` y, salvo `POST /auth/login` y los endpoints públicos `/publico/**`, `Authorization: Bearer <token>`)*
 
 4. **Detener los contenedores:**
    ```powershell
@@ -189,8 +189,7 @@ DB_PASSWORD=123
    ```text
    db/municipalidad-creation-script.sql
    ```
-   *Crea la base de datos `das-mascotas-cordoba` con todas las tablas relacionales, catálogos, stored procedures y datos semilla.*
-   > Si actualizás una base de datos ya existente sin recrearla, aplicá en orden los scripts idempotentes de `db/migrations/` (`001_rf15_perfiles_auditoria.sql` y `002_publicaciones_logica_en_servicio.sql`).
+   *Recrea desde cero la base de datos `das-mascotas-cordoba` con todas las tablas relacionales, catálogos, stored procedures y datos semilla.*
 
 ### 2. Ejecución del Backend (Spring Boot + CXF SOAP + POA)
 1. Navegar al directorio del backend:
@@ -223,9 +222,9 @@ DB_PASSWORD=123
 4. Acceder en el navegador a: **`http://localhost:4200/`**
 
 ### 4. Credenciales de Prueba para Login
-- **Refugio Principal (Patitas Felices - ID 1):** CUIL: `20-25999000-5` | Clave: `pass123` *(Carga 2 publicaciones activas iniciales)*.
+- **Refugio Principal (Patitas Felices - ID 1):** CUIL: `20-25999000-5` | Clave: `pass123` *(Carga 2 publicaciones activas iniciales y redirige a `/publicaciones`)*.
 - **Refugio Secundario (Hogar Animal - ID 2):** CUIL: `27-38123456-9` | Clave: `pass123` *(Sin publicaciones iniciales; cuenta con mascota precargada en el refugio "Thor" - NRM 100006 para probar la publicación de un animal ya registrado)*.
-- **Ciudadano sin refugio:** CUIL: `20-28555666-3` | Clave: `pass123` *(Prueba de validación de perfil / acceso denegado al módulo de refugios)*.
+- **Ciudadano:** CUIL: `20-28555666-3` | Clave: `pass123` *(Inicia sesión y personaliza el portal público RF16; sin acceso al módulo exclusivo de `REFUGIO`)*.
 
 ---
 
@@ -235,8 +234,9 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
 
 ### 🔐 Seguridad y Autenticación
 * **REST:**
-  * Todas las peticiones (incluido `/auth/login`) envían la cabecera HTTP `X-API-Key`.  
+  * Todas las peticiones envían la cabecera HTTP `X-API-Key`.  
     *Clave por defecto:* `UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+  * Los endpoints públicos (`/publico/**`) aceptan acceso anónimo y, si llega un `Authorization: Bearer <token>` válido, personalizan la respuesta según el perfil sin devolver `401`.
   * Todos los endpoints protegidos (`/auth/me`, `/auth/logout` y `/refugios/**`) requieren además `Authorization: Bearer <token>` con el JWT emitido por `POST /auth/login`.
 * **SOAP:**
   * Se incluye el elemento `<apiKey>` en la cabecera SOAP (`<soapenv:Header>`).  
@@ -247,7 +247,13 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
 
 ### 🌐 1. Servicios RESTful (JSON)
 
-#### A. Autenticación de Refugio (RF15)
+#### 0. Portal del Programa Municipal (RF16 - Público y Personalizable)
+* **URL:** `GET http://localhost:8080/publico/portal`
+* **Headers:**
+  * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+  * *(Opcional)* `Authorization: Bearer <token>`
+
+#### A. Autenticación de Usuarios (RF15)
 * **URL:** `POST http://localhost:8080/auth/login`
 * **Headers:**
   * `Content-Type: application/json`

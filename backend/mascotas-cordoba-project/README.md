@@ -13,7 +13,7 @@ Desarrollado con **Java 17**, **Spring Boot**, **Apache CXF** (SOAP), **AspectJ*
   ```text
   ../../db/municipalidad-creation-script.sql
   ```
-  > Si la base de datos ya existía de una versión anterior, aplicar en orden los scripts idempotentes de `../../db/migrations/` (`001_rf15_perfiles_auditoria.sql` y `002_publicaciones_logica_en_servicio.sql`).
+  > Este script recrea `das-mascotas-cordoba` desde cero con el esquema completo, los stored procedures y los datos semilla actualizados.
 
 ---
 
@@ -87,8 +87,9 @@ Los recursos REST (`AuthResource`, `PublicacionesResource`) delegan en los mismo
 
 ### RESTful API (JSON)
 - Header requerido en todos los endpoints: `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
-- Header requerido en endpoints protegidos (todos excepto `/auth/login`): `Authorization: Bearer <token>`
-- `POST /auth/login`: Autenticación de usuarios y emisión de JWT (RF15).
+- Header requerido en endpoints protegidos (`/auth/me`, `/auth/logout` y `/refugios/**`): `Authorization: Bearer <token>` (en `/publico/**` es opcional: si viene válido personaliza la respuesta y si falta o expiró continúa en modo anónimo).
+- `GET /publico/portal`: Portal público del programa, métricas en vivo y servicios habilitados según el perfil si hay sesión (RF16).
+- `POST /auth/login`: Autenticación multiperfil (`CIUDADANO`, `REFUGIO`, `VETERINARIA`, `MUNICIPALIDAD`) y emisión de JWT (RF15).
 - `GET /auth/me`: Identidad y perfil del usuario autenticado (RF15).
 - `POST /auth/logout`: Revocación del JWT actual (RF15).
 - `GET /refugios/publicaciones/estados`: Catálogo de estados válidos para publicaciones (RF13).

@@ -768,3 +768,18 @@ BEGIN
 END
 GO
 
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_resumen_portal (RF16)
+   Devuelve métricas públicas en vivo del Programa Municipal para el portal.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_resumen_portal
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT publicacionesActivas    = (SELECT COUNT(1) FROM dbo.publicaciones_adopcion (NOLOCK) WHERE estado_publicacion = 'Activa'),
+           veterinariasHabilitadas = (SELECT COUNT(1) FROM dbo.veterinarias (NOLOCK) WHERE habilitada = 1),
+           refugiosAdheridos       = (SELECT COUNT(1) FROM dbo.refugios (NOLOCK));
+END
+GO
+

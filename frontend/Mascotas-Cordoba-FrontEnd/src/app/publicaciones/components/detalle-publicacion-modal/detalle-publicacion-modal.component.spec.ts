@@ -72,6 +72,7 @@ describe('DetallePublicacionModalComponent', () => {
     expect(el.textContent).toContain('Luna');
     expect(el.textContent).toContain('Hembra');
     expect(el.textContent).toContain('4 años');
+    expect(el.textContent).toContain('(nac. 2022)');
     expect(el.textContent).toContain('Border Collie');
     expect(el.textContent).toContain('Perra dócil, castrada y con vacunas al día');
     expect(el.textContent).toContain('Patio cerrado y seguimiento veterinario');
@@ -127,5 +128,26 @@ describe('DetallePublicacionModalComponent', () => {
     expect(dialogSpy.open).toHaveBeenCalledWith(ImagenLightboxModalComponent, jasmine.objectContaining({
       data: jasmine.objectContaining({ altText: 'Luna' })
     }));
+  });
+
+  it('should ignore close attempts while a state update is in flight', () => {
+    crear(samplePub);
+    const pending$ = new Subject<IPublicacionAdopcion>();
+    estadoSpy.cambiarEstado.and.returnValue(pending$.asObservable());
+
+    component.cambiarEstado('Pausada');
+    expect(component.procesando()).toBeTrue();
+
+    component.cerrar();
+    backdrop$.next(new MouseEvent('click'));
+    keydown$.next(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(dialogRefSpy.close).not.toHaveBeenCalled();
+
+    pending$.next({ ...samplePub, estadoPublicacion: 'Pausada' });
+    pending$.complete();
+    expect(component.procesando()).toBeFalse();
+
+    component.cerrar();
+    expect(dialogRefSpy.close).toHaveBeenCalledWith(jasmine.objectContaining({ estadoPublicacion: 'Pausada' }));
   });
 });

@@ -144,7 +144,6 @@ CREATE TABLE mascotas (
     nombre VARCHAR(64) NOT NULL,
     sexo CHAR(1) NOT NULL,
     [año_nacimiento] INT NOT NULL,
-    fecha_nacimiento DATE NULL,
     microchip VARCHAR(64) NULL,
     vive BIT NOT NULL DEFAULT 1,
     id_responsable INT NULL,
@@ -549,18 +548,7 @@ BEGIN
            nombreMascota         = m.nombre,
            sexo                  = m.sexo,
            añoNacimiento         = m.[año_nacimiento],
-           fechaNacimiento       = CONVERT(VARCHAR(10), m.fecha_nacimiento, 23),
-           edadAproximada        = CASE
-               WHEN m.fecha_nacimiento IS NOT NULL THEN
-                   CASE
-                       WHEN DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE))
-                            - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE)), m.fecha_nacimiento) > CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END < 0
-                       THEN 0
-                       ELSE DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE))
-                            - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE)), m.fecha_nacimiento) > CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END
-                   END
-               ELSE (YEAR(GETDATE()) - m.[año_nacimiento])
-           END,
+           edadAproximada        = (YEAR(GETDATE()) - m.[año_nacimiento]),
            especie               = COALESCE(
                (SELECT TOP 1 cm.valor_caracteristica 
                   FROM dbo.caracteristicas_mascotas cm (NOLOCK) 
@@ -596,7 +584,6 @@ CREATE OR ALTER PROCEDURE dbo.ins_mascota_refugio
     @nombre             VARCHAR(64),
     @sexo               CHAR(1),
     @año_nacimiento     INT,
-    @fecha_nacimiento   DATE = NULL,
     @especie            VARCHAR(64) = NULL,
     @raza               VARCHAR(64) = NULL,
     @nro_reg_municipal  INT OUTPUT
@@ -610,8 +597,8 @@ BEGIN
     SELECT @nro_reg_municipal = COALESCE(MAX(nro_reg_municipal), 100000) + 1
       FROM dbo.mascotas WITH (UPDLOCK, HOLDLOCK);
 
-    INSERT INTO dbo.mascotas (nro_reg_municipal, nombre, sexo, [año_nacimiento], fecha_nacimiento, microchip, vive, id_responsable, id_refugio)
-    VALUES (@nro_reg_municipal, @nombre, @sexo, @año_nacimiento, @fecha_nacimiento, NULL, 1, NULL, @id_refugio);
+    INSERT INTO dbo.mascotas (nro_reg_municipal, nombre, sexo, [año_nacimiento], microchip, vive, id_responsable, id_refugio)
+    VALUES (@nro_reg_municipal, @nombre, @sexo, @año_nacimiento, NULL, 1, NULL, @id_refugio);
 
     IF @especie IS NOT NULL AND TRIM(@especie) <> ''
         INSERT INTO dbo.caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracteristica, nro_valor_dominio, valor_caracteristica)
@@ -722,18 +709,7 @@ BEGIN
            nombre          = m.nombre,
            sexo            = m.sexo,
            añoNacimiento   = m.[año_nacimiento],
-           fechaNacimiento = CONVERT(VARCHAR(10), m.fecha_nacimiento, 23),
-           edadAproximada  = CASE
-               WHEN m.fecha_nacimiento IS NOT NULL THEN
-                   CASE
-                       WHEN DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE))
-                            - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE)), m.fecha_nacimiento) > CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END < 0
-                       THEN 0
-                       ELSE DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE))
-                            - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, m.fecha_nacimiento, CAST(GETDATE() AS DATE)), m.fecha_nacimiento) > CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END
-                   END
-               ELSE (YEAR(GETDATE()) - m.[año_nacimiento])
-           END,
+           edadAproximada  = (YEAR(GETDATE()) - m.[año_nacimiento]),
            especie         = COALESCE(
                (SELECT TOP 1 cm.valor_caracteristica 
                   FROM dbo.caracteristicas_mascotas cm (NOLOCK) 

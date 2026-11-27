@@ -107,7 +107,7 @@ describe('NuevaPublicacionModalComponent', () => {
 
     const request = resourceSpy.crearPublicacion.calls.mostRecent().args[0];
     expect(request.añoNacimiento).toBe(2022);
-    expect(request.fechaNacimiento).toBeUndefined();
+    expect('fechaNacimiento' in request).toBeFalse();
     expect(request.condicionAdopcion).toBe('Patio cerrado');
     expect(request.nroRegMunicipal).toBeUndefined();
     expect(messageSpy.notify).toHaveBeenCalledWith('Creada');
@@ -200,5 +200,56 @@ describe('NuevaPublicacionModalComponent', () => {
     component.cancelar();
     expect(confirmSpy.confirm).not.toHaveBeenCalled();
     expect(dialogRefSpy.close).toHaveBeenCalledWith(false);
+  });
+
+  it('should reject whitespace-only values inline on submit', () => {
+    component.form.patchValue({
+      nombreMascota: '   ',
+      especie: 'Perro',
+      sexo: 'Macho',
+      anioNacimiento: new Date(2022, 0, 1),
+      condicionAdopcion: '   ',
+      descripcion: '   '
+    });
+
+    component.publicar();
+    fixture.detectChanges();
+
+    expect(component.mostrarError('nombreMascota')).toBeTrue();
+    expect(component.mostrarError('condicionAdopcion')).toBeTrue();
+    expect(component.mostrarError('descripcion')).toBeTrue();
+    expect(resourceSpy.crearPublicacion).not.toHaveBeenCalled();
+  });
+
+  it('should reset enviado when switching pet selection so cleared fields do not flash errors', () => {
+    component.publicar();
+    expect(component.enviado()).toBeTrue();
+
+    component.form.controls.nroRegMunicipal.setValue(100004);
+    expect(component.enviado()).toBeFalse();
+
+    component.form.controls.nroRegMunicipal.setValue(0);
+    expect(component.enviado()).toBeFalse();
+    expect(component.mostrarError('nombreMascota')).toBeFalse();
+  });
+
+  it('should reuse cached uploaded photo URL when retrying after crearPublicacion fails', () => {
+    const file = new File(['img'], 'foto.jpg', { type: 'image/jpeg' });
+    component.archivoFoto.set(file);
+    completarFormularioValido();
+
+    resourceSpy.subirFoto.and.returnValue(of({ codigoRespuesta: 1, urlFoto: '/uploads/publicaciones/cached.jpg' }));
+    resourceSpy.crearPublicacion.and.returnValue(throwError(() => ({ error: { mensajeRespuesta: 'Error temporal' } })));
+
+    component.publicar();
+    expect(resourceSpy.subirFoto).toHaveBeenCalledTimes(1);
+    expect(component.errorServidor()).toBe('Error temporal');
+
+    resourceSpy.crearPublicacion.and.returnValue(of({ codigoRespuesta: 1, nroPublicacion: 10, mensajeRespuesta: 'Creada' }));
+    component.publicar();
+
+    expect(resourceSpy.subirFoto).toHaveBeenCalledTimes(1);
+    expect(resourceSpy.crearPublicacion.calls.mostRecent().args[0].foto).toBe('/uploads/publicaciones/cached.jpg');
+    expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
   });
 });

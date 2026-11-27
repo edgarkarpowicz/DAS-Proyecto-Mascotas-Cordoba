@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -10,6 +10,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class NavbarComponent {
 
+  private readonly _el = inject(ElementRef<HTMLElement>);
   private readonly authService = inject(AuthService);
   readonly currentUser = this.authService.usuario;
   showDropdown = false;
@@ -24,6 +25,13 @@ export class NavbarComponent {
 
   toggleDropdown(): void {
     this.showDropdown = !this.showDropdown;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.showDropdown && !this._el.nativeElement.contains(event.target as Node)) {
+      this.showDropdown = false;
+    }
   }
 
   @HostListener('document:keydown.escape')

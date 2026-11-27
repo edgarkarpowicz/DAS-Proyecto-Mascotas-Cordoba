@@ -110,9 +110,8 @@ class PublicacionesServiceTests {
 
     @Test
     void testCrearPublicacionConMascotaNuevaRegistraMascotaYLuegoPublicacion() {
-        when(publicacionesRepository.registrarMascota(eq(1), eq("Max"), eq("M"), eq(añoValido), isNull(), eq("Perro"), eq("Mestizo")))
+        when(publicacionesRepository.registrarMascota(eq(1), eq("Max"), eq("M"), eq(añoValido), eq("Perro"), eq("Mestizo")))
                 .thenReturn(100050);
-        when(publicacionesRepository.contarPublicacionesActivas(100050, 0)).thenReturn(0);
         when(publicacionesRepository.insertarPublicacion(eq(1), eq(100050), isNull(), eq("Juguetón"), eq("Patio cerrado"), isNull(), eq("Activa")))
                 .thenReturn(105);
 
@@ -121,13 +120,14 @@ class PublicacionesServiceTests {
         assertEquals(1, response.getCodigoRespuesta());
         assertEquals(105, response.getNroPublicacion());
         InOrder orden = inOrder(publicacionesRepository);
-        orden.verify(publicacionesRepository).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any(), any());
+        orden.verify(publicacionesRepository).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any());
         orden.verify(publicacionesRepository).insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString());
+        verify(publicacionesRepository, never()).contarPublicacionesActivas(anyInt(), anyInt());
     }
 
     @Test
     void testCrearPublicacionAsignaCuilYRefugioDeSesion() {
-        when(publicacionesRepository.registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any(), any())).thenReturn(100050);
+        when(publicacionesRepository.registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any())).thenReturn(100050);
         when(publicacionesRepository.insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString())).thenReturn(77);
         NuevaPublicacionRequestBE req = nuevaMascota();
 
@@ -151,7 +151,7 @@ class PublicacionesServiceTests {
         AdministrarPublicacionResponseBE response = publicacionesService.crearPublicacion(req);
 
         assertEquals(50, response.getNroPublicacion());
-        verify(publicacionesRepository, never()).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any(), any());
+        verify(publicacionesRepository, never()).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any());
     }
 
     @Test
@@ -186,7 +186,7 @@ class PublicacionesServiceTests {
     }
 
     @Test
-    void testCrearPublicacionSinAñoNiFechaEsBadRequest() {
+    void testCrearPublicacionSinAñoEsBadRequest() {
         NuevaPublicacionRequestBE req = nuevaMascota();
         req.setAñoNacimiento(null);
 
@@ -209,25 +209,31 @@ class PublicacionesServiceTests {
     }
 
     @Test
-    void testCrearPublicacionTomaElAñoDeLaFechaSiSoloLlegaFecha() {
+    void testCrearPublicacionAñoMuyAntiguoEsBadRequest() {
         NuevaPublicacionRequestBE req = nuevaMascota();
-        req.setAñoNacimiento(null);
-        req.setFechaNacimiento(añoValido + "-05-10");
-        when(publicacionesRepository.registrarMascota(anyInt(), anyString(), anyString(), eq(añoValido), any(), any(), any())).thenReturn(100050);
-        when(publicacionesRepository.insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString())).thenReturn(5);
-
-        assertEquals(5, publicacionesService.crearPublicacion(req).getNroPublicacion());
-    }
-
-    @Test
-    void testCrearPublicacionFechaNacimientoInvalidaEsBadRequest() {
-        NuevaPublicacionRequestBE req = nuevaMascota();
-        req.setFechaNacimiento("10/05/2024");
+        req.setAñoNacimiento(Year.now().getValue() - 31);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
 
         assertEquals(HttpStatus.BAD_REQUEST, status(ex));
-        assertTrue(ex.getReason().contains("YYYY-MM-DD"));
+        assertTrue(ex.getReason().contains("anterior"));
+        verifyNoMoreInteractionsConEscrituras();
+    }
+
+    @Test
+    void testNormalizarSexo() {
+        assertEquals("H", PublicacionesService.normalizarSexo("F"));
+        assertEquals("H", PublicacionesService.normalizarSexo("Femenino"));
+        assertEquals("H", PublicacionesService.normalizarSexo("H"));
+        assertEquals("H", PublicacionesService.normalizarSexo("Hembra"));
+        assertEquals("M", PublicacionesService.normalizarSexo("M"));
+        assertEquals("M", PublicacionesService.normalizarSexo("Macho"));
+        assertEquals("M", PublicacionesService.normalizarSexo(null));
+        assertEquals("M", PublicacionesService.normalizarSexo("   "));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> PublicacionesService.normalizarSexo("X"));
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
     }
 
     @Test
@@ -391,7 +397,7 @@ class PublicacionesServiceTests {
     }
 
     private void verifyNoMoreInteractionsConEscrituras() {
-        verify(publicacionesRepository, never()).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any(), any());
+        verify(publicacionesRepository, never()).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any());
         verify(publicacionesRepository, never()).insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString());
     }
 

@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { IPublicacionAdopcion } from '../../api/models/i-publicacion-adopcion';
 import { EstadoPublicacion, EstadoPublicacionService } from '../../services/estado-publicacion.service';
@@ -6,7 +7,6 @@ import { ExpandImageButtonComponent } from '../../../shared/components/expand-im
 import { ImagenLightboxModalComponent } from '../../../shared/components/imagen-lightbox-modal/imagen-lightbox-modal.component';
 import {
   applyFallbackFoto,
-  formatFechaNacimiento,
   formatFechaPublicacion,
   formatFotoCaption,
   getDefaultFotoMascota,
@@ -43,8 +43,8 @@ export class DetallePublicacionModalComponent {
 
   constructor() {
     // Esc o clic en el fondo también devuelven la publicación vigente.
-    this._dialogRef.backdropClick().subscribe(() => this.cerrar());
-    this._dialogRef.keydownEvents().subscribe(event => {
+    this._dialogRef.backdropClick().pipe(takeUntilDestroyed()).subscribe(() => this.cerrar());
+    this._dialogRef.keydownEvents().pipe(takeUntilDestroyed()).subscribe(event => {
       if (event.key === 'Escape') {
         this.cerrar();
       }
@@ -52,6 +52,9 @@ export class DetallePublicacionModalComponent {
   }
 
   cerrar(): void {
+    if (this.procesando()) {
+      return;
+    }
     this._dialogRef.close(this.publicacion());
   }
 
@@ -85,11 +88,11 @@ export class DetallePublicacionModalComponent {
   }
 
   getEdad(pub: IPublicacionAdopcion): string {
-    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento, pub.fechaNacimiento);
+    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento);
   }
 
   getNacimientoLabel(pub: IPublicacionAdopcion): string | null {
-    return formatFechaNacimiento(pub.fechaNacimiento) ?? (pub.añoNacimiento ? String(pub.añoNacimiento) : null);
+    return pub.añoNacimiento ? String(pub.añoNacimiento) : null;
   }
 
   getSexo(pub: IPublicacionAdopcion): 'Hembra' | 'Macho' {

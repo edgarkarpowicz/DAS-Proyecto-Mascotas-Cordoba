@@ -1,14 +1,14 @@
 # Mascotas Córdoba - FrontEnd Web Application
 
 Portal Web cliente de la plataforma **Mascotas Córdoba** (Programa Municipal de Bienestar Animal).  
-Desarrollado en **Angular 17** (Standalone Components, Signals, Resolvers, Guards e Interceptors).
+Desarrollado en **Angular 21** con **Angular Material**, Standalone Components, Signals, Reactive Forms, Resolvers, Guards e Interceptors.
 
 ---
 
 ## 📋 Requisitos Previos
 
-- **Node.js:** Versión 18.x o superior.
-- **npm:** Versión 9.x o superior.
+- **Node.js:** Versión `20.19+` o `22+`.
+- **npm:** Versión `10.x` o superior.
 - **Backend:** Servicio Spring Boot corriendo en `http://localhost:8080`.
 
 ---
@@ -36,7 +36,7 @@ export const environment = {
    cd frontend/Mascotas-Cordoba-FrontEnd
    ```
 
-2. **Instalar dependencias (solo la primera vez):**
+2. **Instalar dependencias (solo la primera vez o tras actualizar `package.json`):**
    ```powershell
    npm install
    ```
@@ -45,7 +45,7 @@ export const environment = {
    ```powershell
    npm start
    # o:
-   ng serve
+   npx ng serve
    ```
 
 4. **Acceder a la aplicación:**
@@ -53,7 +53,12 @@ export const environment = {
 
 ---
 
-## 🔨 Compilación para Producción
+## 🧪 Tests y Compilación para Producción
+
+Para ejecutar la suite de pruebas unitarias:
+```powershell
+npx ng test --watch=false --browsers=ChromeHeadless
+```
 
 Para compilar el proyecto y verificar que no existan errores de tipos o empaquetado:
 ```powershell
@@ -71,26 +76,25 @@ Utiliza los usuarios precargados en la base de datos municipal:
 | :--- | :--- | :--- | :--- |
 | **Roberto Sánchez** | `20-25999000-5` | `pass123` | **Refugio Patitas Felices** (Carga 2 publicaciones iniciales) |
 | **Ana Carolina Morales** | `27-38123456-9` | `pass123` | **Hogar Animal Córdoba** (Sin publicaciones iniciales; incluye mascota precargada NRM 100006 "Thor") |
-| **Juan Carlos Pérez** | `20-28555666-3` | `pass123` | *Sin refugio* (Prueba de acceso denegado - 401) |
+| **Juan Carlos Pérez** | `20-28555666-3` | `pass123` | *Sin refugio* (Prueba de validación de perfil / acceso denegado) |
 
 ---
 
 ## 🏛️ Arquitectura del FrontEnd
 
-Siguiendo las pautas de diseño y buenas prácticas del curso:
+La aplicación se organiza por módulos funcionales cargados con `loadChildren` desde `src/app/app.routes.ts`:
 
-- **API Resources (`src/app/api/resources/`):**
-  - `AuthResource`: Invocación a `POST /auth/login`.
-  - `PublicacionesResource`: Consultas de estados, publicaciones del refugio, mascotas disponibles y transiciones de estado.
-- **Interceptors (`src/app/interceptors/`):**
-  - `appHttpInterceptor`: Inyecta la cabecera `X-API-Key`, activa el spinner global de carga reactivo y cancela peticiones pendientes ante cambios de ruta.
-- **Error Handler (`src/app/handlers/`):**
-  - `AppErrorHandler`: Captura global de errores HTTP y de tiempo de ejecución, desplegando un modal accesible (`ModalMessageComponent`).
-- **Guards (`src/app/guards/`):**
-  - `authGuard`: Protege el acceso a rutas privadas (`/publicaciones`) requiriendo sesión iniciada.
-  - `controlarCambiosGuard`: Previene la pérdida de cambios sin guardar en formularios y modales (`CanDeactivateFn`).
-- **Resolvers (`src/app/resolvers/`):**
-  - `publicacionesResolver`: Pre-carga las publicaciones del refugio autenticado antes de activar la ruta.
-  - `estadosResolver`: Pre-carga el catálogo dinámico de estados de publicación.
-- **Manejo de Estado Reactivo:**
-  - `AuthService`, `LoaderService`, `AppMessageService`, `ConfirmDialogService` utilizando Angular Signals.
+- **Módulo de Autenticación (`src/app/auth/`):**
+  - `AUTH_ROUTES` (`auth.routes.ts`) y `LoginComponent` con Reactive Forms y validación en línea al enviar.
+- **Módulo de Publicaciones (`src/app/publicaciones/`):**
+  - `PUBLICACIONES_ROUTES` (`publicaciones.routes.ts`) con proveedores locales (`PublicacionesResource`, `EstadoPublicacionService`) y resolvers de navegación (`publicacionesResolver`, `estadosResolver`).
+  - `PublicacionesComponent`: grilla filtrable por pestañas de estado y nombre, con `EstadoPublicacionService` (impide reactivar publicaciones `Finalizada`).
+  - Modales por referencia con `MatDialog`:
+    - `NuevaPublicacionModalComponent`: carga sus propios catálogos (`getMascotasDisponibles`, `getEspecies`), usa Reactive Forms, `textarea` para condiciones de adopción, calendario de años de Angular Material (`añoNacimiento`), subida de foto con caché ante reintentos y grabación directa al publicar.
+    - `DetallePublicacionModalComponent`: cambia el estado desde el propio diálogo y devuelve la publicación actualizada al cerrar.
+- **Núcleo (`src/app/core/`):**
+  - `AuthService` y `AuthSessionService` (sesión JWT persistida únicamente en `sessionStorage`, restaurada al inicio con `provideAppInitializer`).
+  - `appHttpInterceptor`: inyecta `X-API-Key` y `Authorization: Bearer <token>`, controla `LoaderService`, cancela peticiones al navegar (`HttpCancelService`) y limpia la sesión ante `401`.
+  - `AppErrorHandler`, `AppMessageService` (`MatSnackBar` para éxitos y `MessageDialogComponent` para errores), `ConfirmDialogService` (`ConfirmDialogComponent`), `authGuard` y `controlarCambiosGuard`.
+- **Compartido (`src/app/shared/`):**
+  - `NavbarComponent`, `ImagenLightboxModalComponent`, `ExpandImageButtonComponent`, `FiltrarPorPipe`, `AutofocusDirective` y utilidades en `mascota-formatters.ts`.

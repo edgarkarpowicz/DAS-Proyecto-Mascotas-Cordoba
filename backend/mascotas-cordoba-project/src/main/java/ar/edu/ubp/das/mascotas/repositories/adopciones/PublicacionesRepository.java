@@ -72,7 +72,7 @@ public class PublicacionesRepository {
      * el número de registro municipal asignado.
      */
     public int registrarMascota(int idRefugio, String nombre, String sexo, int añoNacimiento,
-                                LocalDate fechaNacimiento, String especie, String raza) {
+                                String especie, String raza) {
         try {
             SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
                     .withProcedureName("ins_mascota_refugio")
@@ -81,7 +81,6 @@ public class PublicacionesRepository {
                             new SqlParameter("nombre", Types.VARCHAR),
                             new SqlParameter("sexo", Types.CHAR),
                             new SqlParameter("año_nacimiento", Types.INTEGER),
-                            new SqlParameter("fecha_nacimiento", Types.DATE),
                             new SqlParameter("especie", Types.VARCHAR),
                             new SqlParameter("raza", Types.VARCHAR),
                             new SqlOutParameter("nro_reg_municipal", Types.INTEGER)
@@ -92,7 +91,6 @@ public class PublicacionesRepository {
             params.put("nombre", nombre);
             params.put("sexo", sexo);
             params.put("año_nacimiento", añoNacimiento);
-            params.put("fecha_nacimiento", fechaNacimiento != null ? Date.valueOf(fechaNacimiento) : null);
             params.put("especie", especie);
             params.put("raza", raza);
 
@@ -199,7 +197,7 @@ public class PublicacionesRepository {
     public boolean mascotaPerteneceARefugio(int nroRegMunicipal, int idRefugio) {
         try {
             Integer count = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(1) FROM dbo.mascotas WHERE nro_reg_municipal = ? AND id_refugio = ?",
+                    "SELECT COUNT(1) FROM dbo.mascotas WHERE nro_reg_municipal = ? AND id_refugio = ? AND vive = 1",
                     Integer.class,
                     nroRegMunicipal,
                     idRefugio

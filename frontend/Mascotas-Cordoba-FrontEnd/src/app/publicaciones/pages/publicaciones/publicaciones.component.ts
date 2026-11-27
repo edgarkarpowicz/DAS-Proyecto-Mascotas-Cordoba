@@ -180,7 +180,7 @@ export class PublicacionesComponent implements HasChangesComponent {
   // ------------------------------------------------------------ formato
 
   getEdadTexto(pub: IPublicacionAdopcion): string {
-    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento, pub.fechaNacimiento);
+    return getEdadTexto(pub.edadAproximada, pub.añoNacimiento);
   }
 
   getSexo(pub: IPublicacionAdopcion): 'Hembra' | 'Macho' {

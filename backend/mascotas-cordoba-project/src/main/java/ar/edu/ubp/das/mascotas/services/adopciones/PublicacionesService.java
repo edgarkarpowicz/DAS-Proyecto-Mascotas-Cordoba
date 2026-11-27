@@ -126,13 +126,12 @@ public class PublicacionesService implements IPublicacionesService {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "La mascota indicada no está registrada bajo cuidado del refugio");
             }
+            if (ACTIVA.equals(estado) && publicacionesRepository.contarPublicacionesActivas(nroRegMunicipal, 0) > 0) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "La mascota seleccionada ya cuenta con una publicación activa de adopción");
+            }
         } else {
             nroRegMunicipal = registrarMascotaNueva(request, idRefugio);
-        }
-
-        if (ACTIVA.equals(estado) && publicacionesRepository.contarPublicacionesActivas(nroRegMunicipal, 0) > 0) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "La mascota seleccionada ya cuenta con una publicación activa de adopción");
         }
 
         request.setIdRefugio(idRefugio);
@@ -161,18 +160,13 @@ public class PublicacionesService implements IPublicacionesService {
             throw badRequest("El nombre de la mascota no puede superar los " + LARGO_MAXIMO_NOMBRE + " caracteres");
         }
 
-        LocalDate fechaNacimiento = parsearFecha(request.getFechaNacimiento(), "nacimiento");
-        if (fechaNacimiento != null && fechaNacimiento.isAfter(LocalDate.now())) {
-            throw badRequest("La fecha de nacimiento no puede ser futura");
-        }
-        int añoNacimiento = resolverAñoNacimiento(request.getAñoNacimiento(), fechaNacimiento);
+        int añoNacimiento = resolverAñoNacimiento(request.getAñoNacimiento());
 
         return publicacionesRepository.registrarMascota(
                 idRefugio,
                 nombre,
                 normalizarSexo(request.getSexo()),
                 añoNacimiento,
-                fechaNacimiento,
                 textoONulo(request.getEspecie()),
                 textoONulo(request.getRaza())
         );
@@ -251,8 +245,7 @@ public class PublicacionesService implements IPublicacionesService {
         return estado;
     }
 
-    private static int resolverAñoNacimiento(Integer añoSolicitado, LocalDate fechaNacimiento) {
-        Integer año = añoSolicitado != null ? añoSolicitado : (fechaNacimiento != null ? fechaNacimiento.getYear() : null);
+    private static int resolverAñoNacimiento(Integer año) {
         if (año == null) {
             throw badRequest("El año de nacimiento es obligatorio para registrar una mascota nueva");
         }
@@ -266,9 +259,16 @@ public class PublicacionesService implements IPublicacionesService {
         return año;
     }
 
-    static String normalizarSexo(String sexo) {
+    public static String normalizarSexo(String sexo) {
         String valor = textoONulo(sexo);
-        return valor != null && valor.toUpperCase().startsWith("H") ? "H" : "M";
+        if (valor == null) {
+            return "M";
+        }
+        return switch (valor.toUpperCase()) {
+            case "H", "HEMBRA", "F", "FEMENINO" -> "H";
+            case "M", "MACHO" -> "M";
+            default -> throw badRequest("El sexo de la mascota debe ser 'M' (Macho) o 'H' (Hembra)");
+        };
     }
 
     private static LocalDate parsearFecha(String fecha, String campo) {

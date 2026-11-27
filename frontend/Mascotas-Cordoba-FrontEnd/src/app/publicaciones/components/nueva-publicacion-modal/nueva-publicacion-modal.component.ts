@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepicker, MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -27,6 +27,11 @@ const FORMATO_ANIO = {
 };
 
 const ANTIGUEDAD_MAXIMA_ANIOS = 30;
+
+function noSoloEspacios(control: AbstractControl): ValidationErrors | null {
+  const value = control.value;
+  return typeof value === 'string' && value.trim().length === 0 ? { required: true } : null;
+}
 
 /**
  * Alta de una publicación de adopción. Se abre por referencia con MatDialog,
@@ -60,13 +65,13 @@ export class NuevaPublicacionModalComponent {
 
   readonly form = this._fb.group({
     nroRegMunicipal: this._fb.nonNullable.control(0),
-    nombreMascota: this._fb.nonNullable.control('', [Validators.required, Validators.maxLength(64)]),
+    nombreMascota: this._fb.nonNullable.control('', [Validators.required, noSoloEspacios, Validators.maxLength(64)]),
     especie: this._fb.nonNullable.control('', Validators.required),
     sexo: this._fb.nonNullable.control('Hembra', Validators.required),
     anioNacimiento: this._fb.control<Date | null>(null, Validators.required),
     raza: this._fb.nonNullable.control('', Validators.maxLength(64)),
-    condicionAdopcion: this._fb.nonNullable.control('', [Validators.required, Validators.maxLength(1000)]),
-    descripcion: this._fb.nonNullable.control('', [Validators.required, Validators.maxLength(2000)])
+    condicionAdopcion: this._fb.nonNullable.control('', [Validators.required, noSoloEspacios, Validators.maxLength(1000)]),
+    descripcion: this._fb.nonNullable.control('', [Validators.required, noSoloEspacios, Validators.maxLength(2000)])
   });
 
   readonly mascotasDisponibles = signal<IMascotaDisponible[]>([]);
@@ -82,6 +87,9 @@ export class NuevaPublicacionModalComponent {
   readonly previewUrl = signal<string | null>(null);
   readonly errorFoto = signal<string | null>(null);
   readonly arrastrando = signal(false);
+
+  private _fotoSubidaArchivo: File | null = null;
+  private _fotoSubidaUrl: string | null = null;
 
   private readonly _anio = toSignal(this.form.controls.anioNacimiento.valueChanges, { initialValue: null });
 
@@ -127,6 +135,9 @@ export class NuevaPublicacionModalComponent {
   // ------------------------------------------------------------ mascota y año
 
   private aplicarMascotaSeleccionada(nro: number): void {
+    this.enviado.set(false);
+    this.errorServidor.set(null);
+
     const identidad = [
       this.form.controls.nombreMascota,
       this.form.controls.especie,
@@ -138,8 +149,7 @@ export class NuevaPublicacionModalComponent {
 
     if (encontrada) {
       // Mascota del Registro Único: sus datos de identidad no se modifican.
-      const anio = encontrada.añoNacimiento
-        ?? (encontrada.fechaNacimiento ? Number(encontrada.fechaNacimiento.slice(0, 4)) : null);
+      const anio = encontrada.añoNacimiento ?? null;
       this.mascotaSeleccionada.set(encontrada);
       this.form.patchValue({
         nombreMascota: encontrada.nombre || '',
@@ -224,6 +234,8 @@ export class NuevaPublicacionModalComponent {
       return;
     }
     this.errorFoto.set(null);
+    this._fotoSubidaArchivo = null;
+    this._fotoSubidaUrl = null;
     this.archivoFoto.set(file);
     const reader = new FileReader();
     reader.onload = () => this.previewUrl.set(reader.result as string);
@@ -234,6 +246,8 @@ export class NuevaPublicacionModalComponent {
     this.archivoFoto.set(null);
     this.previewUrl.set(null);
     this.errorFoto.set(null);
+    this._fotoSubidaArchivo = null;
+    this._fotoSubidaUrl = null;
     const input = this.fileInput()?.nativeElement;
     if (input) {
       input.value = '';
@@ -301,7 +315,19 @@ export class NuevaPublicacionModalComponent {
     if (!archivo) {
       return of(undefined);
     }
-    return this._pubResource.subirFoto(archivo).pipe(map(res => res.urlFoto || undefined));
+    if (this._fotoSubidaArchivo === archivo && this._fotoSubidaUrl) {
+      return of(this._fotoSubidaUrl);
+    }
+    return this._pubResource.subirFoto(archivo).pipe(
+      map(res => {
+        const url = res.urlFoto || undefined;
+        if (url) {
+          this._fotoSubidaArchivo = archivo;
+          this._fotoSubidaUrl = url;
+        }
+        return url;
+      })
+    );
   }
 
   private armarRequest(urlFoto?: string): INuevaPublicacionRequest {

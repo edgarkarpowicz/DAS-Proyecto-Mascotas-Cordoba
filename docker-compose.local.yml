@@ -1,0 +1,46 @@
+# Arranque local completo, incluyendo SQL Server y datos de prueba.
+# docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml up -d --build
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mascotas-db
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD en .env.local}
+    ports:
+      - "127.0.0.1:1433:1433"
+    volumes:
+      - mascotas_sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "SQLCMDPASSWORD=\"$$MSSQL_SA_PASSWORD\" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q 'SELECT 1' -o /dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: "no"
+    entrypoint: ["/bin/bash", "/scripts/init-db-local.sh"]
+    environment:
+      SQLCMDPASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD en .env.local}
+    volumes:
+      - ./scripts/init-db-local.sh:/scripts/init-db-local.sh:ro
+      - ./db:/scripts/db:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  backend:
+    environment:
+      DB_HOST: sqlserver
+      DB_USER: sa
+      DB_PASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD en .env.local}
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+volumes:
+  mascotas_sqlserver_data:

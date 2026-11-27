@@ -14,9 +14,9 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # ==============================================================================
-# Etapa 2: Runtime con Apache Tomcat 10.1 (Convención Cátedra DAS)
+# Etapa 2: Runtime con Apache Tomcat 11 (Servlet 6.1, requerido por Spring Boot 4)
 # ==============================================================================
-FROM tomcat:10.1-jdk17-temurin
+FROM tomcat:11.0-jdk17-temurin
 LABEL authors="Mariela Pastarini / DAS UBP"
 
 # Limpiar aplicaciones de ejemplo predeterminadas de Tomcat

@@ -20,3 +20,6 @@ buildNumber.properties
 uploads/publicaciones/*-*_*.*
 !uploads/publicaciones/mia_100005.jpg
 !uploads/publicaciones/rocco_100004.jpg
+
+# Credenciales de desarrollo local (Docker Compose)
+.env.local

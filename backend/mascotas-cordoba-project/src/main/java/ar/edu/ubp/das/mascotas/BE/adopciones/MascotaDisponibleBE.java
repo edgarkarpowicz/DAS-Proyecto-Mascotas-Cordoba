@@ -6,7 +6,6 @@ public class MascotaDisponibleBE {
     private String nombre;
     private String sexo;
     private Integer añoNacimiento;
-    private String fechaNacimiento;
     private Integer edadAproximada;
     private String especie;
     private String raza;
@@ -44,14 +43,6 @@ public class MascotaDisponibleBE {
 
     public void setAñoNacimiento(Integer añoNacimiento) {
         this.añoNacimiento = añoNacimiento;
-    }
-
-    public String getFechaNacimiento() {
-        return fechaNacimiento;
-    }
-
-    public void setFechaNacimiento(String fechaNacimiento) {
-        this.fechaNacimiento = fechaNacimiento;
     }
 
     public Integer getEdadAproximada() {

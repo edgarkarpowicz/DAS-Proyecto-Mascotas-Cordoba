@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
-import { AuthResource } from '../../main/api/resources/auth-resource';
-import { PerfilUsuario } from '../../main/api/models/i-usuario-refugio';
-import { ILoginResponse } from '../../main/api/models/i-login-response';
+import { AuthResource } from '../api/auth-resource';
+import { PerfilUsuario } from '../api/models/i-usuario-refugio';
+import { ILoginResponse } from '../api/models/i-login-response';
 import { AuthSessionService } from './auth-session.service';
 
 @Injectable({
@@ -25,11 +25,11 @@ export class AuthService {
     return this._session.hasPerfil(...perfiles);
   }
 
-  login(cuil: string, clave: string, recordarme = false): Observable<ILoginResponse> {
+  login(cuil: string, clave: string): Observable<ILoginResponse> {
     return this._authResource.login({ cuil: cuil.trim(), clave: clave.trim() }).pipe(
       tap(response => {
         if (response && response.codigoRespuesta === 1 && response.usuario && response.token) {
-          this._session.setSession(response.usuario, response.token, recordarme);
+          this._session.setSession(response.usuario, response.token);
         }
       })
     );

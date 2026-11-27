@@ -1,0 +1,203 @@
+.login-wrapper {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  background-color: var(--papel);
+}
+
+/* ==========================================================================
+   Marca
+   ========================================================================== */
+.marca {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 3rem clamp(1.5rem, 5vw, 4.5rem);
+  background-color: var(--verde-noche);
+  color: #ffffff;
+}
+
+.marca-sello {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-display);
+  font-stretch: var(--display-stretch);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.marca-sello svg {
+  width: 24px;
+  height: 24px;
+  color: #7fd3a5;
+}
+
+.marca-frase {
+  position: relative;
+  z-index: 1;
+  max-width: 13ch;
+  font-size: clamp(2.4rem, 4.6vw, 4.25rem);
+  font-weight: 900;
+}
+
+.marca-programa {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Contorno grande del corazón de la marca, recortado por el borde */
+.marca-corazon {
+  position: absolute;
+  right: -18%;
+  bottom: -22%;
+  width: 78%;
+  color: rgba(127, 211, 165, 0.22);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Formulario
+   ========================================================================== */
+.acceso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.acceso-contenido {
+  width: 100%;
+  max-width: 380px;
+}
+
+.acceso-titulo {
+  font-size: 2rem;
+  color: var(--verde-noche);
+}
+
+.acceso-bajada {
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.error-banner {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--ladrillo-tenue);
+  border-left: 4px solid var(--ladrillo);
+  color: #7d2a1c;
+  font-size: 0.875rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-medium);
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-container:focus-within {
+  border-color: var(--verde-monte);
+  box-shadow: 0 0 0 3px rgba(19, 107, 67, 0.15);
+}
+
+.input-container input {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--text-dark);
+}
+
+.input-container.input-error {
+  border-color: var(--ladrillo);
+  background-color: #fdf6f4;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ladrillo);
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background-color: var(--verde-monte);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: var(--verde-monte-hover);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* ==========================================================================
+   Celular: la marca queda como encabezado compacto
+   ========================================================================== */
+@media (max-width: 860px) {
+  .login-wrapper {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .marca {
+    padding: 1.75rem 1.25rem 2rem;
+    gap: 1.25rem;
+  }
+
+  .marca-frase {
+    font-size: 2rem;
+    max-width: 16ch;
+  }
+
+  .marca-corazon {
+    width: 55%;
+    right: -12%;
+    bottom: -35%;
+  }
+
+  .acceso {
+    align-items: flex-start;
+    padding: 2rem 1.25rem 3rem;
+  }
+}

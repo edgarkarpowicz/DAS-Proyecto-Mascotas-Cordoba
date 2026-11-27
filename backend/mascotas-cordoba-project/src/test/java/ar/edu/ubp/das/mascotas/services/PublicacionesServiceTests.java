@@ -8,16 +8,20 @@ import ar.edu.ubp.das.mascotas.services.adopciones.PublicacionesService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Year;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,11 +36,11 @@ class PublicacionesServiceTests {
     @InjectMocks
     private PublicacionesService publicacionesService;
 
-    private SesionUsuarioBE sesionRefugio;
+    private final int añoValido = Year.now().getValue() - 2;
 
     @BeforeEach
     void setUp() {
-        sesionRefugio = new SesionUsuarioBE();
+        SesionUsuarioBE sesionRefugio = new SesionUsuarioBE();
         sesionRefugio.setToken("tok-soap-refugio");
         sesionRefugio.setIdCiudadano(3);
         sesionRefugio.setCuil("20-25999000-5");
@@ -45,161 +49,356 @@ class PublicacionesServiceTests {
 
         lenient().when(authorizationService.requireAuthenticated()).thenReturn(sesionRefugio);
         lenient().when(authorizationService.requireRefugio(any())).thenReturn(sesionRefugio);
+        lenient().when(publicacionesRepository.esEstadoValido(anyString())).thenAnswer(inv ->
+                List.of("Activa", "Pausada", "Finalizada").contains(inv.<String>getArgument(0)));
     }
 
-    @Test
-    void testGetEstadosPublicacion() {
-        EstadoPublicacionBE e1 = new EstadoPublicacionBE("Activa", "Visible");
-        when(publicacionesRepository.getEstadosPublicacion()).thenReturn(List.of(e1));
-
-        List<EstadoPublicacionBE> res = publicacionesService.getEstadosPublicacion();
-
-        assertNotNull(res);
-        assertEquals(1, res.size());
-        assertEquals("Activa", res.get(0).getCodEstado());
+    private NuevaPublicacionRequestBE nuevaMascota() {
+        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
+        req.setIdRefugio(1);
+        req.setNombreMascota("Max");
+        req.setSexo("Macho");
+        req.setAñoNacimiento(añoValido);
+        req.setEspecie("Perro");
+        req.setRaza("Mestizo");
+        req.setCaracteristicasMascota("Juguetón");
+        req.setCondicionAdopcion("Patio cerrado");
+        return req;
     }
 
-    @Test
-    void testGetEspecies() {
-        EspecieBE esp = new EspecieBE(1, "Perro");
-        when(publicacionesRepository.getEspecies()).thenReturn(List.of(esp));
-
-        List<EspecieBE> res = publicacionesService.getEspecies();
-
-        assertNotNull(res);
-        assertEquals(1, res.size());
-        assertEquals("Perro", res.get(0).getNomEspecie());
-    }
-
-    @Test
-    void testGetPublicacionesPorRefugio() {
+    private PublicacionAdopcionBE publicacion(int nro, int nrm, String estado) {
         PublicacionAdopcionBE pub = new PublicacionAdopcionBE();
-        pub.setNroPublicacion(10);
-        pub.setNombreMascota("Rocco");
+        pub.setNroPublicacion(nro);
+        pub.setNroRegMunicipal(nrm);
+        pub.setIdRefugio(1);
+        pub.setEstadoPublicacion(estado);
+        return pub;
+    }
 
+    private static HttpStatus status(ResponseStatusException ex) {
+        return HttpStatus.valueOf(ex.getStatusCode().value());
+    }
+
+    // ------------------------------------------------------------- consultas
+
+    @Test
+    void testGetEstadosYEspecies() {
+        when(publicacionesRepository.getEstadosPublicacion()).thenReturn(List.of(new EstadoPublicacionBE("Activa", "Visible")));
+        when(publicacionesRepository.getEspecies()).thenReturn(List.of(new EspecieBE(1, "Perro")));
+
+        assertEquals("Activa", publicacionesService.getEstadosPublicacion().get(0).getCodEstado());
+        assertEquals("Perro", publicacionesService.getEspecies().get(0).getNomEspecie());
+    }
+
+    @Test
+    void testGetPublicacionesPorRefugioUsaElRefugioDeLaSesion() {
+        PublicacionAdopcionBE pub = publicacion(10, 100004, "Activa");
         when(publicacionesRepository.getPublicacionesPorRefugio(1)).thenReturn(List.of(pub));
 
-        List<PublicacionAdopcionBE> res = publicacionesService.getPublicacionesPorRefugio(1);
-
-        assertNotNull(res);
-        assertEquals(1, res.size());
-        assertEquals("Rocco", res.get(0).getNombreMascota());
+        assertEquals(1, publicacionesService.getPublicacionesPorRefugio(1).size());
     }
 
     @Test
-    void testGetPublicacionesPorRefugioInvalido() {
-        List<PublicacionAdopcionBE> res = publicacionesService.getPublicacionesPorRefugio(0);
-        assertNotNull(res);
-        assertTrue(res.isEmpty());
-        verifyNoInteractions(publicacionesRepository);
+    void testGetPublicacionesRefugioInvalidoEsBadRequest() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesService.getPublicacionesPorRefugio(0));
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        verify(publicacionesRepository, never()).getPublicacionesPorRefugio(anyInt());
     }
 
-    @Test
-    void testGetMascotasDisponibles() {
-        MascotaDisponibleBE pet = new MascotaDisponibleBE();
-        pet.setNroRegMunicipal(100006);
-        pet.setNombre("Thor");
-
-        when(publicacionesRepository.getMascotasDisponibles(1)).thenReturn(List.of(pet));
-
-        List<MascotaDisponibleBE> res = publicacionesService.getMascotasDisponibles(1);
-
-        assertNotNull(res);
-        assertEquals(1, res.size());
-        assertEquals("Thor", res.get(0).getNombre());
-    }
+    // ---------------------------------------------------------------- alta
 
     @Test
-    void testCrearPublicacionExitosa() {
-        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
-        req.setIdRefugio(1);
-        req.setNombreMascota("Max");
-        req.setEstadoPublicacion("Activa");
+    void testCrearPublicacionConMascotaNuevaRegistraMascotaYLuegoPublicacion() {
+        when(publicacionesRepository.registrarMascota(eq(1), eq("Max"), eq("M"), eq(añoValido), eq("Perro"), eq("Mestizo")))
+                .thenReturn(100050);
+        when(publicacionesRepository.insertarPublicacion(eq(1), eq(100050), isNull(), eq("Juguetón"), eq("Patio cerrado"), isNull(), eq("Activa")))
+                .thenReturn(105);
 
-        when(publicacionesRepository.esEstadoValido("Activa")).thenReturn(true);
-        when(publicacionesRepository.crearPublicacion(req)).thenReturn(105);
+        AdministrarPublicacionResponseBE response = publicacionesService.crearPublicacion(nuevaMascota());
 
-        AdministrarPublicacionResponseBE response = publicacionesService.crearPublicacion(req);
-
-        assertNotNull(response);
         assertEquals(1, response.getCodigoRespuesta());
         assertEquals(105, response.getNroPublicacion());
-        assertTrue(response.getMensajeRespuesta().contains("exitosamente"));
+        InOrder orden = inOrder(publicacionesRepository);
+        orden.verify(publicacionesRepository).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any());
+        orden.verify(publicacionesRepository).insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString());
+        verify(publicacionesRepository, never()).contarPublicacionesActivas(anyInt(), anyInt());
     }
 
     @Test
-    void testCrearPublicacionRefugioInvalido() {
+    void testCrearPublicacionAsignaCuilYRefugioDeSesion() {
+        when(publicacionesRepository.registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any())).thenReturn(100050);
+        when(publicacionesRepository.insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString())).thenReturn(77);
+        NuevaPublicacionRequestBE req = nuevaMascota();
+
+        publicacionesService.crearPublicacion(req);
+
+        assertEquals(1, req.getIdRefugio());
+        assertEquals("20-25999000-5", req.getCuilPublicante());
+    }
+
+    @Test
+    void testCrearPublicacionConMascotaRegistradaNoLaVuelveARegistrar() {
         NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
-        req.setIdRefugio(null);
+        req.setIdRefugio(1);
+        req.setNroRegMunicipal(100004);
+        req.setCaracteristicasMascota("Cariñoso");
+        req.setCondicionAdopcion("Patio cerrado");
+        when(publicacionesRepository.mascotaPerteneceARefugio(100004, 1)).thenReturn(true);
+        when(publicacionesRepository.contarPublicacionesActivas(100004, 0)).thenReturn(0);
+        when(publicacionesRepository.insertarPublicacion(eq(1), eq(100004), any(), anyString(), anyString(), any(), eq("Activa"))).thenReturn(50);
 
         AdministrarPublicacionResponseBE response = publicacionesService.crearPublicacion(req);
 
-        assertNotNull(response);
-        assertEquals(-1, response.getCodigoRespuesta());
-        assertTrue(response.getMensajeRespuesta().contains("obligatorio"));
+        assertEquals(50, response.getNroPublicacion());
+        verify(publicacionesRepository, never()).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any());
     }
 
     @Test
-    void testCrearPublicacionEstadoInvalido() {
+    void testCrearPublicacionMascotaDeOtroRefugioEsForbidden() {
         NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
         req.setIdRefugio(1);
-        req.setNombreMascota("Max");
+        req.setNroRegMunicipal(200001);
+        req.setCaracteristicasMascota("Cariñoso");
+        req.setCondicionAdopcion("Patio cerrado");
+        when(publicacionesRepository.mascotaPerteneceARefugio(200001, 1)).thenReturn(false);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+
+        assertEquals(HttpStatus.FORBIDDEN, status(ex));
+        verify(publicacionesRepository, never()).insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString());
+    }
+
+    @Test
+    void testCrearPublicacionMascotaConPublicacionActivaEsConflict() {
+        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
+        req.setIdRefugio(1);
+        req.setNroRegMunicipal(100004);
+        req.setCaracteristicasMascota("Cariñoso");
+        req.setCondicionAdopcion("Patio cerrado");
+        when(publicacionesRepository.mascotaPerteneceARefugio(100004, 1)).thenReturn(true);
+        when(publicacionesRepository.contarPublicacionesActivas(100004, 0)).thenReturn(1);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+
+        assertEquals(HttpStatus.CONFLICT, status(ex));
+        verify(publicacionesRepository, never()).insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString());
+    }
+
+    @Test
+    void testCrearPublicacionSinAñoEsBadRequest() {
+        NuevaPublicacionRequestBE req = nuevaMascota();
+        req.setAñoNacimiento(null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        assertTrue(ex.getReason().contains("año de nacimiento"));
+        verifyNoMoreInteractionsConEscrituras();
+    }
+
+    @Test
+    void testCrearPublicacionAñoFuturoEsBadRequest() {
+        NuevaPublicacionRequestBE req = nuevaMascota();
+        req.setAñoNacimiento(Year.now().getValue() + 1);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        assertTrue(ex.getReason().contains("futuro"));
+    }
+
+    @Test
+    void testCrearPublicacionAñoMuyAntiguoEsBadRequest() {
+        NuevaPublicacionRequestBE req = nuevaMascota();
+        req.setAñoNacimiento(Year.now().getValue() - 31);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        assertTrue(ex.getReason().contains("anterior"));
+        verifyNoMoreInteractionsConEscrituras();
+    }
+
+    @Test
+    void testNormalizarSexo() {
+        assertEquals("H", PublicacionesService.normalizarSexo("F"));
+        assertEquals("H", PublicacionesService.normalizarSexo("Femenino"));
+        assertEquals("H", PublicacionesService.normalizarSexo("H"));
+        assertEquals("H", PublicacionesService.normalizarSexo("Hembra"));
+        assertEquals("M", PublicacionesService.normalizarSexo("M"));
+        assertEquals("M", PublicacionesService.normalizarSexo("Macho"));
+        assertEquals("M", PublicacionesService.normalizarSexo(null));
+        assertEquals("M", PublicacionesService.normalizarSexo("   "));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> PublicacionesService.normalizarSexo("X"));
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+    }
+
+    @Test
+    void testCrearPublicacionSinCondicionesDeAdopcionEsBadRequest() {
+        NuevaPublicacionRequestBE req = nuevaMascota();
+        req.setCondicionAdopcion("   ");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        assertTrue(ex.getReason().contains("condiciones de adopción"));
+        verifyNoMoreInteractionsConEscrituras();
+    }
+
+    @Test
+    void testCrearPublicacionFinalizadaNoSePermite() {
+        NuevaPublicacionRequestBE req = nuevaMascota();
+        req.setEstadoPublicacion("Finalizada");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        verifyNoMoreInteractionsConEscrituras();
+    }
+
+    @Test
+    void testCrearPublicacionEstadoInexistenteEsBadRequest() {
+        NuevaPublicacionRequestBE req = nuevaMascota();
         req.setEstadoPublicacion("Inexistente");
 
-        when(publicacionesRepository.esEstadoValido("Inexistente")).thenReturn(false);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
 
-        AdministrarPublicacionResponseBE response = publicacionesService.crearPublicacion(req);
-
-        assertNotNull(response);
-        assertEquals(-1, response.getCodigoRespuesta());
-        assertTrue(response.getMensajeRespuesta().contains("no válido"));
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        assertTrue(ex.getReason().contains("no válido"));
     }
 
     @Test
-    void testActualizarEstadoExitoso() {
-        CambioEstadoRequestBE req = new CambioEstadoRequestBE();
-        req.setIdRefugio(1);
-        req.setNuevoEstado("Pausada");
+    void testCrearPublicacionSinRefugioEsBadRequest() {
+        NuevaPublicacionRequestBE req = nuevaMascota();
+        req.setIdRefugio(null);
 
-        when(publicacionesRepository.esEstadoValido("Pausada")).thenReturn(true);
-        when(publicacionesRepository.actualizarEstado(1, 1, "Pausada")).thenReturn(true);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
 
-        AdministrarPublicacionResponseBE response = publicacionesService.actualizarEstado(1, req);
-
-        assertNotNull(response);
-        assertEquals(0, response.getCodigoRespuesta());
-        assertEquals(1, response.getNroPublicacion());
-        assertTrue(response.getMensajeRespuesta().contains("actualizado"));
-    }
-
-    @Test
-    void testActualizarEstadoNoEncontrado() {
-        CambioEstadoRequestBE req = new CambioEstadoRequestBE();
-        req.setIdRefugio(1);
-        req.setNuevoEstado("Pausada");
-
-        when(publicacionesRepository.esEstadoValido("Pausada")).thenReturn(true);
-        when(publicacionesRepository.actualizarEstado(999, 1, "Pausada")).thenReturn(false);
-
-        AdministrarPublicacionResponseBE response = publicacionesService.actualizarEstado(999, req);
-
-        assertNotNull(response);
-        assertEquals(-1, response.getCodigoRespuesta());
-        assertTrue(response.getMensajeRespuesta().contains("No se encontró"));
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        assertTrue(ex.getReason().contains("obligatorio"));
     }
 
     @Test
     void testCrearPublicacionPerfilNoAutorizadoLanzaForbidden() {
-        NuevaPublicacionRequestBE req = new NuevaPublicacionRequestBE();
-        req.setIdRefugio(1);
-        req.setNombreMascota("Max");
-
         when(authorizationService.requireRefugio(1)).thenThrow(
                 new ResponseStatusException(HttpStatus.FORBIDDEN, "Perfil no autorizado")
         );
 
-        assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(req));
+        assertThrows(ResponseStatusException.class, () -> publicacionesService.crearPublicacion(nuevaMascota()));
         verifyNoInteractions(publicacionesRepository);
+    }
+
+    // ------------------------------------------------------ cambio de estado
+
+    @Test
+    void testPausarPublicacionActiva() {
+        when(publicacionesRepository.getPublicacion(1, 1)).thenReturn(Optional.of(publicacion(1, 100004, "Activa")));
+        when(publicacionesRepository.actualizarEstado(1, 1, "Pausada")).thenReturn(true);
+
+        AdministrarPublicacionResponseBE response = publicacionesService.actualizarEstado(1, new CambioEstadoRequestBE(1, "Pausada"));
+
+        assertEquals(0, response.getCodigoRespuesta());
+        assertTrue(response.getMensajeRespuesta().contains("Pausada"));
+    }
+
+    @Test
+    void testReanudarPublicacionPausadaVerificaQueNoHayaOtraActiva() {
+        when(publicacionesRepository.getPublicacion(2, 1)).thenReturn(Optional.of(publicacion(2, 100005, "Pausada")));
+        when(publicacionesRepository.contarPublicacionesActivas(100005, 2)).thenReturn(0);
+        when(publicacionesRepository.actualizarEstado(2, 1, "Activa")).thenReturn(true);
+
+        publicacionesService.actualizarEstado(2, new CambioEstadoRequestBE(1, "Activa"));
+
+        verify(publicacionesRepository).contarPublicacionesActivas(100005, 2);
+        verify(publicacionesRepository).actualizarEstado(2, 1, "Activa");
+    }
+
+    @Test
+    void testReanudarConOtraPublicacionActivaEsConflict() {
+        when(publicacionesRepository.getPublicacion(2, 1)).thenReturn(Optional.of(publicacion(2, 100005, "Pausada")));
+        when(publicacionesRepository.contarPublicacionesActivas(100005, 2)).thenReturn(1);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesService.actualizarEstado(2, new CambioEstadoRequestBE(1, "Activa")));
+
+        assertEquals(HttpStatus.CONFLICT, status(ex));
+        verify(publicacionesRepository, never()).actualizarEstado(anyInt(), anyInt(), anyString());
+    }
+
+    @Test
+    void testNoSePuedeReactivarUnaPublicacionFinalizada() {
+        when(publicacionesRepository.getPublicacion(3, 1)).thenReturn(Optional.of(publicacion(3, 100006, "Finalizada")));
+
+        for (String destino : List.of("Activa", "Pausada")) {
+            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                    () -> publicacionesService.actualizarEstado(3, new CambioEstadoRequestBE(1, destino)));
+            assertEquals(HttpStatus.CONFLICT, status(ex));
+            assertTrue(ex.getReason().contains("finalizada"));
+        }
+        verify(publicacionesRepository, never()).actualizarEstado(anyInt(), anyInt(), anyString());
+    }
+
+    @Test
+    void testFinalizarDesdeActivaOPausada() {
+        when(publicacionesRepository.getPublicacion(1, 1)).thenReturn(Optional.of(publicacion(1, 100004, "Activa")));
+        when(publicacionesRepository.getPublicacion(2, 1)).thenReturn(Optional.of(publicacion(2, 100005, "Pausada")));
+        when(publicacionesRepository.actualizarEstado(anyInt(), eq(1), eq("Finalizada"))).thenReturn(true);
+
+        publicacionesService.actualizarEstado(1, new CambioEstadoRequestBE(1, "Finalizada"));
+        publicacionesService.actualizarEstado(2, new CambioEstadoRequestBE(1, "Finalizada"));
+
+        verify(publicacionesRepository, times(2)).actualizarEstado(anyInt(), eq(1), eq("Finalizada"));
+    }
+
+    @Test
+    void testCambiarAlMismoEstadoEsBadRequest() {
+        when(publicacionesRepository.getPublicacion(1, 1)).thenReturn(Optional.of(publicacion(1, 100004, "Activa")));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesService.actualizarEstado(1, new CambioEstadoRequestBE(1, "Activa")));
+
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+    }
+
+    @Test
+    void testActualizarEstadoPublicacionInexistenteEsNotFound() {
+        when(publicacionesRepository.getPublicacion(999, 1)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesService.actualizarEstado(999, new CambioEstadoRequestBE(1, "Pausada")));
+
+        assertEquals(HttpStatus.NOT_FOUND, status(ex));
+        assertTrue(ex.getReason().contains("No se encontró"));
+    }
+
+    @Test
+    void testActualizarEstadoInexistenteEsBadRequest() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> publicacionesService.actualizarEstado(1, new CambioEstadoRequestBE(1, "Inexistente")));
+
+        assertEquals(HttpStatus.BAD_REQUEST, status(ex));
+        assertTrue(ex.getReason().contains("no válido"));
+        verify(publicacionesRepository, never()).getPublicacion(anyInt(), anyInt());
+    }
+
+    // ------------------------------------------------------- transaccionalidad
+
+    @Test
+    void testLasOperacionesQueGrabanSonTransaccionales() throws NoSuchMethodException {
+        assertNotNull(PublicacionesService.class
+                .getMethod("crearPublicacion", NuevaPublicacionRequestBE.class)
+                .getAnnotation(Transactional.class));
+        assertNotNull(PublicacionesService.class
+                .getMethod("actualizarEstado", int.class, CambioEstadoRequestBE.class)
+                .getAnnotation(Transactional.class));
+    }
+
+    private void verifyNoMoreInteractionsConEscrituras() {
+        verify(publicacionesRepository, never()).registrarMascota(anyInt(), anyString(), anyString(), anyInt(), any(), any());
+        verify(publicacionesRepository, never()).insertarPublicacion(anyInt(), anyInt(), any(), anyString(), anyString(), any(), anyString());
     }
 
 }

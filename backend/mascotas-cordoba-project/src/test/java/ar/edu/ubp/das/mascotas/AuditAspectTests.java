@@ -98,6 +98,69 @@ class AuditAspectTests {
         );
     }
 
+    @Test
+    void testPedidoRestQuePasaPorElServicioSeAuditaUnaSolaVez() {
+        SesionUsuarioBE sesion = new SesionUsuarioBE();
+        sesion.setIdCiudadano(3);
+        sesion.setCuil("20-25999000-5");
+        sesion.setPerfil("REFUGIO");
+        UserContextHolder.set(sesion);
+
+        JoinPoint recurso = joinPointAnidado("ar.edu.ubp.das.mascotas.resources.adopciones.PublicacionesResource", "actualizarEstado");
+        JoinPoint servicio = joinPointAnidado("ar.edu.ubp.das.mascotas.services.adopciones.PublicacionesService", "actualizarEstado");
+        AdministrarPublicacionResponseBE respuesta = AdministrarPublicacionResponseBE.actualizado("Actualizada", 1);
+
+        auditAspect.logBefore(recurso);
+        auditAspect.logBefore(servicio);
+        auditAspect.logAfter(servicio, respuesta);
+        verify(auditoriaRepository, never()).registrarOperacion(any(), any(), any(), any(), any());
+
+        auditAspect.logAfter(recurso, ResponseEntity.ok(respuesta));
+        verify(auditoriaRepository, times(1)).registrarOperacion(
+                eq(sesion),
+                eq("REST"),
+                eq("PublicacionesResource.actualizarEstado"),
+                eq("EXITO"),
+                eq("Actualizada")
+        );
+    }
+
+    @Test
+    void testErrorDelServicioEnPedidoRestSeAuditaUnaSolaVezComoRest() {
+        SesionUsuarioBE sesion = new SesionUsuarioBE();
+        sesion.setIdCiudadano(3);
+        sesion.setCuil("20-25999000-5");
+        sesion.setPerfil("REFUGIO");
+        UserContextHolder.set(sesion);
+
+        JoinPoint recurso = joinPointAnidado("ar.edu.ubp.das.mascotas.resources.adopciones.PublicacionesResource", "actualizarEstado");
+        JoinPoint servicio = joinPointAnidado("ar.edu.ubp.das.mascotas.services.adopciones.PublicacionesService", "actualizarEstado");
+        ResponseStatusException error = new ResponseStatusException(HttpStatus.CONFLICT, "Una publicación finalizada no puede reactivarse");
+
+        auditAspect.logBefore(recurso);
+        auditAspect.logBefore(servicio);
+        auditAspect.logAfterThrowing(servicio, error);
+        auditAspect.logAfterThrowing(recurso, error);
+
+        verify(auditoriaRepository, times(1)).registrarOperacion(
+                eq(sesion), eq("REST"), eq("PublicacionesResource.actualizarEstado"), any(), any());
+    }
+
+    /** En llamadas anidadas no todos los datos del join point se consultan. */
+    private JoinPoint joinPointAnidado(String fqcn, String methodName) {
+        JoinPoint jp = mock(JoinPoint.class);
+        Signature sig = mock(Signature.class);
+        lenient().when(jp.getSignature()).thenReturn(sig);
+        lenient().when(sig.getDeclaringTypeName()).thenReturn(fqcn);
+        try {
+            Class<?> clazz = Class.forName(fqcn);
+            lenient().when(sig.getDeclaringType()).thenReturn(clazz);
+        } catch (ClassNotFoundException ignored) {
+        }
+        lenient().when(sig.getName()).thenReturn(methodName);
+        return jp;
+    }
+
     private JoinPoint mockJoinPoint(String fqcn, String methodName) {
         JoinPoint jp = mock(JoinPoint.class);
         Signature sig = mock(Signature.class);

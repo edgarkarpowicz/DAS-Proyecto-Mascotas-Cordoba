@@ -1,41 +1,35 @@
-import { Injectable, signal } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { Observable, map } from 'rxjs';
+import { ConfirmDialogComponent, IConfirmDialogData } from '../dialogs/confirm-dialog/confirm-dialog.component';
 
-export interface IConfirmDialogData {
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-}
+export type { IConfirmDialogData };
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConfirmDialogService {
 
-  private _dialogData = signal<IConfirmDialogData | null>(null);
-  private _resultSubject: Subject<boolean> | null = null;
+  private readonly _dialog = inject(MatDialog);
 
-  readonly dialogData = this._dialogData.asReadonly();
-
-  confirm(title: string = 'Descartar cambios', message: string = '¿Está seguro de descartar sus cambios?'): Observable<boolean> {
-    this._resultSubject = new Subject<boolean>();
-    this._dialogData.set({
-      title,
-      message,
-      confirmText: 'Aceptar',
-      cancelText: 'Cancelar'
+  /**
+   * Abre el diálogo de confirmación por referencia y emite true solo si el
+   * usuario acepta (cerrar con Esc o con el fondo cuenta como cancelar).
+   */
+  confirm(
+    title: string = 'Descartar cambios',
+    message: string = '¿Está seguro de descartar sus cambios?',
+    confirmText: string = 'Aceptar'
+  ): Observable<boolean> {
+    const ref = this._dialog.open<ConfirmDialogComponent, IConfirmDialogData, boolean>(ConfirmDialogComponent, {
+      data: { title, message, confirmText, cancelText: 'Cancelar' },
+      width: '420px',
+      maxWidth: 'calc(100vw - 2rem)',
+      panelClass: 'dialogo-app',
+      backdropClass: 'fondo-dialogo',
+      autoFocus: 'dialog'
     });
-    return this._resultSubject.asObservable();
-  }
-
-  resolve(accepted: boolean): void {
-    if (this._resultSubject) {
-      this._resultSubject.next(accepted);
-      this._resultSubject.complete();
-      this._resultSubject = null;
-    }
-    this._dialogData.set(null);
+    return ref.afterClosed().pipe(map(result => result === true));
   }
 
 }

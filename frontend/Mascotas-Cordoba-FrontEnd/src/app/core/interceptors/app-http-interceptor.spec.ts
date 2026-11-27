@@ -5,7 +5,7 @@ import { provideRouter, Router } from '@angular/router';
 import { appHttpInterceptor } from './app-http-interceptor';
 import { LoaderService } from '../services/loader-service';
 import { AuthSessionService } from '../services/auth-session.service';
-import { IUsuarioRefugio } from '../../main/api/models/i-usuario-refugio';
+import { IUsuarioRefugio } from '../api/models/i-usuario-refugio';
 import { environment } from '../../../environments/environment';
 
 describe('appHttpInterceptor', () => {
@@ -95,7 +95,7 @@ describe('appHttpInterceptor', () => {
   });
 
   it('should clear session without redirecting on 401 from /auth/me during startup check', () => {
-    authSession.setSession(mockUser, 'revoked-tok', true);
+    authSession.setSession(mockUser, 'revoked-tok');
     const navSpy = spyOn(router, 'navigate');
 
     http.get('/auth/me').subscribe({
@@ -108,7 +108,7 @@ describe('appHttpInterceptor', () => {
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
     expect(authSession.isAuthenticated()).toBeFalse();
-    expect(localStorage.getItem('mascotas_cba_token')).toBeNull();
+    expect(sessionStorage.getItem('mascotas_cba_token')).toBeNull();
     expect(navSpy).not.toHaveBeenCalled();
   });
 

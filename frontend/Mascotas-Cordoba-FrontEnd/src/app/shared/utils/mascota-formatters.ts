@@ -66,25 +66,7 @@ function parseIsoCalendarDate(fecha?: string): ParsedCalendarDate | null {
   return { year, month, day };
 }
 
-export function getEdadTexto(edadAproximada?: number, anoNacimiento?: number, fechaNacimiento?: string): string {
-  const parsedBirthDate = parseIsoCalendarDate(fechaNacimiento);
-  if (parsedBirthDate) {
-    const today = new Date();
-    const totalMonths =
-      (today.getFullYear() - parsedBirthDate.year) * 12 +
-      (today.getMonth() - (parsedBirthDate.month - 1)) -
-      (today.getDate() < parsedBirthDate.day ? 1 : 0);
-
-    if (totalMonths <= 0) {
-      return 'Menos de 1 mes';
-    }
-    if (totalMonths < 12) {
-      return `${totalMonths} ${totalMonths === 1 ? 'mes' : 'meses'}`;
-    }
-    const years = Math.floor(totalMonths / 12);
-    return `${years} ${years === 1 ? 'año' : 'años'}`;
-  }
-
+export function getEdadTexto(edadAproximada?: number, anoNacimiento?: number): string {
   if (typeof edadAproximada === 'number' && edadAproximada >= 0) {
     if (edadAproximada === 0) {
       return 'Menos de 1 año';
@@ -110,20 +92,16 @@ export function getSexoLabel(sexo?: string): 'Hembra' | 'Macho' {
   return 'Macho';
 }
 
-export function formatFechaNacimiento(fecha?: string): string | null {
-  const parsed = parseIsoCalendarDate(fecha);
-  if (!parsed) {
-    return null;
-  }
-  const day = String(parsed.day).padStart(2, '0');
-  const month = String(parsed.month).padStart(2, '0');
-  return `${day}/${month}/${parsed.year}`;
-}
-
 export function formatFechaPublicacion(fecha?: string): string {
   if (!fecha || !fecha.trim()) {
     return 'Sin fecha registrada';
   }
-  return formatFechaNacimiento(fecha) ?? fecha.trim();
+  const parsed = parseIsoCalendarDate(fecha);
+  if (!parsed) {
+    return fecha.trim();
+  }
+  const day = String(parsed.day).padStart(2, '0');
+  const month = String(parsed.month).padStart(2, '0');
+  return `${day}/${month}/${parsed.year}`;
 }
 

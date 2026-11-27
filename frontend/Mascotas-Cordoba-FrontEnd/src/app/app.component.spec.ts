@@ -27,8 +27,6 @@ describe('AppComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-loader')).not.toBeNull();
-    expect(compiled.querySelector('app-modal-message')).not.toBeNull();
-    expect(compiled.querySelector('app-modal-descartar-cambios')).not.toBeNull();
     expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
 });

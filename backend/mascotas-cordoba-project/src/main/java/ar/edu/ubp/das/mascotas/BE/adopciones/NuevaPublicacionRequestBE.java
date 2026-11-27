@@ -9,7 +9,6 @@ public class NuevaPublicacionRequestBE {
     private String nombreMascota;
     private String sexo;
     private Integer añoNacimiento;
-    private String fechaNacimiento;
     private String especie;
     private String raza;
 
@@ -64,14 +63,6 @@ public class NuevaPublicacionRequestBE {
 
     public void setAñoNacimiento(Integer añoNacimiento) {
         this.añoNacimiento = añoNacimiento;
-    }
-
-    public String getFechaNacimiento() {
-        return fechaNacimiento;
-    }
-
-    public void setFechaNacimiento(String fechaNacimiento) {
-        this.fechaNacimiento = fechaNacimiento;
     }
 
     public String getEspecie() {

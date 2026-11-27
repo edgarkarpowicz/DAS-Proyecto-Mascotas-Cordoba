@@ -1,40 +1,48 @@
-import { Component, HostListener, input, output } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { applyFallbackFoto } from '../../utils/mascota-formatters';
 
+export interface IImagenLightboxData {
+  imageUrl: string;
+  altText?: string;
+  fallbackUrl?: string;
+  caption?: string;
+}
+
+/**
+ * Vista ampliada de una foto. Se abre por referencia con
+ * ImagenLightboxModalComponent.abrir(dialog, datos).
+ */
 @Component({
   selector: 'app-imagen-lightbox-modal',
-  standalone: true,
   templateUrl: './imagen-lightbox-modal.component.html',
   styleUrls: ['./imagen-lightbox-modal.component.css']
 })
 export class ImagenLightboxModalComponent {
 
-  imageUrl = input.required<string>();
-  altText = input<string>('Fotografía de mascota');
-  fallbackUrl = input<string>('');
-  caption = input<string>('');
+  private readonly _dialogRef = inject(MatDialogRef<ImagenLightboxModalComponent>);
+  readonly data = inject<IImagenLightboxData>(MAT_DIALOG_DATA);
 
-  close = output<void>();
+  static abrir(dialog: MatDialog, data: IImagenLightboxData): MatDialogRef<ImagenLightboxModalComponent> {
+    return dialog.open(ImagenLightboxModalComponent, {
+      data,
+      maxWidth: '96vw',
+      panelClass: 'dialogo-lightbox',
+      backdropClass: 'fondo-lightbox',
+      autoFocus: 'dialog'
+    });
+  }
 
-  @HostListener('document:keydown.escape')
-  onEscapeKey(): void {
-    this.cerrar();
+  get altText(): string {
+    return this.data.altText || 'Fotografía de mascota';
   }
 
   cerrar(): void {
-    this.close.emit();
-  }
-
-  onBackdropClick(event: MouseEvent): void {
-    event.stopPropagation();
-    if (event.target === event.currentTarget) {
-      this.cerrar();
-    }
+    this._dialogRef.close();
   }
 
   onImageError(event: Event): void {
-    applyFallbackFoto(event, undefined, this.fallbackUrl());
+    applyFallbackFoto(event, undefined, this.data.fallbackUrl);
   }
 
 }
-

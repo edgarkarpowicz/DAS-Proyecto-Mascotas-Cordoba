@@ -131,7 +131,7 @@ El proyecto cuenta con configuración de **Docker** y **Docker Compose** siguien
 * **`backend` (Puerto 8080):** Contenedor multi-stage basado en `maven:3.9-eclipse-temurin-17` y runtime en `tomcat:11.0-jdk17-temurin`.
   * Se conecta a la base de datos host mediante `host.docker.internal:1433`.
   * Monta un volumen persistente `./uploads:/usr/local/tomcat/uploads` para que las fotos subidas no se pierdan.
-* **`frontend` (Puerto 4200):** Contenedor multi-stage basado en `node:20-alpine` y servidor `nginx:alpine`.
+* **`frontend` (Puerto 4200):** Contenedor multi-stage basado en `node:22-alpine` y servidor `nginx:alpine`.
   * Configurado con soporte para rutas HTML5 SPA (redirección a `index.html`).
 
 ### Comandos de Ejecución
@@ -155,8 +155,8 @@ El proyecto cuenta con configuración de **Docker** y **Docker Compose** siguien
 
 3. **Acceder a las aplicaciones:**
    * **Portal Web (Frontend Angular):** [http://localhost:4200/](http://localhost:4200/)
-   * **API REST (Backend):** [http://localhost:8080/refugios/publicaciones/estados](http://localhost:8080/refugios/publicaciones/estados)
-   * **Servicios SOAP (CXF WSDL):** [http://localhost:8080/services/publicaciones?wsdl](http://localhost:8080/services/publicaciones?wsdl)
+   * **Servicios SOAP (CXF WSDL):** [http://localhost:8080/services/auth?wsdl](http://localhost:8080/services/auth?wsdl) y [http://localhost:8080/services/publicaciones?wsdl](http://localhost:8080/services/publicaciones?wsdl)
+   * **API REST (Backend):** `http://localhost:8080` *(requiere cabecera `X-API-Key` y, salvo `POST /auth/login`, `Authorization: Bearer <token>`)*
 
 4. **Detener los contenedores:**
    ```powershell
@@ -181,7 +181,7 @@ DB_PASSWORD=123
 - **Java JDK 17** o superior instalado y configurado en el `PATH`.
 - **Microsoft SQL Server** (local o contenedor Docker) con base de datos configurada.
 - **Maven 3.8+** (o utilizar el wrapper `./mvnw` incluido).
-- **Node.js** (v18+) y **Angular CLI** (para el portal cliente).
+- **Node.js** (v20.19+ o v22+) y **Angular CLI 21** (para el portal cliente).
 
 ### 1. Base de Datos (Microsoft SQL Server)
 1. Abrir **SQL Server Management Studio (SSMS)** o **Azure Data Studio**.
@@ -190,6 +190,7 @@ DB_PASSWORD=123
    db/municipalidad-creation-script.sql
    ```
    *Crea la base de datos `das-mascotas-cordoba` con todas las tablas relacionales, catálogos, stored procedures y datos semilla.*
+   > Si actualizás una base de datos ya existente sin recrearla, aplicá en orden los scripts idempotentes de `db/migrations/` (`001_rf15_perfiles_auditoria.sql` y `002_publicaciones_logica_en_servicio.sql`).
 
 ### 2. Ejecución del Backend (Spring Boot + CXF SOAP + POA)
 1. Navegar al directorio del backend:
@@ -206,7 +207,7 @@ DB_PASSWORD=123
    ```
    *El backend quedará escuchando en `http://localhost:8080` (REST) y `http://localhost:8080/services` (SOAP).*
 
-### 3. Ejecución del FrontEnd (Angular 17)
+### 3. Ejecución del FrontEnd (Angular 21 + Angular Material)
 1. Abrir otra terminal y navegar al directorio del frontend:
    ```powershell
    cd frontend/Mascotas-Cordoba-FrontEnd
@@ -224,19 +225,23 @@ DB_PASSWORD=123
 ### 4. Credenciales de Prueba para Login
 - **Refugio Principal (Patitas Felices - ID 1):** CUIL: `20-25999000-5` | Clave: `pass123` *(Carga 2 publicaciones activas iniciales)*.
 - **Refugio Secundario (Hogar Animal - ID 2):** CUIL: `27-38123456-9` | Clave: `pass123` *(Sin publicaciones iniciales; cuenta con mascota precargada en el refugio "Thor" - NRM 100006 para probar la publicación de un animal ya registrado)*.
-- **Ciudadano sin refugio:** CUIL: `20-28555666-3` | Clave: `pass123` *(Prueba de validación de rol / 401)*.
+- **Ciudadano sin refugio:** CUIL: `20-28555666-3` | Clave: `pass123` *(Prueba de validación de perfil / acceso denegado al módulo de refugios)*.
 
 ---
 
 ## 🔌 Ejemplos de Invocación de Servicios (REST y SOAP / XML)
 
-El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **SOAP (XML)** sobre el puerto `8080`.
+El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **SOAP (XML)** sobre el puerto `8080`, compartiendo la misma capa de negocio (`AuthService` y `PublicacionesService` con transacciones `@Transactional`).
 
 ### 🔐 Seguridad y Autenticación
-* **REST:** Se envía la cabecera HTTP `X-API-Key`.  
-  *Clave por defecto:* `UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
-* **SOAP:** Se incluye el elemento `<apiKey>` en la cabecera SOAP (`<soapenv:Header>`).  
-  *Clave por defecto:* `UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT`
+* **REST:**
+  * Todas las peticiones (incluido `/auth/login`) envían la cabecera HTTP `X-API-Key`.  
+    *Clave por defecto:* `UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+  * Todos los endpoints protegidos (`/auth/me`, `/auth/logout` y `/refugios/**`) requieren además `Authorization: Bearer <token>` con el JWT emitido por `POST /auth/login`.
+* **SOAP:**
+  * Se incluye el elemento `<apiKey>` en la cabecera SOAP (`<soapenv:Header>`).  
+    *Clave por defecto:* `UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT`
+  * Las operaciones de `/services/publicaciones` requieren además `<token>...</token>` en `<soapenv:Header>` (o `Authorization: Bearer <token>`). Los errores de validación o de negocio en SOAP se informan mediante `<soap:Fault>`.
 
 ---
 
@@ -279,12 +284,13 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
 * **URL:** `GET http://localhost:8080/refugios/publicaciones/estados`
 * **Headers:**
   * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+  * `Authorization: Bearer <token>`
 * **Response Body (200 OK):**
   ```json
   [
-    { "codEstado": "Activa", "nomEstado": "Publicación activa para adopción" },
-    { "codEstado": "Pausada", "nomEstado": "Publicación temporalmente en pausa" },
-    { "codEstado": "Finalizada", "nomEstado": "Adopción concretada o retirada" }
+    { "codEstado": "Activa", "descripcion": "Publicación visible y disponible para adopción" },
+    { "codEstado": "Pausada", "descripcion": "Publicación pausada temporalmente por el refugio" },
+    { "codEstado": "Finalizada", "descripcion": "Proceso de adopción concretado exitosamente" }
   ]
   ```
 
@@ -292,6 +298,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
 * **URL:** `GET http://localhost:8080/refugios/1/publicaciones`
 * **Headers:**
   * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+  * `Authorization: Bearer <token>`
 * **Response Body (200 OK):**
   ```json
   [
@@ -313,6 +320,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
 * **Headers:**
   * `Content-Type: application/json`
   * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+  * `Authorization: Bearer <token>`
 * **Request Body:**
   ```json
   {
@@ -343,6 +351,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
 * **Headers:**
   * `Content-Type: application/json`
   * `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+  * `Authorization: Bearer <token>`
 * **Request Body:**
   ```json
   {
@@ -358,6 +367,8 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
     "nroPublicacion": 102
   }
   ```
+
+> Otros endpoints REST disponibles (con `X-API-Key` y `Authorization: Bearer <token>`): `GET /auth/me`, `POST /auth/logout`, `GET /refugios/especies`, `GET /refugios/{idRefugio}/mascotas-disponibles` y `POST /refugios/publicaciones/fotos` (`multipart/form-data` con campo `archivo`).
 
 ---
 
@@ -426,6 +437,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
                     xmlns:adop="http://adopciones.services.mascotas.das.ubp.edu.ar/">
      <soapenv:Header>
         <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+        <token>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.&lt;payload&gt;.&lt;firma&gt;</token>
      </soapenv:Header>
      <soapenv:Body>
         <adop:getEstadosPublicacion/>
@@ -439,15 +451,15 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
         <ns2:getEstadosPublicacionResponse xmlns:ns2="http://adopciones.services.mascotas.das.ubp.edu.ar/">
            <estado>
               <codEstado>Activa</codEstado>
-              <nomEstado>Publicación activa para adopción</nomEstado>
+              <descripcion>Publicación visible y disponible para adopción</descripcion>
            </estado>
            <estado>
               <codEstado>Pausada</codEstado>
-              <nomEstado>Publicación temporalmente en pausa</nomEstado>
+              <descripcion>Publicación pausada temporalmente por el refugio</descripcion>
            </estado>
            <estado>
               <codEstado>Finalizada</codEstado>
-              <nomEstado>Adopción concretada o retirada</nomEstado>
+              <descripcion>Proceso de adopción concretado exitosamente</descripcion>
            </estado>
         </ns2:getEstadosPublicacionResponse>
      </soap:Body>
@@ -464,6 +476,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
                     xmlns:adop="http://adopciones.services.mascotas.das.ubp.edu.ar/">
      <soapenv:Header>
         <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+        <token>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.&lt;payload&gt;.&lt;firma&gt;</token>
      </soapenv:Header>
      <soapenv:Body>
         <adop:getPublicacionesPorRefugio>
@@ -483,6 +496,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
                     xmlns:adop="http://adopciones.services.mascotas.das.ubp.edu.ar/">
      <soapenv:Header>
         <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+        <token>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.&lt;payload&gt;.&lt;firma&gt;</token>
      </soapenv:Header>
      <soapenv:Body>
         <adop:crearPublicacion>
@@ -528,6 +542,7 @@ El backend expone simultáneamente endpoints **REST (JSON)** y servicios web **S
                     xmlns:adop="http://adopciones.services.mascotas.das.ubp.edu.ar/">
      <soapenv:Header>
         <apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>
+        <token>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.&lt;payload&gt;.&lt;firma&gt;</token>
      </soapenv:Header>
      <soapenv:Body>
         <adop:actualizarEstado>

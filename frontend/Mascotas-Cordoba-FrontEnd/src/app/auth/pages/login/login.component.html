@@ -1,0 +1,72 @@
+<div class="login-wrapper">
+
+  <section class="marca" aria-label="Mascotas Córdoba">
+    <div class="marca-sello">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+      <span>Mascotas Córdoba</span>
+    </div>
+
+    <p class="marca-frase display">Cada publicación acerca a una mascota a su familia.</p>
+
+    <p class="marca-programa">Programa Municipal de Bienestar Animal</p>
+
+    <svg class="marca-corazon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.6" aria-hidden="true">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+  </section>
+
+  <section class="acceso" aria-labelledby="titulo-ingreso">
+    <div class="acceso-contenido">
+      <h1 id="titulo-ingreso" class="acceso-titulo display">Ingresá al refugio</h1>
+      <p class="acceso-bajada">Usá el CUIL y la contraseña de tu cuenta de refugio.</p>
+
+      @if (error(); as mensaje) {
+        <div class="error-banner" role="alert">{{ mensaje }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
+
+        <div class="form-group">
+          <label for="cuil">CUIL</label>
+          <div class="input-container" [class.input-error]="mostrarError('cuil')">
+            <input
+              appAutofocus
+              id="cuil"
+              type="text"
+              inputmode="numeric"
+              formControlName="cuil"
+              placeholder="20-12345678-9"
+              autocomplete="username"
+            />
+          </div>
+          @if (mostrarError('cuil')) {
+            <span class="field-error">Ingresá tu CUIL.</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="clave">Contraseña</label>
+          <div class="input-container" [class.input-error]="mostrarError('clave')">
+            <input
+              id="clave"
+              type="password"
+              formControlName="clave"
+              autocomplete="current-password"
+            />
+          </div>
+          @if (mostrarError('clave')) {
+            <span class="field-error">Ingresá tu contraseña.</span>
+          }
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="loading()">
+          {{ loading() ? 'Ingresando...' : 'Ingresar' }}
+        </button>
+
+      </form>
+    </div>
+  </section>
+
+</div>

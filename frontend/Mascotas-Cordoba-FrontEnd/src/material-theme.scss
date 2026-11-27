@@ -1,0 +1,58 @@
+// Tema de Angular Material alineado con la paleta de Mascotas Córdoba
+// (verde del programa y tipografía Archivo definidos en styles.css).
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: (
+      primary: mat.$green-palette,
+      tertiary: mat.$orange-palette,
+    ),
+    typography: (
+      plain-family: (Archivo, sans-serif),
+      brand-family: (Archivo, sans-serif),
+    ),
+    density: 0,
+  ));
+
+  // El color primario institucional reemplaza al tono por defecto de la paleta.
+  --mat-sys-primary: #136b43;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e3ede6;
+  --mat-sys-on-primary-container: #0d2a1e;
+}
+
+// Los diálogos se abren con MatDialog, pero cada componente dibuja su propia
+// tarjeta (.modal-card, .detail-card...). El contenedor de Material queda
+// transparente para no duplicar fondo, bordes ni sombra.
+.dialogo-app .mat-mdc-dialog-surface {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.dialogo-lightbox .mat-mdc-dialog-surface {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.fondo-dialogo {
+  background-color: rgba(13, 42, 30, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.fondo-lightbox {
+  background-color: rgba(13, 42, 30, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+// Snackbar de confirmación de acciones.
+.snackbar-exito {
+  --mat-snack-bar-container-color: #0d2a1e;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #7fd3a5;
+  --mat-snack-bar-supporting-text-font: Archivo, sans-serif;
+}

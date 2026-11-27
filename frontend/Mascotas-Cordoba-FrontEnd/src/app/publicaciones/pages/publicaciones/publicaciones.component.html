@@ -1,0 +1,142 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-publicaciones">
+  <div class="banda-contenido">
+
+    <div class="banda-encabezado">
+      <div>
+        <h1 id="titulo-publicaciones" class="banda-titulo display">Mis publicaciones</h1>
+        <p class="banda-bajada">
+          @if (usuario()?.nombreRefugio; as refugio) {
+            Las mascotas de {{ refugio }} que buscan una familia.
+          } @else {
+            Las mascotas del refugio que buscan una familia.
+          }
+        </p>
+      </div>
+      <button type="button" class="btn-nueva-publicacion" (click)="abrirNuevaModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Nueva publicación</span>
+      </button>
+    </div>
+
+    <div class="banda-filtros">
+      <div class="pestanias" role="tablist" aria-label="Filtrar por estado">
+        @for (pestania of pestanias(); track pestania.valor) {
+          <button
+            type="button"
+            role="tab"
+            class="pestania"
+            [class.activa]="estadoSeleccionado() === pestania.valor"
+            [attr.aria-selected]="estadoSeleccionado() === pestania.valor"
+            (click)="filtrarPorEstado(pestania.valor)"
+          >
+            {{ pestania.etiqueta }}
+            <span class="pestania-cantidad">{{ pestania.cantidad }}</span>
+          </button>
+        }
+      </div>
+
+      <label class="buscador" for="buscarMascota">
+        <span class="sr-only">Buscar por nombre</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          appAutofocus
+          id="buscarMascota"
+          type="search"
+          [formControl]="busqueda"
+          placeholder="Buscar por nombre"
+          autocomplete="off"
+        />
+      </label>
+    </div>
+
+  </div>
+</section>
+
+<main class="page-container">
+  @if ((publicacionesPorEstado() | filtrarPor:['nombreMascota']:searchQuery()); as filtradas) {
+    @if (filtradas.length > 0) {
+      <section class="cards-grid" aria-label="Publicaciones">
+        @for (pub of filtradas; track pub.nroPublicacion) {
+          <article
+            class="pet-card"
+            [class.estado-activa]="pub.estadoPublicacion === 'Activa'"
+            [class.estado-pausada]="pub.estadoPublicacion === 'Pausada'"
+            [class.estado-finalizada]="pub.estadoPublicacion === 'Finalizada'"
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="'Ver la publicación de ' + pub.nombreMascota"
+            (click)="abrirDetalleModal(pub)"
+            (keydown.enter)="abrirDetalleModal(pub)"
+            (keydown.space)="$event.preventDefault(); abrirDetalleModal(pub)"
+          >
+            <div class="card-image-wrapper">
+              <img [src]="getFotoMascota(pub)" (error)="onImageError($event, pub)" [alt]="pub.nombreMascota" class="pet-image" loading="lazy" />
+              <app-expand-image-button
+                class="card-expand-btn"
+                [ariaLabel]="'Ampliar la foto de ' + pub.nombreMascota"
+                (expand)="abrirImagenAmpliada(pub)"
+              ></app-expand-image-button>
+            </div>
+
+            <div class="card-content">
+              <p class="estado-linea">
+                <span class="estado-punto" aria-hidden="true"></span>
+                <span class="estado-texto">{{ pub.estadoPublicacion }}</span>
+                <span class="estado-fecha">desde el {{ getFechaPublicacion(pub) }}</span>
+              </p>
+
+              <h2 class="pet-name display">{{ pub.nombreMascota }}</h2>
+
+              <p class="pet-datos">
+                {{ pub.especie || 'Mascota' }}, {{ getSexo(pub) | lowercase }}, {{ getEdadTexto(pub) | lowercase }}@if (pub.raza) {, {{ pub.raza }}}
+              </p>
+
+              <p class="pet-description">{{ pub.caracteristicasMascota || 'Sin descripción.' }}</p>
+
+              <div
+                class="card-actions-footer"
+                (keydown.enter)="$event.stopPropagation()"
+                (keydown.space)="$event.stopPropagation()"
+              >
+                <span class="nrm">NRM {{ pub.nroRegMunicipal }}</span>
+                <span class="acciones">
+                  @for (accion of acciones(pub); track accion.nuevoEstado) {
+                    <button
+                      type="button"
+                      class="action-btn"
+                      [class.btn-pause]="accion.nuevoEstado === 'Pausada'"
+                      [class.btn-resume]="accion.nuevoEstado === 'Activa'"
+                      [class.btn-delete]="accion.nuevoEstado === 'Finalizada'"
+                      (click)="$event.stopPropagation(); cambiarEstado(pub, accion.nuevoEstado)"
+                      [attr.aria-label]="accion.etiqueta + ' la publicación de ' + pub.nombreMascota"
+                    >
+                      {{ accion.etiqueta }}
+                    </button>
+                  }
+                </span>
+              </div>
+            </div>
+          </article>
+        }
+      </section>
+    } @else if (publicaciones().length === 0) {
+      <div class="vacio">
+        <h2 class="vacio-titulo display">Todavía no hay publicaciones</h2>
+        <p>Publicá una mascota del refugio para que las familias la encuentren.</p>
+        <button type="button" class="vacio-accion" (click)="abrirNuevaModal()">Nueva publicación</button>
+      </div>
+    } @else {
+      <div class="vacio">
+        <h2 class="vacio-titulo display">Ninguna publicación coincide</h2>
+        <p>Probá con otro nombre o mirá todas las publicaciones.</p>
+        <button type="button" class="vacio-accion" (click)="limpiarFiltros()">Ver todas</button>
+      </div>
+    }
+  }
+</main>

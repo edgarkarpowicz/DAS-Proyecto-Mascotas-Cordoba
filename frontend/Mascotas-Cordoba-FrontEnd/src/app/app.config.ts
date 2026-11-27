@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, ApplicationConfig, ErrorHandler, inject } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer } from '@angular/core';
 import { provideRouter, Router, withComponentInputBinding, withNavigationErrorHandler } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -24,14 +24,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([appHttpInterceptor])
     ),
-    {
-      provide: APP_INITIALIZER,
-      multi: true,
-      useFactory: () => {
-        const authService = inject(AuthService);
-        return () => firstValueFrom(authService.restoreSession());
-      }
-    },
+    provideAppInitializer(() => {
+      const authService = inject(AuthService);
+      return firstValueFrom(authService.restoreSession());
+    }),
     { provide: ErrorHandler, useClass: AppErrorHandler }
   ]
 };

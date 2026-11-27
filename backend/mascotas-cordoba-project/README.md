@@ -13,6 +13,7 @@ Desarrollado con **Java 17**, **Spring Boot**, **Apache CXF** (SOAP), **AspectJ*
   ```text
   ../../db/municipalidad-creation-script.sql
   ```
+  > Si la base de datos ya existía de una versión anterior, aplicar en orden los scripts idempotentes de `../../db/migrations/` (`001_rf15_perfiles_auditoria.sql` y `002_publicaciones_logica_en_servicio.sql`).
 
 ---
 
@@ -56,12 +57,12 @@ cxf.path=/services
    cd backend/mascotas-cordoba-project
    ```
 
-2. **Compilar el proyecto:**
+2. **Compilar y ejecutar los tests:**
    ```powershell
    # En Windows PowerShell:
-   .\mvnw.cmd compile
+   .\mvnw.cmd test
    # o:
-   ./mvnw compile
+   ./mvnw test
    ```
 
 3. **Iniciar la aplicación:**
@@ -80,19 +81,29 @@ cxf.path=/services
 
 ---
 
-## 🔌 Servicios Expuestos
+## 🔌 Servicios Expuestos y Arquitectura
 
-### RESTful API (JSON) - Header `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
-- `POST /auth/login`: Autenticación de responsables de refugios (RF15).
+Los recursos REST (`AuthResource`, `PublicacionesResource`) delegan en los mismos servicios de negocio que expone Apache CXF (`AuthService`, `PublicacionesService`), donde viven las validaciones, las reglas de negocio (transiciones de estado, exclusividad de publicación activa, pertenencia al refugio, `añoNacimiento`), las transacciones `@Transactional` y la trazabilidad por AOP (`AuditAspect` + `ExceptionHandlingAspect`).
+
+### RESTful API (JSON)
+- Header requerido en todos los endpoints: `X-API-Key: UBPU5i0Kq7Cne3p3mzdrwEpBj7XyQsaiXq6`
+- Header requerido en endpoints protegidos (todos excepto `/auth/login`): `Authorization: Bearer <token>`
+- `POST /auth/login`: Autenticación de usuarios y emisión de JWT (RF15).
+- `GET /auth/me`: Identidad y perfil del usuario autenticado (RF15).
+- `POST /auth/logout`: Revocación del JWT actual (RF15).
 - `GET /refugios/publicaciones/estados`: Catálogo de estados válidos para publicaciones (RF13).
+- `GET /refugios/especies` (alias `/refugios/publicaciones/especies`): Catálogo de especies (RF13 / RF06).
 - `GET /refugios/{idRefugio}/publicaciones`: Listado de publicaciones administradas por el refugio (RF13).
 - `GET /refugios/{idRefugio}/mascotas-disponibles`: Mascotas del refugio listas para publicar (RF13).
-- `POST /refugios/publicaciones`: Crear nueva publicación de adopción (RF13).
-- `PUT /refugios/publicaciones/{nroPublicacion}/estado`: Cambiar estado (Activa / Pausada / Finalizada) (RF13).
+- `POST /refugios/publicaciones`: Crear nueva publicación de adopción y, si corresponde, registrar la mascota en el mismo bloque transaccional (RF13 / RF06).
+- `PUT /refugios/publicaciones/{nroPublicacion}/estado`: Cambiar estado (`Activa` ⇄ `Pausada`, `Activa`/`Pausada` → `Finalizada`) (RF13).
+- `POST /refugios/publicaciones/fotos`: Subida de foto de mascota (`multipart/form-data`, campo `archivo`) (RF13).
 
-### SOAP / XML (Apache CXF) - Header SOAP `<apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>`
-- `POST /services/auth`: Operación `login`.
-- `POST /services/publicaciones`: Operaciones `getEstadosPublicacion`, `getPublicacionesPorRefugio`, `crearPublicacion`, `actualizarEstado`.
+### SOAP / XML (Apache CXF)
+- Header SOAP requerido: `<apiKey>UBPqnXyjsMPkbYN4Qj1ag3zveiimsMAPjyT</apiKey>`
+- En `/services/publicaciones` se requiere además `<token>...</token>` (o `Authorization: Bearer <token>`).
+- `POST /services/auth`: Operaciones `login`, `logout`.
+- `POST /services/publicaciones`: Operaciones `getEstadosPublicacion`, `getEspecies`, `getPublicacionesPorRefugio`, `getMascotasDisponibles`, `crearPublicacion`, `actualizarEstado`.
 
 ---
 
@@ -100,6 +111,6 @@ cxf.path=/services
 
 | CUIL | Contraseña | Refugio | Rol |
 | :--- | :--- | :--- | :--- |
-| `20-25999000-5` | `pass123` | Refugio Patitas Felices (ID: 1) | Responsable habilitado |
-| `27-38123456-9` | `pass123` | Hogar Animal Córdoba (ID: 2) | Responsable habilitado |
-| `20-28555666-3` | `pass123` | *Ninguno* | Ciudadano (Acceso denegado a refugios) |
+| `20-25999000-5` | `pass123` | Refugio Patitas Felices (ID: 1) | `REFUGIO` (Responsable habilitado) |
+| `27-38123456-9` | `pass123` | Hogar Animal Córdoba (ID: 2) | `REFUGIO` (Responsable habilitado) |
+| `20-28555666-3` | `pass123` | *Ninguno* | `CIUDADANO` (Acceso denegado a refugios) |

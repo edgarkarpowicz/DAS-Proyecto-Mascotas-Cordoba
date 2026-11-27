@@ -4,28 +4,26 @@ import ar.edu.ubp.das.mascotas.BE.auth.LoginRequestBE;
 import ar.edu.ubp.das.mascotas.BE.auth.LoginResponseBE;
 import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.BE.auth.UsuarioRefugioBE;
-import ar.edu.ubp.das.mascotas.repositories.auth.AuthRepository;
 import ar.edu.ubp.das.mascotas.security.AuthorizationService;
-import ar.edu.ubp.das.mascotas.security.JwtTokenService;
-import ar.edu.ubp.das.mascotas.security.UserContextHolder;
+import ar.edu.ubp.das.mascotas.services.auth.IAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Recurso REST de autenticación (RF15). Solo adapta HTTP: la validación, la
+ * autenticación y la emisión o revocación del JWT están en AuthService, el
+ * mismo servicio que expone el endpoint SOAP.
+ */
 @RestController
 @RequestMapping("/auth")
 public class AuthResource {
 
     @Autowired
-    private AuthRepository authRepository;
-
-    @Autowired
-    private JwtTokenService jwtTokenService;
+    private IAuthService authService;
 
     @Autowired
     private AuthorizationService authorizationService;
@@ -36,23 +34,7 @@ public class AuthResource {
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponseBE> login(@RequestBody LoginRequestBE request) {
-
-        validarLoginRequest(request);
-
-        UsuarioRefugioBE usuario = authRepository.autenticarUsuario(
-                request.getCuil().trim(),
-                request.getClave().trim()
-        ).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED,
-                "Credenciales inválidas o usuario inhabilitado"
-        ));
-
-        String token = jwtTokenService.generarToken(usuario);
-        UserContextHolder.set(jwtTokenService.construirSesion(token, usuario));
-
-        return ResponseEntity.ok(
-                LoginResponseBE.exitoso(token, usuario)
-        );
+        return ResponseEntity.ok(authService.login(request));
     }
 
     /**
@@ -65,25 +47,17 @@ public class AuthResource {
     }
 
     /**
-     * RF15 - Revoca en memoria el identificador jti del JWT actual al cerrar sesión.
+     * RF15 - Revoca el JWT actual al cerrar sesión.
      */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout() {
         SesionUsuarioBE sesion = authorizationService.requireAuthenticated();
-        jwtTokenService.revocarToken(sesion.getToken());
+        authService.logout(sesion.getToken());
 
         Map<String, Object> response = new HashMap<>();
         response.put("codigoRespuesta", 1);
         response.put("mensajeRespuesta", "Sesión cerrada exitosamente");
         return ResponseEntity.ok(response);
-    }
-
-    private void validarLoginRequest(LoginRequestBE request) {
-        if (request == null ||
-                request.getCuil() == null || request.getCuil().trim().isEmpty() ||
-                request.getClave() == null || request.getClave().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El CUIL y la clave son obligatorios para iniciar sesión");
-        }
     }
 
 }

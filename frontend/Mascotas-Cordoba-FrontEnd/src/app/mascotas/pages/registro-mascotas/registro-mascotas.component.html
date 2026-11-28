@@ -1,0 +1,130 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-registro">
+  <div class="banda-contenido">
+    <h1 id="titulo-registro" class="banda-titulo display">Registro único de mascotas</h1>
+    <p class="banda-bajada">
+      Alta municipal (RF06) con validación automática de microchip y coincidencia para evitar duplicados de NRM.
+    </p>
+  </div>
+</section>
+
+<main class="registro-container">
+  <article class="registro-card">
+
+    @if (resultado(); as registrada) {
+      <div class="resultado-banner" role="status">
+        <strong>
+          {{ registrada.nrmReutilizado ? 'NRM existente reutilizado:' : 'Nuevo NRM asignado:' }}
+          {{ registrada.nroRegMunicipal }}
+        </strong>
+        <span>
+          {{ registrada.nombre }} ({{ registrada.especie }})
+        </span>
+      </div>
+    }
+
+    @if (errorServidor(); as mensajeError) {
+      <div class="error-banner" role="alert">{{ mensajeError }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="registro-form" novalidate>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="nombre">Nombre *</label>
+          <input
+            appAutofocus
+            id="nombre"
+            type="text"
+            formControlName="nombre"
+            placeholder="Ej: Firulais"
+            [class.input-error]="mostrarError('nombre')"
+          />
+          @if (mostrarError('nombre')) {
+            <span class="field-error">Ingresá el nombre de la mascota.</span>
+          }
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="especie">Especie *</label>
+          <select id="especie" formControlName="especie" [class.input-error]="mostrarError('especie')">
+            @for (esp of especies(); track esp.nroValorDominio) {
+              <option [value]="esp.nomEspecie">{{ esp.nomEspecie }}</option>
+            }
+          </select>
+          @if (mostrarError('especie')) {
+            <span class="field-error">Elegí la especie.</span>
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="sexo">Sexo *</label>
+          <select id="sexo" formControlName="sexo">
+            <option value="Hembra">Hembra</option>
+            <option value="Macho">Macho</option>
+          </select>
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="anioNacimiento">Año de nacimiento *</label>
+          <div class="anio-wrapper">
+            <input
+              id="anioNacimiento"
+              formControlName="anioNacimiento"
+              [matDatepicker]="pickerAnio"
+              [min]="anioMinimo"
+              [max]="anioMaximo"
+              placeholder="Elegí el año"
+              readonly
+              (click)="pickerAnio.open()"
+              [class.input-error]="mostrarError('anioNacimiento')"
+            />
+            <button type="button" class="anio-toggle" aria-label="Abrir calendario de años" (click)="pickerAnio.open()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+            <mat-datepicker #pickerAnio startView="multi-year" (yearSelected)="elegirAnio($event, pickerAnio)"></mat-datepicker>
+          </div>
+          @if (mostrarError('anioNacimiento')) {
+            <span class="field-error">Elegí el año de nacimiento.</span>
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="raza">Raza</label>
+          <input id="raza" type="text" formControlName="raza" placeholder="Ej: Mestizo Canino" />
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="microchip">Microchip (opcional)</label>
+          <input id="microchip" type="text" formControlName="microchip" placeholder="Ej: 981098104523123" />
+        </div>
+      </div>
+
+      <div class="form-row align-end">
+        <div class="form-group flex-1">
+          <label for="cuilResponsable">CUIL del ciudadano responsable (opcional)</label>
+          <input id="cuilResponsable" type="text" formControlName="cuilResponsable" placeholder="Ej: 20-28555666-3" />
+        </div>
+
+        <label class="checkbox-field" for="castrado">
+          <input id="castrado" type="checkbox" formControlName="castrado" />
+          <span>Mascota castrada / esterilizada</span>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit" [disabled]="guardando()">
+          {{ guardando() ? 'Registrando...' : 'Registrar mascota' }}
+        </button>
+      </div>
+
+    </form>
+  </article>
+</main>

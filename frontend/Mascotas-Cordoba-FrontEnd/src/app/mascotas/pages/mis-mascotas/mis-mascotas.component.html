@@ -1,0 +1,87 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-mis-mascotas">
+  <div class="banda-contenido">
+    <h1 id="titulo-mis-mascotas" class="banda-titulo display">Mis mascotas</h1>
+    <p class="banda-bajada">
+      @if (usuario(); as u) {
+        Mascotas asociadas al CUIL {{ u.cuil }} en el Registro Único Municipal.
+      } @else {
+        Mascotas registradas a tu nombre en el Programa Municipal de Bienestar Animal.
+      }
+    </p>
+  </div>
+</section>
+
+<main class="mascotas-container">
+  @if (error(); as mensajeError) {
+    <div class="error-banner" role="alert">{{ mensajeError }}</div>
+  }
+
+  @if (page().items.length > 0) {
+    <section class="cards-grid" aria-label="Listado de mis mascotas">
+      @for (mascota of page().items; track mascota.nroRegMunicipal) {
+        <article class="mascota-card">
+          <div class="card-top">
+            <span class="nrm-badge">NRM {{ mascota.nroRegMunicipal }}</span>
+            <span
+              class="estado-sanitario"
+              [class.al-dia]="mascota.estadoSanitario === 'Al día'"
+              [class.vencido]="mascota.estadoSanitario === 'Con vencimientos'"
+            >
+              {{ mascota.estadoSanitario || 'Sin registros' }}
+            </span>
+          </div>
+
+          <h2 class="mascota-nombre display">{{ mascota.nombre }}</h2>
+          <p class="mascota-meta">
+            {{ mascota.especie }}, {{ getSexo(mascota) | lowercase }}, {{ getEdad(mascota) | lowercase }}@if (mascota.raza) {, {{ mascota.raza }}}
+          </p>
+
+          <dl class="mascota-detalles">
+            <div>
+              <dt>Año nacimiento</dt>
+              <dd>{{ getAnioNacimiento(mascota) }}</dd>
+            </div>
+            <div>
+              <dt>Castrado</dt>
+              <dd>{{ mascota.castrado ? 'Sí' : 'No' }}</dd>
+            </div>
+            <div>
+              <dt>Microchip</dt>
+              <dd>{{ mascota.microchip || 'Sin microchip' }}</dd>
+            </div>
+            <div>
+              <dt>Registros sanitarios</dt>
+              <dd>{{ mascota.cantidadAtenciones ?? 0 }}</dd>
+            </div>
+          </dl>
+
+          <div class="card-footer">
+            <a [routerLink]="['/sanidad/carnet']" [queryParams]="{ nrm: mascota.nroRegMunicipal }" class="btn-carnet">
+              Ver carnet sanitario &rarr;
+            </a>
+          </div>
+        </article>
+      }
+    </section>
+
+    @if (page().totalPaginas > 1) {
+      <nav class="paginacion" aria-label="Paginación de mis mascotas">
+        <button type="button" class="btn-pag" [disabled]="page().pagina <= 1" (click)="irAPagina(page().pagina - 1)">
+          &larr; Anterior
+        </button>
+        <span class="pag-info">Página {{ page().pagina }} de {{ page().totalPaginas }}</span>
+        <button type="button" class="btn-pag" [disabled]="page().pagina >= page().totalPaginas" (click)="irAPagina(page().pagina + 1)">
+          Siguiente &rarr;
+        </button>
+      </nav>
+    }
+  } @else if (!cargando() && !error()) {
+    <div class="vacio">
+      <h2 class="vacio-titulo display">Todavía no tenés mascotas registradas</h2>
+      <p>Cuando una veterinaria adherida o un refugio registre tu mascota con tu CUIL, aparecerá aquí.</p>
+      <a routerLink="/" class="btn-volver">Volver al portal</a>
+    </div>
+  }
+</main>

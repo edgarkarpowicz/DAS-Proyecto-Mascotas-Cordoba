@@ -129,7 +129,7 @@ public class PortalService implements IPortalService {
                             "Mis mascotas",
                             "Visualizá tus mascotas registradas y su estado general en el programa.",
                             "/mascotas/mias",
-                            false,
+                            true,
                             true,
                             "RF20"
                     ),
@@ -149,7 +149,7 @@ public class PortalService implements IPortalService {
                             "Registro único de mascotas",
                             "Consultá y enviá altas de mascotas sin NRM desde tu clínica.",
                             "/mascotas/registro",
-                            false,
+                            true,
                             true,
                             "RF06"
                     ),
@@ -164,6 +164,15 @@ public class PortalService implements IPortalService {
                     )
             );
             case MUNICIPALIDAD -> List.of(
+                    new ServicioHabilitadoBE(
+                            "REGISTRO_MASCOTAS",
+                            "Registro único de mascotas",
+                            "Registrá o deduplicá mascotas en el padrón municipal único (NRM).",
+                            "/mascotas/registro",
+                            true,
+                            true,
+                            "RF06"
+                    ),
                     new ServicioHabilitadoBE(
                             "APROBAR_ORGANIZACIONES",
                             "Aprobar organizaciones adheridas",

@@ -145,6 +145,7 @@ CREATE TABLE mascotas (
     sexo CHAR(1) NOT NULL,
     [año_nacimiento] INT NOT NULL,
     microchip VARCHAR(64) NULL,
+    castrado BIT NOT NULL DEFAULT 0,
     vive BIT NOT NULL DEFAULT 1,
     id_responsable INT NULL,
     id_refugio INT NULL,
@@ -366,13 +367,13 @@ INSERT INTO dominio_rasgos_mascotas (cod_rasgo, nro_valor_dominio, nom_valor_dom
 (5, 4, 'Gigante');
 
 -- 9. Mascotas (Registro Único Municipal con NRM)
-INSERT INTO mascotas (nro_reg_municipal, nombre, sexo, [año_nacimiento], microchip, vive, id_responsable, id_refugio) VALUES
-(100001, 'Firulais', 'M', 2021, '981098104523123', 1, 1, NULL),
-(100002, 'Milo', 'M', 2022, '981098107845612', 1, 2, NULL),
-(100003, 'Luna', 'H', 2023, '981098109923841', 1, 1, NULL),
-(100004, 'Rocco', 'M', 2023, '981098101112233', 1, NULL, 1),
-(100005, 'Mía', 'H', 2024, NULL, 1, NULL, 1),
-(100006, 'Thor', 'M', 2022, '981098104455667', 1, NULL, 2);
+INSERT INTO mascotas (nro_reg_municipal, nombre, sexo, [año_nacimiento], microchip, castrado, vive, id_responsable, id_refugio) VALUES
+(100001, 'Firulais', 'M', 2021, '981098104523123', 0, 1, 1, NULL),
+(100002, 'Milo', 'M', 2022, '981098107845612', 1, 1, 2, NULL),
+(100003, 'Luna', 'H', 2023, '981098109923841', 0, 1, 1, NULL),
+(100004, 'Rocco', 'M', 2023, '981098101112233', 1, 1, NULL, 1),
+(100005, 'Mía', 'H', 2024, NULL, 0, 1, NULL, 1),
+(100006, 'Thor', 'M', 2022, '981098104455667', 0, 1, NULL, 2);
 
 -- 10. Características de Mascotas (Tabla Intermedia: Mascotas <-> Rasgos <-> Dominio)
 INSERT INTO caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracteristica, nro_valor_dominio, valor_caracteristica) VALUES
@@ -945,6 +946,239 @@ BEGIN
      WHERE p.id_refugio = @id_refugio
        AND p.estado_publicacion = 'Activa'
      ORDER BY p.nro_publicacion DESC;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_mascotas_ciudadano (RF20)
+   Devuelve las mascotas del ciudadano autenticado con estado sanitario general.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_mascotas_ciudadano
+(
+    @id_ciudadano INT,
+    @offset       INT = 0,
+    @limit        INT = 20
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT nroRegMunicipal    = m.nro_reg_municipal,
+           nombre             = m.nombre,
+           sexo               = m.sexo,
+           añoNacimiento      = m.[año_nacimiento],
+           microchip          = m.microchip,
+           castrado           = m.castrado,
+           vive               = m.vive,
+           idResponsable      = m.id_responsable,
+           idRefugio          = m.id_refugio,
+           especie            = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1),
+               'Perro'
+           ),
+           raza               = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2),
+               'Mestizo'
+           ),
+           cantidadAtenciones = (
+               SELECT COUNT(1)
+                 FROM dbo.informacion_sanitaria s (NOLOCK)
+                WHERE s.nro_reg_municipal = m.nro_reg_municipal
+           ),
+           estadoSanitario    = CASE
+               WHEN NOT EXISTS (
+                   SELECT 1
+                     FROM dbo.informacion_sanitaria s (NOLOCK)
+                    WHERE s.nro_reg_municipal = m.nro_reg_municipal
+               ) THEN 'Sin registros'
+               WHEN EXISTS (
+                   SELECT 1
+                     FROM dbo.informacion_sanitaria s (NOLOCK)
+                    WHERE s.nro_reg_municipal = m.nro_reg_municipal
+                      AND s.fecha_vencimiento IS NOT NULL
+                      AND s.fecha_vencimiento < CAST(GETDATE() AS DATE)
+               ) THEN 'Con vencimientos'
+               ELSE 'Al día'
+           END
+      FROM dbo.mascotas m (NOLOCK)
+     WHERE m.id_responsable = @id_ciudadano
+       AND m.vive = 1
+     ORDER BY m.nro_reg_municipal
+     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: count_mascotas_ciudadano (RF20)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.count_mascotas_ciudadano
+(
+    @id_ciudadano INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT COUNT(1)
+      FROM dbo.mascotas m (NOLOCK)
+     WHERE m.id_responsable = @id_ciudadano
+       AND m.vive = 1;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: buscar_ciudadano_por_cuil (RF06)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.buscar_ciudadano_por_cuil
+(
+    @cuil VARCHAR(20)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @cuil_clean VARCHAR(20) = REPLACE(REPLACE(TRIM(@cuil), '-', ''), ' ', '');
+
+    SELECT TOP 1 c.id_ciudadano
+      FROM dbo.ciudadanos c (NOLOCK)
+     WHERE c.habilitado = 1
+       AND (c.cuil = @cuil OR REPLACE(REPLACE(c.cuil, '-', ''), ' ', '') = @cuil_clean);
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: buscar_mascota_por_microchip (RF06)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.buscar_mascota_por_microchip
+(
+    @microchip VARCHAR(64)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 1
+           nroRegMunicipal = m.nro_reg_municipal,
+           nombre          = m.nombre,
+           sexo            = m.sexo,
+           añoNacimiento   = m.[año_nacimiento],
+           microchip       = m.microchip,
+           castrado        = m.castrado,
+           vive            = m.vive,
+           idResponsable   = m.id_responsable,
+           idRefugio       = m.id_refugio,
+           especie         = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1),
+               'Perro'
+           ),
+           raza            = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2
+           )
+      FROM dbo.mascotas m (NOLOCK)
+     WHERE m.vive = 1
+       AND UPPER(TRIM(m.microchip)) = UPPER(TRIM(@microchip));
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: buscar_mascota_coincidencia (RF06)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.buscar_mascota_coincidencia
+(
+    @id_responsable INT = NULL,
+    @id_refugio     INT = NULL,
+    @nombre         VARCHAR(64),
+    @sexo           CHAR(1),
+    @año_nacimiento INT,
+    @especie        VARCHAR(64)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 1
+           nroRegMunicipal = m.nro_reg_municipal,
+           nombre          = m.nombre,
+           sexo            = m.sexo,
+           añoNacimiento   = m.[año_nacimiento],
+           microchip       = m.microchip,
+           castrado        = m.castrado,
+           vive            = m.vive,
+           idResponsable   = m.id_responsable,
+           idRefugio       = m.id_refugio,
+           especie         = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1),
+               @especie
+           ),
+           raza            = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2
+           )
+      FROM dbo.mascotas m (NOLOCK)
+     WHERE m.vive = 1
+       AND LOWER(TRIM(m.nombre)) = LOWER(TRIM(@nombre))
+       AND UPPER(m.sexo) = UPPER(@sexo)
+       AND m.[año_nacimiento] = @año_nacimiento
+       AND LOWER(TRIM(COALESCE(
+           (SELECT TOP 1 cm.valor_caracteristica
+              FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+             WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1),
+           ''
+       ))) = LOWER(TRIM(@especie))
+       AND (
+           (@id_responsable IS NOT NULL AND m.id_responsable = @id_responsable)
+           OR (@id_refugio IS NOT NULL AND m.id_refugio = @id_refugio)
+       );
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: ins_mascota_registro_unico (RF06)
+   Inserta una mascota en el Registro Único asignando NRM consecutivo seguro.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.ins_mascota_registro_unico
+(
+    @nombre             VARCHAR(64),
+    @sexo               CHAR(1),
+    @año_nacimiento     INT,
+    @microchip          VARCHAR(64) = NULL,
+    @castrado           BIT = 0,
+    @id_responsable     INT = NULL,
+    @id_refugio         INT = NULL,
+    @especie            VARCHAR(64),
+    @raza               VARCHAR(64) = NULL,
+    @nro_reg_municipal  INT OUTPUT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT @nro_reg_municipal = COALESCE(MAX(nro_reg_municipal), 100000) + 1
+      FROM dbo.mascotas WITH (UPDLOCK, HOLDLOCK);
+
+    INSERT INTO dbo.mascotas
+        (nro_reg_municipal, nombre, sexo, [año_nacimiento], microchip, castrado, vive, id_responsable, id_refugio)
+    VALUES
+        (@nro_reg_municipal, @nombre, @sexo, @año_nacimiento, NULLIF(TRIM(@microchip), ''), @castrado, 1, @id_responsable, @id_refugio);
+
+    IF @especie IS NOT NULL AND TRIM(@especie) <> ''
+        INSERT INTO dbo.caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracteristica, nro_valor_dominio, valor_caracteristica)
+        VALUES (@nro_reg_municipal, 1, 1, NULL, TRIM(@especie));
+
+    IF @raza IS NOT NULL AND TRIM(@raza) <> ''
+        INSERT INTO dbo.caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracteristica, nro_valor_dominio, valor_caracteristica)
+        VALUES (@nro_reg_municipal, 2, 1, NULL, TRIM(@raza));
 END
 GO
 

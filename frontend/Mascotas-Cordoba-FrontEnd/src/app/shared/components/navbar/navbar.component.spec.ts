@@ -84,7 +84,7 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
     const linksCiudadano = Array.from(fixture.nativeElement.querySelectorAll('.nav-link'))
       .map((el: unknown) => (el as HTMLElement).textContent?.trim());
-    expect(linksCiudadano).toEqual(['Portal', 'Veterinarias', 'Refugios']);
+    expect(linksCiudadano).toEqual(['Portal', 'Veterinarias', 'Refugios', 'Mis mascotas']);
 
     mockUser.set(null);
     fixture.detectChanges();

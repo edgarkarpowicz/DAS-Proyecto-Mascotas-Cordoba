@@ -16,6 +16,9 @@ public class MascotaBE {
     private Boolean vive;
     private Integer idResponsable;
     private Integer idRefugio;
+    private boolean nrmReutilizado;
+    private int cantidadAtenciones;
+    private String estadoSanitario;
 
     public Integer getNroRegMunicipal() {
         return nroRegMunicipal;
@@ -103,5 +106,29 @@ public class MascotaBE {
 
     public void setIdRefugio(Integer idRefugio) {
         this.idRefugio = idRefugio;
+    }
+
+    public boolean isNrmReutilizado() {
+        return nrmReutilizado;
+    }
+
+    public void setNrmReutilizado(boolean nrmReutilizado) {
+        this.nrmReutilizado = nrmReutilizado;
+    }
+
+    public int getCantidadAtenciones() {
+        return cantidadAtenciones;
+    }
+
+    public void setCantidadAtenciones(int cantidadAtenciones) {
+        this.cantidadAtenciones = cantidadAtenciones;
+    }
+
+    public String getEstadoSanitario() {
+        return estadoSanitario;
+    }
+
+    public void setEstadoSanitario(String estadoSanitario) {
+        this.estadoSanitario = estadoSanitario;
     }
 }

@@ -10,6 +10,9 @@ export interface IMascota {
   vive: boolean;
   idResponsable?: number;
   idRefugio?: number;
+  nrmReutilizado?: boolean;
+  cantidadAtenciones?: number;
+  estadoSanitario?: string;
 }
 
 export interface IRegistrarMascotaRequest {

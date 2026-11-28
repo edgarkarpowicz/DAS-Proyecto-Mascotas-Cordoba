@@ -1,0 +1,189 @@
+.banda {
+  background-color: var(--verde-noche);
+  color: #ffffff;
+  padding: 2rem 1.5rem 2.25rem;
+}
+
+.banda-contenido {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.banda-titulo {
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  margin-bottom: 0.4rem;
+}
+
+.banda-bajada {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.mascotas-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3.5rem;
+}
+
+.error-banner {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--ladrillo-tenue);
+  border-left: 4px solid var(--ladrillo);
+  color: #7d2a1c;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.mascota-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nrm-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--verde-monte);
+  background: var(--hoja);
+  padding: 0.22rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.estado-sanitario {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.22rem 0.6rem;
+  border-radius: var(--radius-full);
+  background: #eef2ef;
+  color: var(--piedra);
+}
+
+.estado-sanitario.al-dia {
+  background: #dff3e6;
+  color: var(--verde-monte);
+}
+
+.estado-sanitario.vencido {
+  background: var(--girasol-tenue);
+  color: #78500a;
+}
+
+.mascota-nombre {
+  font-size: 1.35rem;
+  color: var(--verde-noche);
+}
+
+.mascota-meta {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--verde-monte);
+}
+
+.mascota-detalles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mascota-detalles dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.mascota-detalles dd {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.card-footer {
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+.btn-carnet {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--verde-monte);
+}
+
+.btn-carnet:hover {
+  text-decoration: underline;
+}
+
+.paginacion {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-pag {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-pag:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.pag-info {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.vacio {
+  text-align: center;
+  padding: 3rem 1.25rem;
+  background: var(--card-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.vacio-titulo {
+  font-size: 1.4rem;
+  color: var(--verde-noche);
+  margin-bottom: 0.4rem;
+}
+
+.vacio p {
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.btn-volver {
+  display: inline-block;
+  padding: 0.65rem 1.2rem;
+  border-radius: var(--radius-full);
+  background: var(--verde-monte);
+  color: #ffffff;
+  font-weight: 700;
+}

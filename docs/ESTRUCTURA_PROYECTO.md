@@ -6,7 +6,7 @@ Mapa de referencia para localizar e implementar cada módulo vertical (**Backend
 
 | RF | Descripción | Estado | Backend (`ar.edu.ubp.das.mascotas`) | Endpoint REST | Integración externa (`integrations/`) | Frontend (`src/app/`) | Ruta Web |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| **RF06** | Registrar Mascota | Estructura lista (`501`) | `BE/mascotas/`, `repositories/mascotas/`, `services/mascotas/`, `resources/mascotas/` | `POST /mascotas` | `integrations/veterinarias/` (`VeterinariaIntegrationClient`) | `mascotas/` | `/mascotas/registro` |
+| **RF06** | Registrar Mascota | **Core municipal implementado** *(lote en Wave 4)* | `BE/mascotas/`, `repositories/mascotas/`, `services/mascotas/`, `resources/mascotas/` | `POST /mascotas` | `integrations/veterinarias/` (`VeterinariaIntegrationClient`) | `mascotas/` | `/mascotas/registro` |
 | **RF09** | Registrar Información Sanitaria | Estructura lista (`501`) | `BE/sanidad/`, `repositories/sanidad/`, `services/sanidad/`, `resources/sanidad/` | `POST /sanidad/atenciones` | `integrations/veterinarias/` (`VeterinariaIntegrationClient`) | `sanidad/` | `/sanidad/atenciones` |
 | **RF10** | Generar Carnet Sanitario Digital | Estructura lista (`501`) | `BE/sanidad/`, `repositories/sanidad/`, `services/sanidad/`, `resources/sanidad/` | `POST /sanidad/carnets/{nrm}` | — | `sanidad/` | `/sanidad/carnet` |
 | **RF11** | Consultar y Validar Carnet Digital | Estructura lista (`501`) | `BE/sanidad/`, `services/sanidad/`, `SanidadResource`, `CarnetsPublicoResource` | `GET /sanidad/carnets/{nrm}` y `GET /publico/carnets/{codigo}/validar` | — | `sanidad/` | `/sanidad/carnet`, `/sanidad/validar-carnet` |
@@ -15,7 +15,7 @@ Mapa de referencia para localizar e implementar cada módulo vertical (**Backend
 | **RF16** | Acceder al Portal del Programa | **Implementado** | `BE/portal/`, `repositories/portal/`, `services/portal/`, `resources/portal/` | `GET /publico/portal` | — | `portal/` | `/` |
 | **RF17** | Consultar Veterinarias Adheridas | **Implementado** | `BE/veterinarias/`, `repositories/veterinarias/`, `services/veterinarias/`, `resources/veterinarias/` | `GET /publico/veterinarias` | — | `veterinarias/` | `/veterinarias` |
 | **RF18** | Consultar Refugios Adheridos | **Implementado** | `BE/refugios/`, `repositories/refugios/`, `services/refugios/`, `resources/refugios/` | `GET /publico/refugios` y `GET /publico/refugios/{id}/publicaciones` | — | `refugios/` | `/refugios` |
-| **RF20** | Consultar Mis Mascotas | Estructura lista (`501`) | `BE/mascotas/`, `repositories/mascotas/`, `services/mascotas/`, `resources/mascotas/` | `GET /mascotas/mias` | — | `mascotas/` | `/mascotas/mias` |
+| **RF20** | Consultar Mis Mascotas | **Implementado** | `BE/mascotas/`, `repositories/mascotas/`, `services/mascotas/`, `resources/mascotas/` | `GET /mascotas/mias` | — | `mascotas/` | `/mascotas/mias` |
 | **RF21** | Consultar Asistente Virtual | Estructura lista (`501`) | `BE/asistente/`, `services/asistente/`, `resources/asistente/` | `POST /publico/asistente/consultar` | `integrations/ia/` (`AsistenteVirtualClient`) | `asistente/` | `/asistente` |
 
 ---

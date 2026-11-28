@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { IEspecie } from '../../publicaciones/api/models/i-especie';
 import { IPageRequest, IPageResponse, toPageHttpParams } from '../../shared/models/pagination';
 import { IMascota, IRegistrarMascotaRequest } from './models/i-mascota';
 
@@ -10,6 +11,7 @@ export class MascotasResource {
 
   private readonly _http = inject(HttpClient);
   private readonly _baseUrl = `${environment.apiUrl}/mascotas`;
+  private readonly _catalogosUrl = `${environment.apiUrl}/publico/catalogos`;
 
   registrarMascota(request: IRegistrarMascotaRequest): Observable<IMascota> {
     return this._http.post<IMascota>(this._baseUrl, request);
@@ -19,6 +21,10 @@ export class MascotasResource {
     return this._http.get<IPageResponse<IMascota>>(`${this._baseUrl}/mias`, {
       params: toPageHttpParams(pageRequest)
     });
+  }
+
+  getEspecies(): Observable<IEspecie[]> {
+    return this._http.get<IEspecie[]>(`${this._catalogosUrl}/especies`);
   }
 
 }

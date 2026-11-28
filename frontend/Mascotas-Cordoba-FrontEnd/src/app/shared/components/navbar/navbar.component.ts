@@ -30,6 +30,10 @@ export class NavbarComponent {
     const perfil = this.currentUser()?.perfil?.trim().toUpperCase();
     if (perfil === 'REFUGIO') {
       items.push({ label: 'Mis publicaciones', route: '/publicaciones', exact: false });
+    } else if (perfil === 'CIUDADANO') {
+      items.push({ label: 'Mis mascotas', route: '/mascotas/mias', exact: false });
+    } else if (perfil === 'VETERINARIA' || perfil === 'MUNICIPALIDAD') {
+      items.push({ label: 'Registrar mascota', route: '/mascotas/registro', exact: false });
     }
     return items;
   });

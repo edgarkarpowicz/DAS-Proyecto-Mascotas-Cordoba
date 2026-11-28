@@ -75,5 +75,13 @@ npm start
 - **Hogar Animal Córdoba (`REFUGIO`):** CUIL `27-38123456-9` / clave `pass123`
 - **Ciudadano (`CIUDADANO`):** CUIL `20-28555666-3` / clave `pass123`
 
-## Próximos Contenedores: Veterinarias Adheridas
-Cuando se implementen las integraciones **RF06** y **RF09**, los servicios simulados de las veterinarias adheridas se levantarán en contenedores mediante `docker-compose.yml` en los puertos configurados en `db/municipalidad-creation-script.sql` (`8081` REST, `8082` SOAP, `8083` REST) para que el backend ejecutado en consola los consuma por lotes.
+## 5. Contenedores de Veterinarias Adheridas (RF06 / RF09)
+El servicio externo simulado (`veterinarias-externas/veterinaria-service`) se levanta en Docker junto con el backend/frontend corriendo por consola en el host:
+
+```powershell
+docker compose up -d --build vet-san-antonio vet-central-soap
+```
+
+- **Vet 1 (`San Antonio Vet` — REST):** `http://localhost:8081/api/veterinaria`
+- **Vet 2 (`Veterinaria Central Córdoba` — SOAP):** `http://localhost:8082/services/VeterinariaSoapService?wsdl`
+- **Vet 3 (`Clínica Vet Alta Córdoba` — `8083`):** se deja apagada por defecto para validar el aislamiento de fallas (**RNF06**) durante la sincronización por lotes en `/municipalidad/integraciones` (usuario `MUNICIPALIDAD`: CUIL `27-22333444-1` / clave `pass123`).

@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadChildren: () => import('./sanidad/sanidad.routes').then(m => m.SANIDAD_ROUTES)
   },
   {
+    path: 'municipalidad/integraciones',
+    loadChildren: () => import('./integraciones/integraciones.routes').then(m => m.INTEGRACIONES_ROUTES)
+  },
+  {
     path: 'veterinarias',
     loadChildren: () => import('./veterinarias/veterinarias.routes').then(m => m.VETERINARIAS_ROUTES)
   },

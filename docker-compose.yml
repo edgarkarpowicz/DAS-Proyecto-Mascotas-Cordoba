@@ -41,12 +41,32 @@ services:
         condition: service_healthy
 
   # ----------------------------------------------------------------------------
-  # Próximos servicios externos simulados: Veterinarias adheridas (RF06 / RF09)
-  # Los endpoints semilla en db/municipalidad-creation-script.sql ya apuntan a:
+  # Sistemas externos simulados: Veterinarias adheridas (RF06 / RF09)
   #   - Vet 1 (San Antonio Vet - REST):               http://localhost:8081/api/veterinaria
   #   - Vet 2 (Veterinaria Central Córdoba - SOAP):   http://localhost:8082/services/VeterinariaSoapService
-  #   - Vet 3 (Clínica Vet Alta Córdoba - REST):      http://localhost:8083/api/v1/integracion
+  #   - Vet 3 (Clínica Vet Alta Córdoba - REST):      http://localhost:8083/api/v1/integracion (no levantada para validar RNF06)
   # ----------------------------------------------------------------------------
+  vet-san-antonio:
+    build:
+      context: ./veterinarias-externas/veterinaria-service
+    container_name: mascotas-vet-san-antonio
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: "8081"
+      CLINIC_PROFILE: "san-antonio"
+    ports:
+      - "127.0.0.1:8081:8081"
+
+  vet-central-soap:
+    build:
+      context: ./veterinarias-externas/veterinaria-service
+    container_name: mascotas-vet-central-soap
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: "8082"
+      CLINIC_PROFILE: "central-soap"
+    ports:
+      - "127.0.0.1:8082:8082"
 
 volumes:
   mascotas_sqlserver_data:

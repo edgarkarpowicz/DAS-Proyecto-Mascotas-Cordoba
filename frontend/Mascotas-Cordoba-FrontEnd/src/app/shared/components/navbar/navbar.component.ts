@@ -39,6 +39,9 @@ export class NavbarComponent {
       items.push({ label: 'Registrar mascota', route: '/mascotas/registro', exact: false });
       items.push({ label: 'Atenciones', route: '/sanidad/atenciones', exact: false });
       items.push({ label: 'Carnet digital', route: '/sanidad/carnet', exact: false });
+      if (perfil === 'MUNICIPALIDAD') {
+        items.push({ label: 'Integraciones', route: '/municipalidad/integraciones', exact: false });
+      }
     }
     return items;
   });

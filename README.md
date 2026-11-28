@@ -101,6 +101,7 @@ DAS-Proyecto-Mascotas-Cordoba/
 │   ├── pom.xml                        # Dependencias (Java 17, Spring Boot, Apache CXF, AspectJ, MSSQL)
 │   └── src/                           # Código fuente (Java, Recursos, Tests)
 ├── frontend/                          # Portal Cliente Web (Angular)
+├── veterinarias-externas/             # Microservicio Dockerizado de Clínicas Adheridas (REST :8081 / SOAP :8082)
 ├── db/                                # Scripts SQL, esquemas DDL y datos de prueba para MS SQL Server
 ├── docs/                              # Documentación del proyecto
 │   ├── ARRANQUE_LOCAL.md              # Guía rápida de ejecución local por consola + Docker auxiliar
@@ -113,7 +114,7 @@ DAS-Proyecto-Mascotas-Cordoba/
 │       ├── obligatorios/              # RF obligatorios de la primera versión
 │       └── no_obligatorios/           # RF complementarios
 │
-├── docker-compose.yml                 # SQL Server opcional y futuros contenedores de Veterinarias externas
+├── docker-compose.yml                 # SQL Server opcional y contenedores de Veterinarias externas (8081 / 8082)
 ├── .gitignore
 ├── LICENSE
 └── README.md

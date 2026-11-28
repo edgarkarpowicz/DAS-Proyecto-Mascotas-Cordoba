@@ -8,6 +8,7 @@ import java.time.LocalDate;
 public class VeterinariaConfiguracionBE {
 
     private Integer idVeterinaria;
+    private String nombreVeterinaria;
     private String urlServicio;
     private TecnologiaIntegracion tecnologia;
     private String parametros;
@@ -20,6 +21,14 @@ public class VeterinariaConfiguracionBE {
 
     public void setIdVeterinaria(Integer idVeterinaria) {
         this.idVeterinaria = idVeterinaria;
+    }
+
+    public String getNombreVeterinaria() {
+        return nombreVeterinaria;
+    }
+
+    public void setNombreVeterinaria(String nombreVeterinaria) {
+        this.nombreVeterinaria = nombreVeterinaria;
     }
 
     public String getUrlServicio() {

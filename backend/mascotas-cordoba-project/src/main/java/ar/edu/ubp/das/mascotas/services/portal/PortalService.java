@@ -203,11 +203,11 @@ public class PortalService implements IPortalService {
                     new ServicioHabilitadoBE(
                             "CONFIGURAR_INTEGRACIONES",
                             "Configurar integraciones veterinarias",
-                            "Administrá URLs, protocolo REST/SOAP y credenciales de clínicas.",
+                            "Administrá URLs, protocolo REST/SOAP y dispará sincronizaciones por lotes.",
                             "/municipalidad/integraciones",
-                            false,
                             true,
-                            "RF04"
+                            true,
+                            "RF04 / RF06 / RF09"
                     ),
                     new ServicioHabilitadoBE(
                             "ADMINISTRAR_CAMPANAS",

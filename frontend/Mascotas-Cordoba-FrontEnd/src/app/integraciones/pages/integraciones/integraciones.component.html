@@ -1,0 +1,136 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-integraciones">
+  <div class="banda-contenido">
+    <h1 id="titulo-integraciones" class="banda-titulo display">Integraciones y sincronización por lotes</h1>
+    <p class="banda-bajada">
+      Orquestá el intercambio REST/SOAP con veterinarias adheridas (RF06 Registro Único y RF09 Información Sanitaria).
+    </p>
+  </div>
+</section>
+
+<main class="integ-container">
+  <section class="control-card" aria-labelledby="subtitulo-corrida">
+    <h2 id="subtitulo-corrida" class="card-titulo display">Ejecutar sincronización manual</h2>
+    <form [formGroup]="filtroForm" class="rango-form" novalidate>
+      <div class="field-group">
+        <label for="fechaDesde">Desde</label>
+        <input id="fechaDesde" type="date" formControlName="fechaDesde" />
+      </div>
+      <div class="field-group">
+        <label for="fechaHasta">Hasta</label>
+        <input id="fechaHasta" type="date" formControlName="fechaHasta" />
+      </div>
+      <button type="button" class="btn-primary" (click)="sincronizarTodas()" [disabled]="sincronizando()">
+        {{ sincronizando() ? 'Sincronizando...' : 'Sincronizar todas las clínicas' }}
+      </button>
+    </form>
+  </section>
+
+  @if (error(); as mensajeError) {
+    <div class="error-banner" role="alert">{{ mensajeError }}</div>
+  }
+
+  @if (resultadosRecientes().length > 0) {
+    <section class="resultados-card" aria-labelledby="subtitulo-resultados">
+      <h2 id="subtitulo-resultados" class="card-titulo display">Resultado de la última ejecución</h2>
+      <div class="resultados-grid">
+        @for (r of resultadosRecientes(); track r.idVeterinaria) {
+          <article class="res-item" [class.ok]="r.estado === 'EXITO'" [class.fail]="r.estado === 'ERROR'">
+            <div class="res-top">
+              <strong>{{ r.nombreVeterinaria || ('Veterinaria #' + r.idVeterinaria) }}</strong>
+              <span class="badge-estado">{{ r.estado }}</span>
+            </div>
+            @if (r.estado === 'EXITO') {
+              <p class="res-stats">
+                Mascotas nuevas: <strong>{{ r.mascotasNuevas }}</strong> &middot;
+                Deduplicadas: <strong>{{ r.mascotasDeduplicadas }}</strong> &middot;
+                NRMs confirmados: <strong>{{ r.nrmsConfirmados }}</strong> &middot;
+                Prácticas sanitarias: <strong>{{ r.atencionesProcesadas }}</strong>
+              </p>
+            } @else {
+              <p class="res-err">Falla aislada (RNF06): {{ r.mensajeError }}</p>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
+
+  <section class="clinicas-card" aria-labelledby="subtitulo-clinicas">
+    <h2 id="subtitulo-clinicas" class="card-titulo display">Veterinarias habilitadas e interoperabilidad</h2>
+
+    @if (clinicas().length > 0) {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Clínica</th>
+            <th>Tecnología</th>
+            <th>Endpoint</th>
+            <th>Última fecha</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of clinicas(); track c.idVeterinaria) {
+            <tr>
+              <td><strong>{{ c.nombreVeterinaria || ('Vet #' + c.idVeterinaria) }}</strong></td>
+              <td><span class="tech-badge">{{ c.tecnologia }}</span></td>
+              <td class="mono-cell">{{ c.urlServicio }}</td>
+              <td>{{ c.ultimaFechaProcesada || 'Pendiente' }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  (click)="sincronizarClinica(c.idVeterinaria)"
+                  [disabled]="sincronizando()"
+                >
+                  Sincronizar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else if (!cargando()) {
+      <p class="vacio">No hay veterinarias configuradas para integración técnica.</p>
+    }
+  </section>
+
+  <section class="lotes-card" aria-labelledby="subtitulo-lotes">
+    <h2 id="subtitulo-lotes" class="card-titulo display">Historial de lotes ejecutados</h2>
+
+    @if (lotes().length > 0) {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Lote</th>
+            <th>Clínica</th>
+            <th>Rango</th>
+            <th>Estado</th>
+            <th>Nuevas / Dup / NRM</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of lotes(); track l.idLote) {
+            <tr>
+              <td>#{{ l.idLote }}</td>
+              <td>{{ l.nombreVeterinaria || ('Vet #' + l.idVeterinaria) }}</td>
+              <td>{{ l.fechaDesde }} &rarr; {{ l.fechaHasta }}</td>
+              <td>
+                <span class="estado-pill" [class.ok]="l.estado === 'EXITO'" [class.fail]="l.estado === 'ERROR'">
+                  {{ l.estado }}
+                </span>
+              </td>
+              <td>{{ l.registrosNuevos }} / {{ l.registrosDeduplicados }} / {{ l.registrosConfirmados }}</td>
+              <td>{{ l.detalleError || ('Procesados: ' + l.registrosProcesados) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="vacio">Todavía no se registraron lotes de sincronización.</p>
+    }
+  </section>
+</main>

@@ -235,6 +235,47 @@ CREATE TABLE carnets_sanitarios (
 );
 
 -- =============================================================================
+-- TABLA: sincronizacion_mascotas_veterinaria (RF06)
+-- Mapea el identificador interno de una clínica adherida al NRM municipal y
+-- controla el acuse de recibo pendiente.
+-- =============================================================================
+CREATE TABLE sincronizacion_mascotas_veterinaria (
+    id_veterinaria INT NOT NULL,
+    id_mascota_externa VARCHAR(64) NOT NULL,
+    nro_reg_municipal INT NOT NULL,
+    nrm_confirmado BIT NOT NULL DEFAULT 0,
+    fecha_sincronizacion DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    CONSTRAINT pk_sinc_mascotas_vet PRIMARY KEY (id_veterinaria, id_mascota_externa),
+    CONSTRAINT fk_sinc_mascotas_vet_vet FOREIGN KEY (id_veterinaria)
+        REFERENCES veterinarias(id_veterinaria),
+    CONSTRAINT fk_sinc_mascotas_vet_mascota FOREIGN KEY (nro_reg_municipal)
+        REFERENCES mascotas(nro_reg_municipal)
+        ON DELETE CASCADE
+);
+
+-- =============================================================================
+-- TABLA: sincronizacion_lotes_veterinaria (RF06 / RF09 / RNF06)
+-- Registra la bitácora y marca de agua de cada corrida por lotes por clínica.
+-- =============================================================================
+CREATE TABLE sincronizacion_lotes_veterinaria (
+    id_lote BIGINT IDENTITY(1,1) NOT NULL,
+    id_veterinaria INT NOT NULL,
+    tipo_lote VARCHAR(32) NOT NULL,
+    fecha_desde DATE NOT NULL,
+    fecha_hasta DATE NOT NULL,
+    fecha_ejecucion DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    estado VARCHAR(20) NOT NULL,
+    registros_procesados INT NOT NULL DEFAULT 0,
+    registros_nuevos INT NOT NULL DEFAULT 0,
+    registros_deduplicados INT NOT NULL DEFAULT 0,
+    registros_confirmados INT NOT NULL DEFAULT 0,
+    detalle_error VARCHAR(500) NULL,
+    CONSTRAINT pk_sinc_lotes_vet PRIMARY KEY (id_lote),
+    CONSTRAINT fk_sinc_lotes_vet_vet FOREIGN KEY (id_veterinaria)
+        REFERENCES veterinarias(id_veterinaria)
+);
+
+-- =============================================================================
 -- TABLA: estados_publicacion
 -- =============================================================================
 CREATE TABLE estados_publicacion (
@@ -1542,6 +1583,195 @@ BEGIN
       LEFT JOIN dbo.refugios r (NOLOCK)
         ON r.id_refugio = m.id_refugio
      WHERE UPPER(TRIM(cs.codigo_validacion)) = UPPER(TRIM(@codigo_validacion));
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_veterinarias_integradas (RF06 / RF09)
+   Devuelve veterinarias habilitadas con su configuración técnica REST/SOAP y
+   la última fecha procesada con éxito.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_veterinarias_integradas
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT idVeterinaria        = v.id_veterinaria,
+           nombreVeterinaria    = v.nombre,
+           urlServicio          = MAX(CASE WHEN cv.cod_atributo = 1 THEN cv.valor END),
+           tecnologia           = UPPER(MAX(CASE WHEN cv.cod_atributo = 2 THEN cv.valor END)),
+           parametros           = MAX(CASE WHEN cv.cod_atributo = 3 THEN cv.valor END),
+           apiKey               = MAX(CASE WHEN cv.cod_atributo = 4 THEN cv.valor END),
+           ultimaFechaProcesada = (
+               SELECT MAX(sl.fecha_hasta)
+                 FROM dbo.sincronizacion_lotes_veterinaria sl (NOLOCK)
+                WHERE sl.id_veterinaria = v.id_veterinaria
+                  AND sl.estado = 'EXITO'
+           )
+      FROM dbo.veterinarias v (NOLOCK)
+      JOIN dbo.configuracion_veterinarias cv (NOLOCK)
+        ON cv.id_veterinaria = v.id_veterinaria
+     WHERE v.habilitada = 1
+     GROUP BY v.id_veterinaria, v.nombre
+     ORDER BY v.id_veterinaria;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_mapeo_mascota_veterinaria (RF06 / RF09)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_mapeo_mascota_veterinaria
+(
+    @id_veterinaria     INT,
+    @id_mascota_externa VARCHAR(64)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 1 nro_reg_municipal
+      FROM dbo.sincronizacion_mascotas_veterinaria (NOLOCK)
+     WHERE id_veterinaria = @id_veterinaria
+       AND id_mascota_externa = TRIM(@id_mascota_externa);
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: upsert_mapeo_mascota_veterinaria (RF06)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.upsert_mapeo_mascota_veterinaria
+(
+    @id_veterinaria     INT,
+    @id_mascota_externa VARCHAR(64),
+    @nro_reg_municipal  INT,
+    @nrm_confirmado     BIT = 0
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (
+        SELECT 1
+          FROM dbo.sincronizacion_mascotas_veterinaria (NOLOCK)
+         WHERE id_veterinaria = @id_veterinaria
+           AND id_mascota_externa = TRIM(@id_mascota_externa)
+    )
+    BEGIN
+        UPDATE dbo.sincronizacion_mascotas_veterinaria
+           SET nro_reg_municipal   = @nro_reg_municipal,
+               nrm_confirmado      = CASE WHEN @nrm_confirmado = 1 THEN 1 ELSE nrm_confirmado END,
+               fecha_sincronizacion = SYSDATETIME()
+         WHERE id_veterinaria = @id_veterinaria
+           AND id_mascota_externa = TRIM(@id_mascota_externa);
+    END
+    ELSE
+    BEGIN
+        INSERT INTO dbo.sincronizacion_mascotas_veterinaria
+            (id_veterinaria, id_mascota_externa, nro_reg_municipal, nrm_confirmado, fecha_sincronizacion)
+        VALUES
+            (@id_veterinaria, TRIM(@id_mascota_externa), @nro_reg_municipal, @nrm_confirmado, SYSDATETIME());
+    END
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_nrms_pendientes_veterinaria (RF06)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_nrms_pendientes_veterinaria
+(
+    @id_veterinaria INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT idMascotaExterna = s.id_mascota_externa,
+           nroRegMunicipal  = s.nro_reg_municipal
+      FROM dbo.sincronizacion_mascotas_veterinaria s (NOLOCK)
+     WHERE s.id_veterinaria = @id_veterinaria
+       AND s.nrm_confirmado = 0
+     ORDER BY s.fecha_sincronizacion, s.id_mascota_externa;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: marcar_nrm_confirmado_veterinaria (RF06)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.marcar_nrm_confirmado_veterinaria
+(
+    @id_veterinaria     INT,
+    @id_mascota_externa VARCHAR(64)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.sincronizacion_mascotas_veterinaria
+       SET nrm_confirmado       = 1,
+           fecha_sincronizacion = SYSDATETIME()
+     WHERE id_veterinaria = @id_veterinaria
+       AND id_mascota_externa = TRIM(@id_mascota_externa);
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: ins_lote_veterinaria (RF06 / RF09 / RNF06)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.ins_lote_veterinaria
+(
+    @id_veterinaria         INT,
+    @tipo_lote              VARCHAR(32),
+    @fecha_desde            DATE,
+    @fecha_hasta            DATE,
+    @estado                 VARCHAR(20),
+    @registros_procesados   INT,
+    @registros_nuevos       INT,
+    @registros_deduplicados INT,
+    @registros_confirmados  INT,
+    @detalle_error          VARCHAR(500) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.sincronizacion_lotes_veterinaria
+        (id_veterinaria, tipo_lote, fecha_desde, fecha_hasta, fecha_ejecucion, estado,
+         registros_procesados, registros_nuevos, registros_deduplicados, registros_confirmados, detalle_error)
+    VALUES
+        (@id_veterinaria, @tipo_lote, @fecha_desde, @fecha_hasta, SYSDATETIME(), @estado,
+         @registros_procesados, @registros_nuevos, @registros_deduplicados, @registros_confirmados, @detalle_error);
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_ultimos_lotes_veterinaria (RF06 / RF09)
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_ultimos_lotes_veterinaria
+(
+    @top INT = 20
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP (@top)
+           idLote                = sl.id_lote,
+           idVeterinaria         = sl.id_veterinaria,
+           nombreVeterinaria     = v.nombre,
+           tipoLote              = sl.tipo_lote,
+           fechaDesde            = sl.fecha_desde,
+           fechaHasta            = sl.fecha_hasta,
+           fechaEjecucion        = sl.fecha_ejecucion,
+           estado                = sl.estado,
+           registrosProcesados   = sl.registros_procesados,
+           registrosNuevos       = sl.registros_nuevos,
+           registrosDeduplicados = sl.registros_deduplicados,
+           registrosConfirmados  = sl.registros_confirmados,
+           detalleError          = sl.detalle_error
+      FROM dbo.sincronizacion_lotes_veterinaria sl (NOLOCK)
+      JOIN dbo.veterinarias v (NOLOCK)
+        ON v.id_veterinaria = sl.id_veterinaria
+     ORDER BY sl.id_lote DESC;
 END
 GO
 

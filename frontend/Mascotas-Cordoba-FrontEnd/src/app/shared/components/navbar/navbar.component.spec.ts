@@ -90,5 +90,27 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.user-btn')).toBeNull();
     expect(fixture.nativeElement.querySelector('.login-link-btn')?.textContent?.trim()).toBe('Iniciar sesión');
+
+    mockUser.set({
+      idCiudadano: 6,
+      apellido: 'Benítez',
+      nombre: 'Laura',
+      cuil: '27-22333444-1',
+      correo: 'laura@cordoba.gob.ar',
+      perfil: 'MUNICIPALIDAD'
+    });
+    fixture.detectChanges();
+    const linksMuni = Array.from(fixture.nativeElement.querySelectorAll('.nav-link'))
+      .map((el: unknown) => (el as HTMLElement).textContent?.trim());
+    expect(linksMuni).toEqual([
+      'Portal',
+      'Veterinarias',
+      'Refugios',
+      'Validar carnet',
+      'Registrar mascota',
+      'Atenciones',
+      'Carnet digital',
+      'Integraciones'
+    ]);
   });
 });

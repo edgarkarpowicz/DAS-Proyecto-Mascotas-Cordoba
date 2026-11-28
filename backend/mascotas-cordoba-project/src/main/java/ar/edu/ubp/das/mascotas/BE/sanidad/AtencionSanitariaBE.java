@@ -14,6 +14,7 @@ public class AtencionSanitariaBE {
     private String detalleAtencion;
     private LocalDate fechaVencimiento;
     private Integer idVeterinaria;
+    private String veterinaria;
     private String profesional;
 
     public Integer getNroRegMunicipal() {
@@ -70,6 +71,14 @@ public class AtencionSanitariaBE {
 
     public void setIdVeterinaria(Integer idVeterinaria) {
         this.idVeterinaria = idVeterinaria;
+    }
+
+    public String getVeterinaria() {
+        return veterinaria;
+    }
+
+    public void setVeterinaria(String veterinaria) {
+        this.veterinaria = veterinaria;
     }
 
     public String getProfesional() {

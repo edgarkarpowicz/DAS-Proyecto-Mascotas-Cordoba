@@ -1,0 +1,239 @@
+.banda {
+  background-color: var(--verde-noche);
+  color: #ffffff;
+  padding: 2rem 1.5rem 2.25rem;
+}
+
+.banda-contenido {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.banda-titulo {
+  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  margin-bottom: 0.4rem;
+}
+
+.banda-bajada {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.sanidad-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3.5rem;
+}
+
+.success-banner,
+.error-banner {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.success-banner {
+  background: #dff3e6;
+  border-left: 4px solid var(--verde-monte);
+  color: var(--verde-noche);
+}
+
+.error-banner {
+  background: var(--ladrillo-tenue);
+  border-left: 4px solid var(--ladrillo);
+  color: #7d2a1c;
+}
+
+.banner-link {
+  color: var(--verde-monte);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sanidad-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .sanidad-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-card,
+.historial-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-titulo {
+  font-size: 1.35rem;
+  color: var(--verde-noche);
+  margin-bottom: 1rem;
+}
+
+.clinica-badge {
+  background: var(--hoja);
+  color: var(--verde-monte);
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.field-group label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--verde-noche);
+}
+
+.field-group input,
+.field-group select,
+.field-group textarea {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.58rem 0.75rem;
+  font-size: 0.94rem;
+  font-family: inherit;
+  background: #ffffff;
+}
+
+.nrm-row {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.field-grow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.two-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .two-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-primary {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--verde-monte);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-secondary,
+.btn-outline {
+  border: 1px solid var(--verde-monte);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--verde-monte);
+  font-weight: 600;
+  padding: 0.52rem 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.historial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.historial-header .card-titulo {
+  margin-bottom: 0;
+}
+
+.historial-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.historial-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+  background: #fafcfb;
+}
+
+.item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.tipo-pill {
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: var(--hoja);
+  color: var(--verde-monte);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.fecha-texto {
+  font-size: 0.82rem;
+  color: var(--piedra);
+}
+
+.item-detalle {
+  margin: 0 0 0.45rem;
+  font-size: 0.92rem;
+  color: var(--verde-noche);
+}
+
+.item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--piedra);
+}
+
+.vacio-historial {
+  color: var(--piedra);
+  font-size: 0.92rem;
+}

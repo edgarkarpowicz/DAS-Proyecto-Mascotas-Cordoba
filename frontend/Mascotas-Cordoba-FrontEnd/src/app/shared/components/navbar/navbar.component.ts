@@ -25,15 +25,20 @@ export class NavbarComponent {
     const items: INavItem[] = [
       { label: 'Portal', route: '/', exact: true },
       { label: 'Veterinarias', route: '/veterinarias', exact: false },
-      { label: 'Refugios', route: '/refugios', exact: false }
+      { label: 'Refugios', route: '/refugios', exact: false },
+      { label: 'Validar carnet', route: '/sanidad/validar-carnet', exact: false }
     ];
     const perfil = this.currentUser()?.perfil?.trim().toUpperCase();
     if (perfil === 'REFUGIO') {
       items.push({ label: 'Mis publicaciones', route: '/publicaciones', exact: false });
+      items.push({ label: 'Carnet digital', route: '/sanidad/carnet', exact: false });
     } else if (perfil === 'CIUDADANO') {
       items.push({ label: 'Mis mascotas', route: '/mascotas/mias', exact: false });
+      items.push({ label: 'Carnet digital', route: '/sanidad/carnet', exact: false });
     } else if (perfil === 'VETERINARIA' || perfil === 'MUNICIPALIDAD') {
       items.push({ label: 'Registrar mascota', route: '/mascotas/registro', exact: false });
+      items.push({ label: 'Atenciones', route: '/sanidad/atenciones', exact: false });
+      items.push({ label: 'Carnet digital', route: '/sanidad/carnet', exact: false });
     }
     return items;
   });

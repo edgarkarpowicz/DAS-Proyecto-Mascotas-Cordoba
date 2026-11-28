@@ -12,7 +12,9 @@ public class RegistrarAtencionRequestBE {
     private Integer codTipoAtencion;
     private String detalleAtencion;
     private LocalDate fechaVencimiento;
+    private Integer idVeterinaria;
     private Integer idProfesional;
+    private String profesional;
 
     public Integer getNroRegMunicipal() {
         return nroRegMunicipal;
@@ -54,11 +56,27 @@ public class RegistrarAtencionRequestBE {
         this.fechaVencimiento = fechaVencimiento;
     }
 
+    public Integer getIdVeterinaria() {
+        return idVeterinaria;
+    }
+
+    public void setIdVeterinaria(Integer idVeterinaria) {
+        this.idVeterinaria = idVeterinaria;
+    }
+
     public Integer getIdProfesional() {
         return idProfesional;
     }
 
     public void setIdProfesional(Integer idProfesional) {
         this.idProfesional = idProfesional;
+    }
+
+    public String getProfesional() {
+        return profesional;
+    }
+
+    public void setProfesional(String profesional) {
+        this.profesional = profesional;
     }
 }

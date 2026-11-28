@@ -46,6 +46,15 @@ public class PortalService implements IPortalService {
                     "RF18"
             ),
             new ServicioHabilitadoBE(
+                    "VALIDAR_CARNET",
+                    "Validar carnet digital",
+                    "Verificá la autenticidad y vigencia de un carnet sanitario por código o QR.",
+                    "/sanidad/validar-carnet",
+                    true,
+                    false,
+                    "RF11"
+            ),
+            new ServicioHabilitadoBE(
                     "CAMPANAS",
                     "Campañas municipales",
                     "Agenda vigente de castración, vacunación antirrábica y jornadas territoriales.",
@@ -138,7 +147,7 @@ public class PortalService implements IPortalService {
                             "Carnet sanitario digital",
                             "Generá y compartí el carnet oficial vigente con código de validación.",
                             "/sanidad/carnet",
-                            false,
+                            true,
                             true,
                             "RF10 / RF11"
                     )
@@ -158,7 +167,7 @@ public class PortalService implements IPortalService {
                             "Información sanitaria",
                             "Consolidá vacunaciones, castraciones y prácticas del programa.",
                             "/sanidad/atenciones",
-                            false,
+                            true,
                             true,
                             "RF09"
                     )
@@ -172,6 +181,15 @@ public class PortalService implements IPortalService {
                             true,
                             true,
                             "RF06"
+                    ),
+                    new ServicioHabilitadoBE(
+                            "INFO_SANITARIA",
+                            "Información sanitaria",
+                            "Registrá atenciones sanitarias y consultá historiales por NRM.",
+                            "/sanidad/atenciones",
+                            true,
+                            true,
+                            "RF09"
                     ),
                     new ServicioHabilitadoBE(
                             "APROBAR_ORGANIZACIONES",

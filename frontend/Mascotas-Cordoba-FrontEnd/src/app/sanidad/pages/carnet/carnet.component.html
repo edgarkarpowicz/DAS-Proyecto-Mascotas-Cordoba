@@ -1,0 +1,153 @@
+<app-navbar class="no-print"></app-navbar>
+
+<section class="banda no-print" aria-labelledby="titulo-carnet">
+  <div class="banda-contenido">
+    <h1 id="titulo-carnet" class="banda-titulo display">Carnet sanitario digital</h1>
+    <p class="banda-bajada">
+      Emití, visualizá e imprimí el carnet oficial vigente de cada mascota registrada con su código QR de validación.
+    </p>
+  </div>
+</section>
+
+<main class="carnet-container">
+  <section class="selector-card no-print" aria-labelledby="subtitulo-selector">
+    <h2 id="subtitulo-selector" class="card-titulo display">Buscar o emitir carnet por NRM</h2>
+
+    @if (esCiudadano() && misMascotas().length > 0) {
+      <div class="mis-mascotas-pills" aria-label="Accesos rápidos de tus mascotas">
+        <span class="pills-label">Tus mascotas:</span>
+        @for (m of misMascotas(); track m.nroRegMunicipal) {
+          <button
+            type="button"
+            class="pill-btn"
+            [class.active]="nrmForm.controls.nroRegMunicipal.value === (m.nroRegMunicipal + '')"
+            (click)="seleccionarMascota(m.nroRegMunicipal)"
+          >
+            {{ m.nombre }} (NRM {{ m.nroRegMunicipal }})
+          </button>
+        }
+      </div>
+    }
+
+    <form [formGroup]="nrmForm" (ngSubmit)="buscarDesdeFormulario()" class="nrm-form" novalidate>
+      <input
+        type="text"
+        inputmode="numeric"
+        formControlName="nroRegMunicipal"
+        placeholder="NRM (ej: 100001)"
+        aria-label="Número de registro municipal"
+      />
+      <button type="submit" class="btn-secondary" [disabled]="cargando()">
+        {{ cargando() ? 'Consultando...' : 'Consultar vigente' }}
+      </button>
+      <button type="button" class="btn-primary" (click)="generarCarnet()" [disabled]="emitiendo()">
+        {{ emitiendo() ? 'Emitiendo...' : 'Emitir / renovar carnet' }}
+      </button>
+    </form>
+  </section>
+
+  @if (error(); as mensajeError) {
+    <div class="error-banner no-print" role="alert">{{ mensajeError }}</div>
+  }
+
+  @if (sinCarnetEmitidoNrm(); as nrmPendiente) {
+    <div class="info-banner no-print" role="status">
+      <div>
+        La mascota <strong>NRM {{ nrmPendiente }}</strong> aún no posee un carnet digital emitido.
+      </div>
+      <button type="button" class="btn-primary" (click)="generarCarnet()" [disabled]="emitiendo()">
+        Emitir primer carnet digital
+      </button>
+    </div>
+  }
+
+  @if (carnet(); as c) {
+    <article class="carnet-oficial" aria-label="Carnet Sanitario Digital Oficial">
+      <header class="carnet-header">
+        <div>
+          <span class="org-label">Municipalidad de Córdoba &middot; Bienestar Animal</span>
+          <h2 class="carnet-nombre display">{{ c.nombreMascota }}</h2>
+          <p class="carnet-subtitulo">
+            NRM {{ c.nroRegMunicipal }}
+            @if (c.especie) { &middot; {{ c.especie }} }
+            @if (c.raza) { &middot; {{ c.raza }} }
+          </p>
+        </div>
+
+        <div class="carnet-qr-box">
+          @if (qrDataUrl(); as qrSrc) {
+            <img [src]="qrSrc" alt="Código QR de validación del carnet" class="qr-img" />
+          }
+          <code class="codigo-badge">{{ c.codigoValidacion }}</code>
+        </div>
+      </header>
+
+      <dl class="carnet-datos">
+        <div>
+          <dt>Responsable / Refugio</dt>
+          <dd>{{ c.responsableNombre || 'Programa Municipal' }}</dd>
+        </div>
+        <div>
+          <dt>Fecha de emisión</dt>
+          <dd>{{ c.fechaEmision }}</dd>
+        </div>
+        <div>
+          <dt>Estado del carnet</dt>
+          <dd>{{ c.vigente ? 'Vigente' : 'No vigente' }}</dd>
+        </div>
+        <div>
+          <dt>Estado sanitario</dt>
+          <dd>{{ c.estadoSanitario || 'Sin registros' }}</dd>
+        </div>
+        <div>
+          <dt>Castrado</dt>
+          <dd>{{ c.castrado ? 'Sí' : 'No informado' }}</dd>
+        </div>
+        <div>
+          <dt>Microchip</dt>
+          <dd>{{ c.microchip || 'No registrado' }}</dd>
+        </div>
+      </dl>
+
+      <section class="carnet-historial" aria-labelledby="titulo-practicas-carnet">
+        <h3 id="titulo-practicas-carnet" class="historial-titulo">Prácticas sanitarias registradas ({{ c.atenciones.length }})</h3>
+
+        @if (c.atenciones.length > 0) {
+          <table class="practicas-tabla">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Práctica</th>
+                <th>Detalle</th>
+                <th>Veterinaria / Profesional</th>
+                <th>Vencimiento</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of c.atenciones; track a.nroRegistro) {
+                <tr>
+                  <td>{{ a.fechaAtencion }}</td>
+                  <td><span class="tipo-tag">{{ a.tipoAtencion }}</span></td>
+                  <td>{{ a.detalleAtencion }}</td>
+                  <td>{{ a.veterinaria || ('Vet #' + a.idVeterinaria) }} &middot; {{ a.profesional || 'Equipo clínico' }}</td>
+                  <td>{{ a.fechaVencimiento || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="sin-practicas">Esta mascota aún no registra prácticas sanitarias cargadas en el programa municipal.</p>
+        }
+      </section>
+
+      <footer class="carnet-acciones no-print">
+        <a [routerLink]="['/sanidad/validar-carnet']" [queryParams]="{ codigo: c.codigoValidacion }" class="btn-outline">
+          Abrir validación pública &rarr;
+        </a>
+        <button type="button" class="btn-secondary" (click)="imprimir()">
+          Imprimir / Guardar PDF
+        </button>
+      </footer>
+    </article>
+  }
+</main>

@@ -16,7 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 class MandatoryRfScaffoldsTests {
@@ -27,7 +28,7 @@ class MandatoryRfScaffoldsTests {
     }
 
     @Test
-    void testPlaceholdersProtegidosValidaPerfilYLanza501() {
+    void testSanidadRechazaPerfilNoAutorizadoYAsistentePermaneceEn501() {
         AuthorizationService authService = new AuthorizationService();
 
         SanidadService sanidadService = new SanidadService();
@@ -37,29 +38,10 @@ class MandatoryRfScaffoldsTests {
         UserContextHolder.set(buildSesion(PerfilUsuario.CIUDADANO));
         assertEquals(HttpStatus.FORBIDDEN, assertThrows(ResponseStatusException.class,
                 () -> sanidadService.registrarAtencion(new RegistrarAtencionRequestBE())).getStatusCode());
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, assertThrows(ResponseStatusException.class,
-                () -> sanidadService.generarCarnet(100001)).getStatusCode());
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, assertThrows(ResponseStatusException.class,
-                () -> sanidadService.consultarCarnet(100001)).getStatusCode());
 
-        UserContextHolder.set(buildSesion(PerfilUsuario.VETERINARIA));
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, assertThrows(ResponseStatusException.class,
-                () -> sanidadService.registrarAtencion(new RegistrarAtencionRequestBE())).getStatusCode());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void testPlaceholdersPublicosLanzan501SinExigirSesion() {
         UserContextHolder.clear();
-
-        SanidadService sanidadService = new SanidadService();
-        ReflectionTestUtils.setField(sanidadService, "sanidadRepository", mock(SanidadRepository.class));
-        ReflectionTestUtils.setField(sanidadService, "authorizationService", new AuthorizationService());
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, assertThrows(ResponseStatusException.class,
-                () -> sanidadService.validarCarnet("ABC-123")).getStatusCode());
-
         AsistenteService asistenteService = new AsistenteService();
-        ReflectionTestUtils.setField(asistenteService, "authorizationService", new AuthorizationService());
+        ReflectionTestUtils.setField(asistenteService, "authorizationService", authService);
         ReflectionTestUtils.setField(asistenteService, "asistenteClientProvider", mock(ObjectProvider.class));
         assertEquals(HttpStatus.NOT_IMPLEMENTED, assertThrows(ResponseStatusException.class,
                 () -> asistenteService.consultar(new ConsultaAsistenteRequestBE())).getStatusCode());

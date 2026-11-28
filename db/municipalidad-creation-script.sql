@@ -197,15 +197,41 @@ CREATE TABLE informacion_sanitaria (
     detalle_atencion VARCHAR(255) NOT NULL,
     fecha_vencimiento DATE NULL,
     id_veterinaria INT NOT NULL,
-    id_profesional INT NOT NULL,
+    id_profesional INT NULL,
+    profesional_texto VARCHAR(128) NULL,
+    nro_atencion_externa INT NULL,
+    nro_detalle_externo INT NULL,
     CONSTRAINT pk_informacion_sanitaria PRIMARY KEY (nro_reg_municipal, nro_registro),
     CONSTRAINT fk_info_sanitaria_mascotas FOREIGN KEY (nro_reg_municipal)
         REFERENCES mascotas(nro_reg_municipal)
         ON DELETE CASCADE,
     CONSTRAINT fk_info_sanitaria_tipos FOREIGN KEY (cod_tipo_atencion)
         REFERENCES tipos_atencion_sanitaria(cod_tipo_atencion),
-    CONSTRAINT fk_info_sanitaria_prof_vet FOREIGN KEY (id_veterinaria, id_profesional)
-        REFERENCES profesionales_veterinarias(id_veterinaria, id_profesional)
+    CONSTRAINT fk_info_sanitaria_veterinarias FOREIGN KEY (id_veterinaria)
+        REFERENCES veterinarias(id_veterinaria)
+);
+
+CREATE UNIQUE INDEX uq_info_sanitaria_externa
+    ON informacion_sanitaria (id_veterinaria, nro_atencion_externa, nro_detalle_externo)
+    WHERE nro_atencion_externa IS NOT NULL AND nro_detalle_externo IS NOT NULL;
+
+-- =============================================================================
+-- TABLA: carnets_sanitarios (RF10 / RF11)
+-- =============================================================================
+CREATE TABLE carnets_sanitarios (
+    id_carnet INT IDENTITY(1,1) NOT NULL,
+    nro_reg_municipal INT NOT NULL,
+    codigo_validacion VARCHAR(64) NOT NULL,
+    fecha_emision DATE NOT NULL,
+    vigente BIT NOT NULL DEFAULT 1,
+    id_emisor INT NULL,
+    CONSTRAINT pk_carnets_sanitarios PRIMARY KEY (id_carnet),
+    CONSTRAINT uq_carnets_sanitarios_codigo UNIQUE (codigo_validacion),
+    CONSTRAINT fk_carnets_sanitarios_mascotas FOREIGN KEY (nro_reg_municipal)
+        REFERENCES mascotas(nro_reg_municipal)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_carnets_sanitarios_emisor FOREIGN KEY (id_emisor)
+        REFERENCES ciudadanos(id_ciudadano)
 );
 
 -- =============================================================================
@@ -423,15 +449,19 @@ INSERT INTO tipos_atencion_sanitaria (cod_tipo_atencion, desc_tipo_atencion) VAL
 (5, 'Consulta clínica');
 
 -- 12. Información Sanitaria (Tabla Intermedia: Mascotas <-> Prácticas <-> Veterinarias/Profesionales)
-INSERT INTO informacion_sanitaria (nro_reg_municipal, nro_registro, fecha_atencion, cod_tipo_atencion, detalle_atencion, fecha_vencimiento, id_veterinaria, id_profesional) VALUES
-(100001, 1, '2024-03-10', 1, 'Vacuna Antirrábica Obligatoria Anual - Lote RAB-2024-X9', '2025-03-10', 1, 1),
-(100001, 2, '2024-09-15', 2, 'Desparasitación interna de amplio espectro - Lote DESP-552', '2025-03-15', 1, 2),
-(100002, 1, '2024-05-20', 4, 'Castración electiva bajo Programa Municipal de Esterilización', NULL, 1, 1),
-(100003, 1, '2024-04-12', 1, 'Vacunación Triple Felina Preventiva - Lote FEL-3312', '2025-04-12', 1, 2),
-(100004, 1, '2024-02-18', 1, 'Vacunación quíntuple canina y antirrábica de ingreso al refugio', '2025-02-18', 2, 3),
-(100004, 2, '2024-03-01', 4, 'Castración quirúrgica previa a habilitación de adopción', NULL, 2, 3),
-(100006, 1, '2024-04-10', 1, 'Vacunación quíntuple canina anual de ingreso a Hogar Animal', '2025-04-10', 2, 3),
-(100006, 2, '2024-05-02', 2, 'Desparasitación interna preventiva', '2024-11-02', 2, 3);
+INSERT INTO informacion_sanitaria (nro_reg_municipal, nro_registro, fecha_atencion, cod_tipo_atencion, detalle_atencion, fecha_vencimiento, id_veterinaria, id_profesional, profesional_texto) VALUES
+(100001, 1, '2026-04-10', 1, 'Vacuna Antirrábica Obligatoria Anual - Lote RAB-2026-X9', '2027-04-10', 1, 1, 'Dr. Esteban Quito'),
+(100001, 2, '2026-09-15', 2, 'Desparasitación interna de amplio espectro - Lote DESP-552', '2027-03-15', 1, 2, 'Dra. Laura Martínez'),
+(100002, 1, '2026-05-20', 4, 'Castración electiva bajo Programa Municipal de Esterilización', NULL, 1, 1, 'Dr. Esteban Quito'),
+(100003, 1, '2026-04-12', 1, 'Vacunación Triple Felina Preventiva - Lote FEL-3312', '2027-04-12', 1, 2, 'Dra. Laura Martínez'),
+(100004, 1, '2026-06-18', 1, 'Vacunación quíntuple canina y antirrábica de ingreso al refugio', '2027-06-18', 2, 3, 'Dr. Martín Ferrero'),
+(100004, 2, '2026-03-01', 4, 'Castración quirúrgica previa a habilitación de adopción', NULL, 2, 3, 'Dr. Martín Ferrero'),
+(100006, 1, '2024-04-10', 1, 'Vacunación quíntuple canina anual de ingreso a Hogar Animal', '2025-04-10', 2, 3, 'Dr. Martín Ferrero'),
+(100006, 2, '2024-05-02', 2, 'Desparasitación interna preventiva', '2024-11-02', 2, 3, 'Dr. Martín Ferrero');
+
+-- 12b. Carnets Sanitarios Digitales (RF10 / RF11)
+INSERT INTO carnets_sanitarios (nro_reg_municipal, codigo_validacion, fecha_emision, vigente, id_emisor) VALUES
+(100001, 'CBA-100001-SEED01', '2026-10-01', 1, 1);
 
 -- 13. Estados de Publicaciones de Adopción
 INSERT INTO estados_publicacion (cod_estado, descripcion) VALUES
@@ -1179,6 +1209,339 @@ BEGIN
     IF @raza IS NOT NULL AND TRIM(@raza) <> ''
         INSERT INTO dbo.caracteristicas_mascotas (nro_reg_municipal, cod_rasgo, nro_caracteristica, nro_valor_dominio, valor_caracteristica)
         VALUES (@nro_reg_municipal, 2, 1, NULL, TRIM(@raza));
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_tipos_atencion_sanitaria (RF09)
+   Devuelve el catálogo oficial de prácticas sanitarias cubiertas por el programa.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_tipos_atencion_sanitaria
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT codTipoAtencion  = t.cod_tipo_atencion,
+           descTipoAtencion = t.desc_tipo_atencion
+      FROM dbo.tipos_atencion_sanitaria t (NOLOCK)
+     ORDER BY t.cod_tipo_atencion;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_mascota_por_nrm (RF06 / RF09 / RF10 / RF11)
+   Obtiene el resumen completo de una mascota del Registro Único por NRM.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_mascota_por_nrm
+(
+    @nro_reg_municipal INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT nroRegMunicipal    = m.nro_reg_municipal,
+           nombre             = m.nombre,
+           sexo               = m.sexo,
+           añoNacimiento      = m.[año_nacimiento],
+           microchip          = m.microchip,
+           castrado           = m.castrado,
+           vive               = m.vive,
+           idResponsable      = m.id_responsable,
+           idRefugio          = m.id_refugio,
+           especie            = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1),
+               'Perro'
+           ),
+           raza               = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2
+           ),
+           cantidadAtenciones = (
+               SELECT COUNT(1)
+                 FROM dbo.informacion_sanitaria s (NOLOCK)
+                WHERE s.nro_reg_municipal = m.nro_reg_municipal
+           ),
+           estadoSanitario    = CASE
+               WHEN NOT EXISTS (
+                   SELECT 1
+                     FROM dbo.informacion_sanitaria s (NOLOCK)
+                    WHERE s.nro_reg_municipal = m.nro_reg_municipal
+               ) THEN 'Sin registros'
+               WHEN EXISTS (
+                   SELECT 1
+                     FROM dbo.informacion_sanitaria s (NOLOCK)
+                    WHERE s.nro_reg_municipal = m.nro_reg_municipal
+                      AND s.fecha_vencimiento IS NOT NULL
+                      AND s.fecha_vencimiento < CAST(GETDATE() AS DATE)
+               ) THEN 'Con vencimientos'
+               ELSE 'Al día'
+           END
+      FROM dbo.mascotas m (NOLOCK)
+     WHERE m.nro_reg_municipal = @nro_reg_municipal;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_informacion_sanitaria_mascota (RF09 / RF10 / RF11)
+   Lista el historial sanitario de una mascota ordenado del más reciente al más antiguo.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_informacion_sanitaria_mascota
+(
+    @nro_reg_municipal INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT nroRegMunicipal  = s.nro_reg_municipal,
+           nroRegistro      = s.nro_registro,
+           fechaAtencion    = s.fecha_atencion,
+           tipoAtencion     = t.desc_tipo_atencion,
+           detalleAtencion  = s.detalle_atencion,
+           fechaVencimiento = s.fecha_vencimiento,
+           idVeterinaria    = s.id_veterinaria,
+           veterinaria      = v.nombre,
+           profesional      = COALESCE(
+               NULLIF(TRIM(s.profesional_texto), ''),
+               CASE WHEN s.id_profesional IS NOT NULL THEN CONCAT('Profesional #', s.id_profesional) END,
+               v.nombre
+           )
+      FROM dbo.informacion_sanitaria s (NOLOCK)
+      JOIN dbo.tipos_atencion_sanitaria t (NOLOCK)
+        ON t.cod_tipo_atencion = s.cod_tipo_atencion
+      JOIN dbo.veterinarias v (NOLOCK)
+        ON v.id_veterinaria = s.id_veterinaria
+     WHERE s.nro_reg_municipal = @nro_reg_municipal
+     ORDER BY s.fecha_atencion DESC, s.nro_registro DESC;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: ins_informacion_sanitaria (RF09)
+   Registra una práctica sanitaria de manera idempotente (si viene clave externa)
+   y marca castrado=1 cuando corresponde a Esterilización o Castración.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.ins_informacion_sanitaria
+(
+    @nro_reg_municipal    INT,
+    @fecha_atencion       DATE,
+    @cod_tipo_atencion    INT,
+    @detalle_atencion     VARCHAR(255),
+    @fecha_vencimiento    DATE = NULL,
+    @id_veterinaria       INT,
+    @id_profesional       INT = NULL,
+    @profesional_texto    VARCHAR(128) = NULL,
+    @nro_atencion_externa INT = NULL,
+    @nro_detalle_externo  INT = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @nro_registro_existente INT = NULL;
+
+    IF @nro_atencion_externa IS NOT NULL AND @nro_detalle_externo IS NOT NULL
+    BEGIN
+        SELECT TOP 1 @nro_registro_existente = s.nro_registro
+          FROM dbo.informacion_sanitaria s (NOLOCK)
+         WHERE s.id_veterinaria = @id_veterinaria
+           AND s.nro_atencion_externa = @nro_atencion_externa
+           AND s.nro_detalle_externo = @nro_detalle_externo;
+    END
+
+    IF @nro_registro_existente IS NULL
+    BEGIN
+        DECLARE @nuevo_nro_registro INT;
+
+        SELECT @nuevo_nro_registro = COALESCE(MAX(s.nro_registro), 0) + 1
+          FROM dbo.informacion_sanitaria s WITH (UPDLOCK, HOLDLOCK)
+         WHERE s.nro_reg_municipal = @nro_reg_municipal;
+
+        INSERT INTO dbo.informacion_sanitaria
+            (nro_reg_municipal, nro_registro, fecha_atencion, cod_tipo_atencion, detalle_atencion,
+             fecha_vencimiento, id_veterinaria, id_profesional, profesional_texto,
+             nro_atencion_externa, nro_detalle_externo)
+        VALUES
+            (@nro_reg_municipal, @nuevo_nro_registro, @fecha_atencion, @cod_tipo_atencion, TRIM(@detalle_atencion),
+             @fecha_vencimiento, @id_veterinaria, @id_profesional, NULLIF(TRIM(@profesional_texto), ''),
+             @nro_atencion_externa, @nro_detalle_externo);
+
+        IF @cod_tipo_atencion IN (3, 4)
+        BEGIN
+            UPDATE dbo.mascotas
+               SET castrado = 1
+             WHERE nro_reg_municipal = @nro_reg_municipal;
+        END
+
+        SET @nro_registro_existente = @nuevo_nro_registro;
+    END
+
+    SELECT nroRegMunicipal  = s.nro_reg_municipal,
+           nroRegistro      = s.nro_registro,
+           fechaAtencion    = s.fecha_atencion,
+           tipoAtencion     = t.desc_tipo_atencion,
+           detalleAtencion  = s.detalle_atencion,
+           fechaVencimiento = s.fecha_vencimiento,
+           idVeterinaria    = s.id_veterinaria,
+           veterinaria      = v.nombre,
+           profesional      = COALESCE(
+               NULLIF(TRIM(s.profesional_texto), ''),
+               CASE WHEN s.id_profesional IS NOT NULL THEN CONCAT('Profesional #', s.id_profesional) END,
+               v.nombre
+           )
+      FROM dbo.informacion_sanitaria s (NOLOCK)
+      JOIN dbo.tipos_atencion_sanitaria t (NOLOCK)
+        ON t.cod_tipo_atencion = s.cod_tipo_atencion
+      JOIN dbo.veterinarias v (NOLOCK)
+        ON v.id_veterinaria = s.id_veterinaria
+     WHERE s.nro_reg_municipal = @nro_reg_municipal
+       AND s.nro_registro = @nro_registro_existente;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: emitir_carnet_sanitario (RF10)
+   Emite un carnet digital único vigente e invalida emisiones anteriores.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.emitir_carnet_sanitario
+(
+    @nro_reg_municipal INT,
+    @codigo_validacion VARCHAR(64),
+    @id_emisor         INT = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.carnets_sanitarios
+       SET vigente = 0
+     WHERE nro_reg_municipal = @nro_reg_municipal
+       AND vigente = 1;
+
+    INSERT INTO dbo.carnets_sanitarios
+        (nro_reg_municipal, codigo_validacion, fecha_emision, vigente, id_emisor)
+    VALUES
+        (@nro_reg_municipal, @codigo_validacion, CAST(GETDATE() AS DATE), 1, @id_emisor);
+
+    SELECT nroRegMunicipal   = m.nro_reg_municipal,
+           codigoValidacion  = cs.codigo_validacion,
+           nombreMascota     = m.nombre,
+           especie           = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1
+           ),
+           raza              = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2
+           ),
+           castrado          = m.castrado,
+           microchip         = m.microchip,
+           vive              = m.vive,
+           responsableNombre = COALESCE(CONCAT(c.nombre, ' ', c.apellido), r.nombre, r.razon_social),
+           fechaEmision      = cs.fecha_emision,
+           vigente           = cs.vigente
+      FROM dbo.carnets_sanitarios cs (NOLOCK)
+      JOIN dbo.mascotas m (NOLOCK)
+        ON m.nro_reg_municipal = cs.nro_reg_municipal
+      LEFT JOIN dbo.ciudadanos c (NOLOCK)
+        ON c.id_ciudadano = m.id_responsable
+      LEFT JOIN dbo.refugios r (NOLOCK)
+        ON r.id_refugio = m.id_refugio
+     WHERE cs.codigo_validacion = @codigo_validacion;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_carnet_activo_por_nrm (RF11)
+   Obtiene el carnet sanitario digital vigente para una mascota por su NRM.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_carnet_activo_por_nrm
+(
+    @nro_reg_municipal INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 1
+           nroRegMunicipal   = m.nro_reg_municipal,
+           codigoValidacion  = cs.codigo_validacion,
+           nombreMascota     = m.nombre,
+           especie           = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1
+           ),
+           raza              = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2
+           ),
+           castrado          = m.castrado,
+           microchip         = m.microchip,
+           vive              = m.vive,
+           responsableNombre = COALESCE(CONCAT(c.nombre, ' ', c.apellido), r.nombre, r.razon_social),
+           fechaEmision      = cs.fecha_emision,
+           vigente           = cs.vigente
+      FROM dbo.carnets_sanitarios cs (NOLOCK)
+      JOIN dbo.mascotas m (NOLOCK)
+        ON m.nro_reg_municipal = cs.nro_reg_municipal
+      LEFT JOIN dbo.ciudadanos c (NOLOCK)
+        ON c.id_ciudadano = m.id_responsable
+      LEFT JOIN dbo.refugios r (NOLOCK)
+        ON r.id_refugio = m.id_refugio
+     WHERE cs.nro_reg_municipal = @nro_reg_municipal
+       AND cs.vigente = 1
+     ORDER BY cs.id_carnet DESC;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_carnet_por_codigo (RF11)
+   Consulta un carnet por su código único para validación pública o por terceros.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_carnet_por_codigo
+(
+    @codigo_validacion VARCHAR(64)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 1
+           nroRegMunicipal   = m.nro_reg_municipal,
+           codigoValidacion  = cs.codigo_validacion,
+           nombreMascota     = m.nombre,
+           especie           = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1
+           ),
+           raza              = (
+               SELECT TOP 1 cm.valor_caracteristica
+                 FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2
+           ),
+           castrado          = m.castrado,
+           microchip         = m.microchip,
+           vive              = m.vive,
+           responsableNombre = COALESCE(CONCAT(c.nombre, ' ', c.apellido), r.nombre, r.razon_social),
+           fechaEmision      = cs.fecha_emision,
+           vigente           = cs.vigente
+      FROM dbo.carnets_sanitarios cs (NOLOCK)
+      JOIN dbo.mascotas m (NOLOCK)
+        ON m.nro_reg_municipal = cs.nro_reg_municipal
+      LEFT JOIN dbo.ciudadanos c (NOLOCK)
+        ON c.id_ciudadano = m.id_responsable
+      LEFT JOIN dbo.refugios r (NOLOCK)
+        ON r.id_refugio = m.id_refugio
+     WHERE UPPER(TRIM(cs.codigo_validacion)) = UPPER(TRIM(@codigo_validacion));
 END
 GO
 

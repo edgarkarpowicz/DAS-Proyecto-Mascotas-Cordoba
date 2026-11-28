@@ -12,9 +12,15 @@ public class CarnetSanitarioBE {
     private Integer nroRegMunicipal;
     private String codigoValidacion;
     private String nombreMascota;
+    private String especie;
+    private String raza;
+    private Boolean castrado;
+    private String microchip;
+    private Boolean vive;
     private String responsableNombre;
     private LocalDate fechaEmision;
     private boolean vigente;
+    private String estadoSanitario;
     private List<AtencionSanitariaBE> atenciones = Collections.emptyList();
 
     public Integer getNroRegMunicipal() {
@@ -41,6 +47,46 @@ public class CarnetSanitarioBE {
         this.nombreMascota = nombreMascota;
     }
 
+    public String getEspecie() {
+        return especie;
+    }
+
+    public void setEspecie(String especie) {
+        this.especie = especie;
+    }
+
+    public String getRaza() {
+        return raza;
+    }
+
+    public void setRaza(String raza) {
+        this.raza = raza;
+    }
+
+    public Boolean getCastrado() {
+        return castrado;
+    }
+
+    public void setCastrado(Boolean castrado) {
+        this.castrado = castrado;
+    }
+
+    public String getMicrochip() {
+        return microchip;
+    }
+
+    public void setMicrochip(String microchip) {
+        this.microchip = microchip;
+    }
+
+    public Boolean getVive() {
+        return vive;
+    }
+
+    public void setVive(Boolean vive) {
+        this.vive = vive;
+    }
+
     public String getResponsableNombre() {
         return responsableNombre;
     }
@@ -63,6 +109,14 @@ public class CarnetSanitarioBE {
 
     public void setVigente(boolean vigente) {
         this.vigente = vigente;
+    }
+
+    public String getEstadoSanitario() {
+        return estadoSanitario;
+    }
+
+    public void setEstadoSanitario(String estadoSanitario) {
+        this.estadoSanitario = estadoSanitario;
     }
 
     public List<AtencionSanitariaBE> getAtenciones() {

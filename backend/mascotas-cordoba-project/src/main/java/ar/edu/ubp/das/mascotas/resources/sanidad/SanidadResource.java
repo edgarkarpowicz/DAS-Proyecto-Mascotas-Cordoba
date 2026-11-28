@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * Recurso REST protegido de sanidad y carnets digitales (RF09, RF10 y RF11).
  */
@@ -26,6 +28,11 @@ public class SanidadResource {
     @PostMapping("/atenciones")
     public ResponseEntity<AtencionSanitariaBE> registrarAtencion(@RequestBody RegistrarAtencionRequestBE request) {
         return ResponseEntity.ok(sanidadService.registrarAtencion(request));
+    }
+
+    @GetMapping("/mascotas/{nroRegMunicipal}/atenciones")
+    public ResponseEntity<List<AtencionSanitariaBE>> consultarAtenciones(@PathVariable int nroRegMunicipal) {
+        return ResponseEntity.ok(sanidadService.consultarAtenciones(nroRegMunicipal));
     }
 
     @PostMapping("/carnets/{nroRegMunicipal}")

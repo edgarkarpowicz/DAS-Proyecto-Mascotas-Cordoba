@@ -1,0 +1,275 @@
+.banda {
+  background-color: var(--verde-noche);
+  color: #ffffff;
+  padding: 2rem 1.5rem 2.25rem;
+}
+
+.banda-contenido {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.banda-titulo {
+  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  margin-bottom: 0.4rem;
+}
+
+.banda-bajada {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.carnet-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3.5rem;
+}
+
+.selector-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.4rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.25rem;
+}
+
+.card-titulo {
+  font-size: 1.25rem;
+  color: var(--verde-noche);
+  margin-bottom: 0.85rem;
+}
+
+.mis-mascotas-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.pills-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--piedra);
+}
+
+.pill-btn {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background: #ffffff;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.pill-btn.active {
+  background: var(--hoja);
+  border-color: var(--verde-monte);
+  color: var(--verde-monte);
+  font-weight: 700;
+}
+
+.nrm-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.nrm-form input {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.94rem;
+}
+
+.btn-primary {
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--verde-monte);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+}
+
+.btn-secondary,
+.btn-outline {
+  border: 1px solid var(--verde-monte);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--verde-monte);
+  font-weight: 600;
+  padding: 0.6rem 1.15rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.error-banner,
+.info-banner {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.error-banner {
+  background: var(--ladrillo-tenue);
+  border-left: 4px solid var(--ladrillo);
+  color: #7d2a1c;
+}
+
+.info-banner {
+  background: var(--hoja);
+  border-left: 4px solid var(--verde-monte);
+  color: var(--verde-noche);
+}
+
+.carnet-oficial {
+  background: #ffffff;
+  border: 2px solid var(--verde-monte);
+  border-radius: var(--radius-md);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.carnet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.org-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--verde-monte);
+}
+
+.carnet-nombre {
+  font-size: 1.85rem;
+  color: var(--verde-noche);
+  margin: 0.2rem 0;
+}
+
+.carnet-subtitulo {
+  margin: 0;
+  color: var(--piedra);
+  font-weight: 600;
+}
+
+.carnet-qr-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.qr-img {
+  width: 140px;
+  height: 140px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+}
+
+.codigo-badge {
+  font-family: monospace;
+  font-size: 0.82rem;
+  background: #f3f5f4;
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--radius-sm);
+}
+
+.carnet-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.9rem;
+  margin: 1.25rem 0;
+}
+
+.carnet-datos dt {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  color: var(--piedra);
+}
+
+.carnet-datos dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+  color: var(--verde-noche);
+}
+
+.carnet-historial {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.15rem;
+}
+
+.historial-titulo {
+  font-size: 1.05rem;
+  color: var(--verde-noche);
+  margin-bottom: 0.85rem;
+}
+
+.practicas-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.practicas-tabla th,
+.practicas-tabla td {
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: top;
+}
+
+.practicas-tabla th {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  color: var(--piedra);
+}
+
+.tipo-tag {
+  background: var(--hoja);
+  color: var(--verde-monte);
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.sin-practicas {
+  color: var(--piedra);
+  margin: 0;
+}
+
+.carnet-acciones {
+  margin-top: 1.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .carnet-oficial {
+    border: 1px solid #333333;
+    box-shadow: none;
+  }
+}

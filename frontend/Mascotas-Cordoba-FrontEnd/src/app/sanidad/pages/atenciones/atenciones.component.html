@@ -1,0 +1,144 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-atenciones">
+  <div class="banda-contenido">
+    <h1 id="titulo-atenciones" class="banda-titulo display">Información sanitaria (RF09)</h1>
+    <p class="banda-bajada">
+      Registrá vacunaciones, desparasitaciones, castraciones y consultas clínicas del programa municipal.
+    </p>
+  </div>
+</section>
+
+<main class="sanidad-container">
+  @if (exito(); as res) {
+    <div class="success-banner" role="status">
+      <div>
+        <strong>Práctica sanitaria registrada correctamente (#{{ res.nroRegistro }})</strong> para la mascota NRM {{ res.nroRegMunicipal }}
+        ({{ res.tipoAtencion }}).
+      </div>
+      <a [routerLink]="['/sanidad/carnet']" [queryParams]="{ nrm: res.nroRegMunicipal }" class="banner-link">
+        Ver / emitir carnet digital &rarr;
+      </a>
+    </div>
+  }
+
+  @if (error(); as mensajeError) {
+    <div class="error-banner" role="alert">{{ mensajeError }}</div>
+  }
+
+  <div class="sanidad-grid">
+    <section class="form-card" aria-labelledby="subtitulo-carga">
+      <h2 id="subtitulo-carga" class="card-titulo display">Nueva práctica sanitaria</h2>
+
+      @if (esVeterinaria() && usuario()?.nombreVeterinaria; as vetNombre) {
+        <p class="clinica-badge">Clínica emisora: <strong>{{ vetNombre }}</strong></p>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
+        <div class="field-group nrm-row">
+          <div class="field-grow">
+            <label for="nroRegMunicipal">NRM de la mascota *</label>
+            <input id="nroRegMunicipal" type="text" inputmode="numeric" formControlName="nroRegMunicipal" placeholder="Ej: 100001" />
+          </div>
+          <button type="button" class="btn-secondary" (click)="buscarHistorialDesdeFormulario()" [disabled]="consultandoHistorial()">
+            {{ consultandoHistorial() ? 'Buscando...' : 'Ver historial' }}
+          </button>
+        </div>
+
+        @if (!esVeterinaria()) {
+          <div class="field-group">
+            <label for="idVeterinaria">Veterinaria participante *</label>
+            <select id="idVeterinaria" formControlName="idVeterinaria">
+              @for (vet of veterinarias(); track vet.idVeterinaria) {
+                <option [value]="vet.idVeterinaria">{{ vet.nombre }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        <div class="two-cols">
+          <div class="field-group">
+            <label for="codTipoAtencion">Tipo de práctica *</label>
+            <select id="codTipoAtencion" formControlName="codTipoAtencion">
+              @for (tipo of tiposAtencion(); track tipo.codTipoAtencion) {
+                <option [value]="tipo.codTipoAtencion">{{ tipo.descTipoAtencion }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="profesional">Profesional interviniente</label>
+            <input id="profesional" type="text" formControlName="profesional" placeholder="Ej: Dr. Esteban Quito" />
+          </div>
+        </div>
+
+        <div class="two-cols">
+          <div class="field-group">
+            <label for="fechaAtencion">Fecha de atención *</label>
+            <input id="fechaAtencion" type="date" formControlName="fechaAtencion" />
+          </div>
+
+          <div class="field-group">
+            <label for="fechaVencimiento">Próximo vencimiento / refuerzo</label>
+            <input id="fechaVencimiento" type="date" formControlName="fechaVencimiento" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="detalleAtencion">Detalle / lote / observaciones *</label>
+          <textarea
+            id="detalleAtencion"
+            rows="3"
+            formControlName="detalleAtencion"
+            placeholder="Ej: Vacuna Antirrábica Obligatoria Anual - Lote RAB-2026-Z4"
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="guardando()">
+          {{ guardando() ? 'Registrando...' : 'Registrar práctica sanitaria' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="historial-card" aria-labelledby="subtitulo-historial">
+      <div class="historial-header">
+        <h2 id="subtitulo-historial" class="card-titulo display">
+          @if (nrmConsultado(); as nrm) {
+            Historial NRM {{ nrm }}
+          } @else {
+            Historial sanitario de la mascota
+          }
+        </h2>
+        @if (nrmConsultado(); as nrm) {
+          <a [routerLink]="['/sanidad/carnet']" [queryParams]="{ nrm: nrm }" class="btn-outline">
+            Carnet digital &rarr;
+          </a>
+        }
+      </div>
+
+      @if (historial().length > 0) {
+        <ul class="historial-lista">
+          @for (item of historial(); track item.nroRegistro) {
+            <li class="historial-item">
+              <div class="item-top">
+                <span class="tipo-pill">{{ item.tipoAtencion }}</span>
+                <span class="fecha-texto">{{ item.fechaAtencion }}</span>
+              </div>
+              <p class="item-detalle">{{ item.detalleAtencion }}</p>
+              <div class="item-meta">
+                <span>{{ item.veterinaria || ('Veterinaria #' + item.idVeterinaria) }} &middot; {{ item.profesional || 'Sin profesional' }}</span>
+                @if (item.fechaVencimiento) {
+                  <span>Vence: {{ item.fechaVencimiento }}</span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="vacio-historial">
+          Ingresá un NRM y presioná <strong>Ver historial</strong> para revisar las prácticas registradas o cargá una nueva atención.
+        </p>
+      }
+    </section>
+  </div>
+</main>

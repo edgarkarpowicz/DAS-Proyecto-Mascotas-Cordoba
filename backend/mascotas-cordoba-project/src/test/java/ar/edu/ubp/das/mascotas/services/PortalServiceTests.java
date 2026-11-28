@@ -43,7 +43,7 @@ class PortalServiceTests {
         assertEquals(4, info.getResumen().getPublicacionesActivas());
         assertEquals(3, info.getResumen().getVeterinariasHabilitadas());
         assertEquals(2, info.getResumen().getRefugiosAdheridos());
-        assertEquals(4, info.getServiciosPublicos().size());
+        assertEquals(5, info.getServiciosPublicos().size());
         assertTrue(info.getServiciosHabilitados().isEmpty());
     }
 

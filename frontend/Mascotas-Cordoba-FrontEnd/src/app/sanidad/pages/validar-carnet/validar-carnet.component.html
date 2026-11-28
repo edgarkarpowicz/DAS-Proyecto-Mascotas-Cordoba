@@ -1,0 +1,91 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-validar">
+  <div class="banda-contenido">
+    <h1 id="titulo-validar" class="banda-titulo display">Validación pública de carnet digital</h1>
+    <p class="banda-bajada">
+      Verificá en línea la autenticidad y vigencia oficial de un Carnet Sanitario Digital por su código único o QR.
+    </p>
+  </div>
+</section>
+
+<main class="validar-container">
+  <section class="search-card" aria-labelledby="subtitulo-codigo">
+    <h2 id="subtitulo-codigo" class="card-titulo display">Consultar código oficial</h2>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="search-form" novalidate>
+      <input
+        type="text"
+        formControlName="codigo"
+        placeholder="Ej: CBA-100001-SEED01"
+        aria-label="Código de validación del carnet"
+      />
+      <button type="submit" class="btn-primary" [disabled]="validando()">
+        {{ validando() ? 'Verificando...' : 'Validar carnet' }}
+      </button>
+    </form>
+
+    <p class="ejemplo-tip">
+      ¿Querés probar la verificación?
+      <button type="button" class="link-btn" (click)="validarCodigoEjemplo('CBA-100001-SEED01')">
+        Usar código de demostración CBA-100001-SEED01
+      </button>
+    </p>
+  </section>
+
+  @if (error(); as mensajeError) {
+    <div class="error-banner" role="alert">{{ mensajeError }}</div>
+  }
+
+  @if (resultado(); as res) {
+    <section
+      class="resultado-card"
+      [class.ok]="res.autentico && res.vigente"
+      [class.warn]="res.autentico && !res.vigente"
+      [class.invalid]="!res.autentico"
+      aria-live="polite"
+    >
+      <div class="resultado-top">
+        <span class="estado-badge">
+          @if (res.autentico && res.vigente) {
+            AUTÉNTICO Y VIGENTE
+          } @else if (res.autentico) {
+            AUTÉNTICO NO VIGENTE
+          } @else {
+            CÓDIGO NO REGISTRADO
+          }
+        </span>
+        @if (res.codigoValidacion) {
+          <code class="codigo-mono">{{ res.codigoValidacion }}</code>
+        }
+      </div>
+
+      <p class="resultado-mensaje">{{ res.mensaje }}</p>
+
+      @if (res.autentico) {
+        <dl class="detalle-grid">
+          <div>
+            <dt>NRM</dt>
+            <dd>{{ res.nroRegMunicipal }}</dd>
+          </div>
+          <div>
+            <dt>Mascota</dt>
+            <dd>{{ res.nombreMascota || 'Sin dato' }}@if (res.especie) { ({{ res.especie }})}</dd>
+          </div>
+          <div>
+            <dt>Responsable / Refugio</dt>
+            <dd>{{ res.responsableNombre || 'Sin dato' }}</dd>
+          </div>
+          <div>
+            <dt>Fecha de emisión</dt>
+            <dd>{{ res.fechaEmision || 'Sin dato' }}</dd>
+          </div>
+          <div>
+            <dt>Estado sanitario</dt>
+            <dd>{{ res.estadoSanitario || 'Sin registros' }}</dd>
+          </div>
+        </dl>
+      }
+    </section>
+  }
+</main>

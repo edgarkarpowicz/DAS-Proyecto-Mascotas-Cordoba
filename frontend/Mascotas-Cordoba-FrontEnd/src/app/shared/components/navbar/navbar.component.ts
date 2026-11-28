@@ -23,7 +23,9 @@ export class NavbarComponent {
 
   readonly navItems = computed<INavItem[]>(() => {
     const items: INavItem[] = [
-      { label: 'Portal', route: '/', exact: true }
+      { label: 'Portal', route: '/', exact: true },
+      { label: 'Veterinarias', route: '/veterinarias', exact: false },
+      { label: 'Refugios', route: '/refugios', exact: false }
     ];
     const perfil = this.currentUser()?.perfil?.trim().toUpperCase();
     if (perfil === 'REFUGIO') {

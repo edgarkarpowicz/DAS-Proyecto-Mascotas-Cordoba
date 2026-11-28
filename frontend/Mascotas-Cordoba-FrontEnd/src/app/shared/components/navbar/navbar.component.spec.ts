@@ -71,7 +71,7 @@ describe('NavbarComponent', () => {
   it('should filter navigation links by profile and show login link when anonymous', () => {
     const linksRefugio = Array.from(fixture.nativeElement.querySelectorAll('.nav-link'))
       .map((el: unknown) => (el as HTMLElement).textContent?.trim());
-    expect(linksRefugio).toEqual(['Portal', 'Mis publicaciones']);
+    expect(linksRefugio).toEqual(['Portal', 'Veterinarias', 'Refugios', 'Mis publicaciones']);
 
     mockUser.set({
       idCiudadano: 1,
@@ -84,7 +84,7 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
     const linksCiudadano = Array.from(fixture.nativeElement.querySelectorAll('.nav-link'))
       .map((el: unknown) => (el as HTMLElement).textContent?.trim());
-    expect(linksCiudadano).toEqual(['Portal']);
+    expect(linksCiudadano).toEqual(['Portal', 'Veterinarias', 'Refugios']);
 
     mockUser.set(null);
     fixture.detectChanges();

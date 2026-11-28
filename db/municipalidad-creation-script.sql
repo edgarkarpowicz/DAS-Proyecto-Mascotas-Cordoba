@@ -783,3 +783,168 @@ BEGIN
 END
 GO
 
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_veterinarias_habilitadas (RF17)
+   Devuelve clínicas veterinarias habilitadas con filtro opcional y paginación.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_veterinarias_habilitadas
+(
+    @filtro VARCHAR(128) = NULL,
+    @offset INT = 0,
+    @limit  INT = 20
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @filtro_limpio VARCHAR(128) = NULLIF(TRIM(@filtro), '');
+
+    SELECT idVeterinaria      = v.id_veterinaria,
+           nombre             = v.nombre,
+           domicilio          = v.domicilio,
+           telefono           = v.telefono,
+           correo             = v.correo,
+           horarios           = v.horarios,
+           serviciosPrestados = v.servicios_prestados
+      FROM dbo.veterinarias v (NOLOCK)
+     WHERE v.habilitada = 1
+       AND (@filtro_limpio IS NULL
+            OR v.nombre LIKE '%' + @filtro_limpio + '%'
+            OR v.domicilio LIKE '%' + @filtro_limpio + '%'
+            OR v.servicios_prestados LIKE '%' + @filtro_limpio + '%')
+     ORDER BY v.nombre
+     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: count_veterinarias_habilitadas (RF17)
+   Cuenta las clínicas veterinarias habilitadas que coinciden con el filtro.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.count_veterinarias_habilitadas
+(
+    @filtro VARCHAR(128) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @filtro_limpio VARCHAR(128) = NULLIF(TRIM(@filtro), '');
+
+    SELECT COUNT(1)
+      FROM dbo.veterinarias v (NOLOCK)
+     WHERE v.habilitada = 1
+       AND (@filtro_limpio IS NULL
+            OR v.nombre LIKE '%' + @filtro_limpio + '%'
+            OR v.domicilio LIKE '%' + @filtro_limpio + '%'
+            OR v.servicios_prestados LIKE '%' + @filtro_limpio + '%');
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_refugios_publicos (RF18)
+   Devuelve directorio público de refugios sin exponer datos privados de responsables.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_refugios_publicos
+(
+    @filtro VARCHAR(128) = NULL,
+    @offset INT = 0,
+    @limit  INT = 20
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @filtro_limpio VARCHAR(128) = NULLIF(TRIM(@filtro), '');
+
+    SELECT idRefugio            = r.id_refugio,
+           nombre               = COALESCE(r.nombre, r.razon_social),
+           domicilio            = r.domicilio,
+           telefono             = r.telefono,
+           correo               = r.correo,
+           horarios             = r.horarios,
+           publicacionesActivas = (
+               SELECT COUNT(1)
+                 FROM dbo.publicaciones_adopcion p (NOLOCK)
+                WHERE p.id_refugio = r.id_refugio
+                  AND p.estado_publicacion = 'Activa'
+           )
+      FROM dbo.refugios r (NOLOCK)
+     WHERE (@filtro_limpio IS NULL
+            OR COALESCE(r.nombre, r.razon_social) LIKE '%' + @filtro_limpio + '%'
+            OR r.domicilio LIKE '%' + @filtro_limpio + '%')
+     ORDER BY COALESCE(r.nombre, r.razon_social)
+     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: count_refugios_publicos (RF18)
+   Cuenta los refugios que coinciden con el filtro de búsqueda pública.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.count_refugios_publicos
+(
+    @filtro VARCHAR(128) = NULL
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @filtro_limpio VARCHAR(128) = NULLIF(TRIM(@filtro), '');
+
+    SELECT COUNT(1)
+      FROM dbo.refugios r (NOLOCK)
+     WHERE (@filtro_limpio IS NULL
+            OR COALESCE(r.nombre, r.razon_social) LIKE '%' + @filtro_limpio + '%'
+            OR r.domicilio LIKE '%' + @filtro_limpio + '%');
+END
+GO
+
+/* -----------------------------------------------------------------------------
+   Procedimiento: get_publicaciones_activas_refugio (RF18 / RF13)
+   Devuelve únicamente las publicaciones Activas de un refugio para consulta pública.
+----------------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.get_publicaciones_activas_refugio
+(
+    @id_refugio INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT nroPublicacion         = p.nro_publicacion,
+           nroRegMunicipal        = p.nro_reg_municipal,
+           idRefugio              = p.id_refugio,
+           fechaPublicacion       = p.fecha_publicacion,
+           caracteristicasMascota = p.caracteristicas_mascota,
+           condicionAdopcion      = p.condicion_adopcion,
+           foto                   = p.foto,
+           estadoPublicacion      = p.estado_publicacion,
+           descripcionEstado      = ep.descripcion,
+           nombreMascota          = m.nombre,
+           sexo                   = m.sexo,
+           añoNacimiento          = m.[año_nacimiento],
+           edadAproximada         = (YEAR(GETDATE()) - m.[año_nacimiento]),
+           especie                = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 1),
+               'Perro'
+           ),
+           raza                   = COALESCE(
+               (SELECT TOP 1 cm.valor_caracteristica
+                  FROM dbo.caracteristicas_mascotas cm (NOLOCK)
+                 WHERE cm.nro_reg_municipal = m.nro_reg_municipal AND cm.cod_rasgo = 2),
+               'Mestizo'
+           )
+      FROM dbo.publicaciones_adopcion p (NOLOCK)
+      JOIN dbo.mascotas m (NOLOCK)
+        ON m.nro_reg_municipal = p.nro_reg_municipal
+      JOIN dbo.estados_publicacion ep (NOLOCK)
+        ON ep.cod_estado = p.estado_publicacion
+     WHERE p.id_refugio = @id_refugio
+       AND p.estado_publicacion = 'Activa'
+     ORDER BY p.nro_publicacion DESC;
+END
+GO
+

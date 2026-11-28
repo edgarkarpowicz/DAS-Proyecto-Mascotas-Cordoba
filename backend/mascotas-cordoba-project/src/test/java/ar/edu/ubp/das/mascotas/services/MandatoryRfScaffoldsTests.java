@@ -6,18 +6,13 @@ import ar.edu.ubp.das.mascotas.BE.auth.SesionUsuarioBE;
 import ar.edu.ubp.das.mascotas.BE.common.PageRequestBE;
 import ar.edu.ubp.das.mascotas.BE.mascotas.RegistrarMascotaRequestBE;
 import ar.edu.ubp.das.mascotas.BE.sanidad.RegistrarAtencionRequestBE;
-import ar.edu.ubp.das.mascotas.integrations.ia.AsistenteVirtualClient;
 import ar.edu.ubp.das.mascotas.repositories.mascotas.MascotasRepository;
-import ar.edu.ubp.das.mascotas.repositories.refugios.RefugiosRepository;
 import ar.edu.ubp.das.mascotas.repositories.sanidad.SanidadRepository;
-import ar.edu.ubp.das.mascotas.repositories.veterinarias.VeterinariasRepository;
 import ar.edu.ubp.das.mascotas.security.AuthorizationService;
 import ar.edu.ubp.das.mascotas.security.UserContextHolder;
 import ar.edu.ubp.das.mascotas.services.asistente.AsistenteService;
 import ar.edu.ubp.das.mascotas.services.mascotas.MascotasService;
-import ar.edu.ubp.das.mascotas.services.refugios.RefugiosService;
 import ar.edu.ubp.das.mascotas.services.sanidad.SanidadService;
-import ar.edu.ubp.das.mascotas.services.veterinarias.VeterinariasService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
@@ -76,16 +71,6 @@ class MandatoryRfScaffoldsTests {
         ReflectionTestUtils.setField(sanidadService, "authorizationService", new AuthorizationService());
         assertEquals(HttpStatus.NOT_IMPLEMENTED, assertThrows(ResponseStatusException.class,
                 () -> sanidadService.validarCarnet("ABC-123")).getStatusCode());
-
-        VeterinariasService veterinariasService = new VeterinariasService();
-        ReflectionTestUtils.setField(veterinariasService, "veterinariasRepository", mock(VeterinariasRepository.class));
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, assertThrows(ResponseStatusException.class,
-                () -> veterinariasService.consultarVeterinarias(null, new PageRequestBE())).getStatusCode());
-
-        RefugiosService refugiosService = new RefugiosService();
-        ReflectionTestUtils.setField(refugiosService, "refugiosRepository", mock(RefugiosRepository.class));
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, assertThrows(ResponseStatusException.class,
-                () -> refugiosService.consultarRefugios(null, new PageRequestBE())).getStatusCode());
 
         AsistenteService asistenteService = new AsistenteService();
         ReflectionTestUtils.setField(asistenteService, "authorizationService", new AuthorizationService());

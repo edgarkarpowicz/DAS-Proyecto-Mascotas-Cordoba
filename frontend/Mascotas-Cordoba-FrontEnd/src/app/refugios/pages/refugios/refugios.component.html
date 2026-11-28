@@ -1,0 +1,121 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-refugios">
+  <div class="banda-contenido">
+    <h1 id="titulo-refugios" class="banda-titulo display">Refugios y adopciones</h1>
+    <p class="banda-bajada">
+      Organizaciones adheridas al programa municipal y sus publicaciones activas de adopción responsable.
+    </p>
+
+    <form class="buscador-form" (submit)="$event.preventDefault(); buscar(1)">
+      <label class="buscador" for="buscarRefugio">
+        <span class="sr-only">Buscar refugio</span>
+        <input
+          appAutofocus
+          id="buscarRefugio"
+          type="search"
+          [formControl]="filtroControl"
+          placeholder="Buscar por nombre o dirección..."
+          autocomplete="off"
+        />
+      </label>
+      <button type="submit" class="btn-buscar" [disabled]="cargando()">Buscar</button>
+      @if (filtroControl.value.trim()) {
+        <button type="button" class="btn-limpiar" (click)="limpiar()">Limpiar</button>
+      }
+    </form>
+  </div>
+</section>
+
+<main class="directorio-container">
+  @if (error(); as mensajeError) {
+    <div class="error-banner" role="alert">{{ mensajeError }}</div>
+  }
+
+  @if (page().items.length > 0) {
+    <section class="refugios-lista" aria-label="Listado de refugios adheridos">
+      @for (refugio of page().items; track refugio.idRefugio) {
+        <article class="refugio-card">
+          <div class="refugio-header">
+            <div>
+              <h2 class="refugio-titulo">{{ refugio.nombre }}</h2>
+              <p class="refugio-dato"><strong>Dirección:</strong> {{ refugio.domicilio }}</p>
+              @if (refugio.horarios) {
+                <p class="refugio-dato"><strong>Horarios:</strong> {{ refugio.horarios }}</p>
+              }
+              <p class="refugio-dato"><strong>Contacto:</strong> {{ refugio.telefono }} &middot; {{ refugio.correo }}</p>
+            </div>
+
+            <button
+              type="button"
+              class="btn-toggle-pubs"
+              (click)="togglePublicaciones(refugio.idRefugio)"
+              [attr.aria-expanded]="refugioExpandido() === refugio.idRefugio"
+            >
+              @if (refugioExpandido() === refugio.idRefugio) {
+                Ocultar mascotas
+              } @else {
+                Ver mascotas en adopción ({{ refugio.publicacionesActivas }})
+              }
+            </button>
+          </div>
+
+          @if (refugioExpandido() === refugio.idRefugio) {
+            <div class="pubs-panel">
+              @if (cargandoPublicaciones() === refugio.idRefugio) {
+                <p class="pubs-estado">Cargando publicaciones activas...</p>
+              } @else if ((publicacionesPorRefugio()[refugio.idRefugio] || []).length > 0) {
+                <div class="pubs-grid">
+                  @for (pub of publicacionesPorRefugio()[refugio.idRefugio]; track pub.nroPublicacion) {
+                    <article class="pub-mini-card">
+                      <div class="pub-img-wrap">
+                        <img [src]="getFoto(pub)" (error)="onImageError($event, pub)" [alt]="pub.nombreMascota" class="pub-img" />
+                        <app-expand-image-button
+                          class="pub-expand"
+                          [ariaLabel]="'Ampliar foto de ' + pub.nombreMascota"
+                          (expand)="abrirImagen(pub)"
+                        />
+                      </div>
+                      <div class="pub-body">
+                        <h3 class="pub-nombre display">{{ pub.nombreMascota }}</h3>
+                        <p class="pub-meta">
+                          {{ pub.especie || 'Mascota' }}, {{ getSexo(pub) | lowercase }}, {{ getEdad(pub) | lowercase }}@if (pub.raza) {, {{ pub.raza }}}
+                        </p>
+                        <p class="pub-desc">{{ pub.caracteristicasMascota }}</p>
+                        @if (pub.condicionAdopcion) {
+                          <p class="pub-condicion"><strong>Condiciones:</strong> {{ pub.condicionAdopcion }}</p>
+                        }
+                      </div>
+                    </article>
+                  }
+                </div>
+              } @else {
+                <p class="pubs-estado">Este refugio no tiene publicaciones activas en este momento.</p>
+              }
+            </div>
+          }
+        </article>
+      }
+    </section>
+
+    @if (page().totalPaginas > 1) {
+      <nav class="paginacion" aria-label="Paginación de refugios">
+        <button type="button" class="btn-pag" [disabled]="page().pagina <= 1" (click)="irAPagina(page().pagina - 1)">
+          &larr; Anterior
+        </button>
+        <span class="pag-info">Página {{ page().pagina }} de {{ page().totalPaginas }}</span>
+        <button type="button" class="btn-pag" [disabled]="page().pagina >= page().totalPaginas" (click)="irAPagina(page().pagina + 1)">
+          Siguiente &rarr;
+        </button>
+      </nav>
+    }
+  } @else if (!cargando() && !error()) {
+    <div class="vacio">
+      <h2 class="vacio-titulo display">No se encontraron refugios adheridos</h2>
+      <p>Probá con otro criterio de búsqueda o consultá el listado completo.</p>
+      @if (filtroControl.value.trim()) {
+        <button type="button" class="btn-buscar" (click)="limpiar()">Ver todos</button>
+      }
+    </div>
+  }
+</main>

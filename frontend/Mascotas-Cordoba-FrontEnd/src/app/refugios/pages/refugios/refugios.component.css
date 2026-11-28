@@ -1,0 +1,247 @@
+.banda {
+  background-color: var(--verde-noche);
+  color: #ffffff;
+  padding: 2rem 1.5rem 2.25rem;
+}
+
+.banda-contenido {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.banda-titulo {
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  margin-bottom: 0.4rem;
+}
+
+.banda-bajada {
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 58ch;
+}
+
+.buscador-form {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.buscador {
+  flex: 1 1 280px;
+  max-width: 460px;
+}
+
+.buscador input {
+  width: 100%;
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.buscador input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.btn-buscar,
+.btn-limpiar {
+  padding: 0.68rem 1.2rem;
+  border-radius: var(--radius-full);
+  border: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-buscar {
+  background: var(--verde-monte);
+  color: #ffffff;
+}
+
+.btn-limpiar {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.directorio-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3.5rem;
+}
+
+.error-banner {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--ladrillo-tenue);
+  border-left: 4px solid var(--ladrillo);
+  color: #7d2a1c;
+}
+
+.refugios-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.refugio-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.35rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.refugio-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.refugio-titulo {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--verde-noche);
+  margin-bottom: 0.3rem;
+}
+
+.refugio-dato {
+  font-size: 0.9rem;
+  color: var(--text-medium);
+}
+
+.btn-toggle-pubs {
+  padding: 0.65rem 1.15rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--hoja-borde);
+  background: var(--hoja);
+  color: var(--verde-noche);
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btn-toggle-pubs:hover {
+  background: #d3e4d8;
+}
+
+.pubs-panel {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.pubs-estado {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.pubs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.pub-mini-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--papel);
+  display: flex;
+  flex-direction: column;
+}
+
+.pub-img-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #e5ece7;
+}
+
+.pub-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pub-expand {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.pub-body {
+  padding: 0.9rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pub-nombre {
+  font-size: 1.08rem;
+  color: var(--verde-noche);
+}
+
+.pub-meta {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--verde-monte);
+}
+
+.pub-desc,
+.pub-condicion {
+  font-size: 0.85rem;
+  color: var(--text-medium);
+}
+
+.paginacion {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-pag {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  color: var(--text-dark);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-pag:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.pag-info {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.vacio {
+  text-align: center;
+  padding: 3rem 1.25rem;
+  background: var(--card-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.vacio-titulo {
+  font-size: 1.4rem;
+  color: var(--verde-noche);
+  margin-bottom: 0.4rem;
+}
+
+.vacio p {
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}

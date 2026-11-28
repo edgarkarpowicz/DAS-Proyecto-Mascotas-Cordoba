@@ -32,7 +32,7 @@ public class PortalService implements IPortalService {
                     "Veterinarias adheridas",
                     "Consultá clínicas veterinarias habilitadas, horarios de atención y servicios.",
                     "/veterinarias",
-                    false,
+                    true,
                     false,
                     "RF17"
             ),
@@ -41,7 +41,7 @@ public class PortalService implements IPortalService {
                     "Refugios y adopciones",
                     "Explorá refugios adheridos y las mascotas con publicación activa.",
                     "/refugios",
-                    false,
+                    true,
                     false,
                     "RF18"
             ),

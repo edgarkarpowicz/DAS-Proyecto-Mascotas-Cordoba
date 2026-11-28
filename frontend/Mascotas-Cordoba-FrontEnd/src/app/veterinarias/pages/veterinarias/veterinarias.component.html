@@ -1,0 +1,76 @@
+<app-navbar></app-navbar>
+
+<section class="banda" aria-labelledby="titulo-veterinarias">
+  <div class="banda-contenido">
+    <div class="banda-encabezado">
+      <div>
+        <h1 id="titulo-veterinarias" class="banda-titulo display">Veterinarias adheridas</h1>
+        <p class="banda-bajada">
+          Clínicas habilitadas en el Programa Municipal de Bienestar Animal, horarios y prestaciones vigentes.
+        </p>
+      </div>
+    </div>
+
+    <form class="buscador-form" (submit)="$event.preventDefault(); buscar(1)">
+      <label class="buscador" for="buscarVeterinaria">
+        <span class="sr-only">Buscar veterinaria</span>
+        <input
+          appAutofocus
+          id="buscarVeterinaria"
+          type="search"
+          [formControl]="filtroControl"
+          placeholder="Buscar por nombre, barrio o servicio..."
+          autocomplete="off"
+        />
+      </label>
+      <button type="submit" class="btn-buscar" [disabled]="cargando()">Buscar</button>
+      @if (filtroControl.value.trim()) {
+        <button type="button" class="btn-limpiar" (click)="limpiar()">Limpiar</button>
+      }
+    </form>
+  </div>
+</section>
+
+<main class="directorio-container">
+  @if (error(); as mensajeError) {
+    <div class="error-banner" role="alert">{{ mensajeError }}</div>
+  }
+
+  @if (page().items.length > 0) {
+    <section class="cards-grid" aria-label="Listado de veterinarias habilitadas">
+      @for (vet of page().items; track vet.idVeterinaria) {
+        <article class="dir-card">
+          <h2 class="dir-titulo">{{ vet.nombre }}</h2>
+          <p class="dir-dato"><strong>Dirección:</strong> {{ vet.domicilio }}</p>
+          <p class="dir-dato"><strong>Horarios:</strong> {{ vet.horarios }}</p>
+          <p class="dir-dato"><strong>Teléfono:</strong> {{ vet.telefono }}</p>
+          <p class="dir-dato"><strong>Correo:</strong> {{ vet.correo }}</p>
+          <div class="dir-servicios">
+            <span class="servicios-label">Servicios prestados</span>
+            <p>{{ vet.serviciosPrestados }}</p>
+          </div>
+        </article>
+      }
+    </section>
+
+    @if (page().totalPaginas > 1) {
+      <nav class="paginacion" aria-label="Paginación de veterinarias">
+        <button type="button" class="btn-pag" [disabled]="page().pagina <= 1" (click)="irAPagina(page().pagina - 1)">
+          &larr; Anterior
+        </button>
+        <span class="pag-info">Página {{ page().pagina }} de {{ page().totalPaginas }}</span>
+        <button type="button" class="btn-pag" [disabled]="page().pagina >= page().totalPaginas" (click)="irAPagina(page().pagina + 1)">
+          Siguiente &rarr;
+        </button>
+      </nav>
+    }
+  } @else if (!cargando() && !error()) {
+    <div class="vacio">
+      <h2 class="vacio-titulo display">No se encontraron veterinarias habilitadas</h2>
+      <p>Probá con otro criterio de búsqueda o consultá el listado completo.</p>
+      @if (filtroControl.value.trim()) {
+        <button type="button" class="btn-buscar" (click)="limpiar()">Ver todas</button>
+      }
+    </div>
+  }
+</main>
